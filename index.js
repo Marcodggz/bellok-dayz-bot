@@ -12,6 +12,7 @@ const { PNG } = require('pngjs');
 // Import config and helpers
 const config = require('./src/config/config');
 const { bufToText, looksLikeHtml, looksLikeRateLimit, tMadrid, clamp, escapeRegExp } = require('./src/utils/helpers');
+const { loadJSON, saveJSON } = require('./src/storage/jsonStore');
 
 const MODE = process.argv[2] || 'run';
 
@@ -26,10 +27,6 @@ const {
   HEAT_RECENT_MIN, HEAT_RECENT_DOT_RADIUS, HEAT_RECENT_DOT_ALPHA,
   STATE_FILE, HEAT_STATE_FILE, HEAT_IMG_PATH
 } = config;
-
-// ================== HELPERS (still local) ==================
-function loadJSON(file, fallback){ try { return JSON.parse(fs.readFileSync(file,'utf8')); } catch { return fallback; } }
-function saveJSON(file, data){ fs.writeFileSync(file, JSON.stringify(data)); }
 
 // ================== ESTADO KILL-FEED ==================
 function loadState(){ return loadJSON(STATE_FILE, {}); }
