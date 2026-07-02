@@ -28,6 +28,7 @@ const { loadJSON, saveJSON } = require("./src/storage/jsonStore");
 const { loadState, saveState } = require("./src/storage/stateStore");
 const { loadHeat, saveHeat } = require("./src/storage/heatStore");
 const { getFileState, setFileState } = require("./src/storage/fileStateStore");
+const { parseKill } = require("./src/parsers/killParser");
 
 const MODE = process.argv[2] || "run";
 
@@ -303,84 +304,7 @@ async function readNewLines(filePath) {
   return chunk ? chunk.split(/\r?\n/).filter(Boolean) : [];
 }
 
-// ================== PARSER / POSICIONES ==================
-function shouldIgnore(line) {
-  if (/##### PlayerList log/i.test(line)) return true;
-  if (/ is connected| has been disconnected/i.test(line)) return true;
-  if (/performed Emote(?!Suicide)/i.test(line)) return true;
-  return false;
-}
-const TIME_RE = /^\s*(\d{2}:\d{2}:\d{2})\s*\|/;
-const q = `["'“”]`;
-const EXPLO = /explosion|grenade|mine|landmine|tripwire|ied/i;
-
-// PvP: "killed Player ..." y "(DEAD) ... killed by Player ..."
-const PVP_PATTERNS = [
-  new RegExp(
-    `Player ${q}(.+?)${q}[^|\\r\\n]*?killed Player ${q}(.+?)${q}[^|\\r\\n]*?(?: with ([^|\\r\\n]+?))?(?: from| at| \\(|$)`,
-    "i",
-  ),
-  new RegExp(
-    `Player ${q}(.+?)${q}[^|\\r\\n]*?(?:\\(DEAD\\)\\s*)?(?:was\\s+)?killed by Player ${q}(.+?)${q}[^|\\r\\n]*?(?: with ([^|\\r\\n]+?))?(?: from| at| \\(|$)`,
-    "i",
-  ),
-];
-
-function cleanWeapon(s) {
-  if (!s) return null;
-  return String(s)
-    .replace(/\s+from.*$/i, "")
-    .replace(/\s+at.*$/i, "")
-    .replace(/\s*\(.*?\)\s*$/, "")
-    .trim();
-}
-function cleanDevice(s) {
-  if (!s) return null;
-  return String(s)
-    .replace(/^an?\s+/i, "")
-    .replace(/\s+from.*$/i, "")
-    .replace(/\s*\(.*?\)\s*$/, "")
-    .trim();
-}
-
-function parseKill(line) {
-  if (shouldIgnore(line)) return null;
-  const tm = line.match(TIME_RE);
-  const t = tm ? tm[1] : null;
-
-  for (const re of PVP_PATTERNS) {
-    const m = line.match(re);
-    if (m) {
-      let killer, victim, weapon;
-      if (/killed Player/i.test(re.source)) {
-        killer = m[1];
-        victim = m[2];
-        weapon = cleanWeapon(m[3]);
-      } else {
-        victim = m[1];
-        killer = m[2];
-        weapon = cleanWeapon(m[3]);
-      }
-      return { type: "pvp", killer, victim, weapon, t, line };
-    }
-  }
-  {
-    // Explosión: "Player "X" ... killed by <cause>" y cause coincide con EXPLO
-    const m = line.match(
-      new RegExp(`Player ${q}(.+?)${q}.*?killed by ([^|\\r\\n]+)`, "i"),
-    );
-    if (m) {
-      const victim = m[1];
-      const cause = m[2].trim();
-      if (EXPLO.test(cause)) {
-        const device = cleanDevice(cause);
-        return { type: "explosion", victim, device, t, line };
-      }
-    }
-  }
-  return null;
-}
-
+// ================== POSICIONES ==================
 // — rastrear posiciones por nombre (última conocida) —
 const lastPosByName = new Map();
 function updatePositionsFromLine(line) {
