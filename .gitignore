@@ -13,3 +13,6 @@ heatmap.png
 # Optional local data
 data/
 output/
+
+# Local AI/dev notes
+AI_CONTEXT.md
