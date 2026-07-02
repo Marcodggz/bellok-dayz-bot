@@ -873,6 +873,44 @@ async function runDiagnose() {
   process.exit(0);
 }
 
+// ================== MOCK PARSE ==================
+async function runMockParse() {
+  const mockLogPath = "./mock/sample-adm.txt";
+  console.log(`[mock-parse] Reading ${mockLogPath}...\n`);
+
+  if (!fs.existsSync(mockLogPath)) {
+    console.error(`[mock-parse] ERROR: File not found: ${mockLogPath}`);
+    process.exit(1);
+  }
+
+  const content = fs.readFileSync(mockLogPath, "utf8");
+  const lines = content.split(/\r?\n/).filter(Boolean);
+
+  console.log(`[mock-parse] Total lines: ${lines.length}\n`);
+
+  let pvpCount = 0;
+  let explosionCount = 0;
+
+  for (const line of lines) {
+    const event = parseKill(line);
+    if (event) {
+      console.log("✅ DETECTED:", JSON.stringify(event, null, 2));
+      if (event.type === "pvp") pvpCount++;
+      else if (event.type === "explosion") explosionCount++;
+    } else {
+      console.log(
+        "❌ No kill event:",
+        line.slice(0, 80) + (line.length > 80 ? "..." : ""),
+      );
+    }
+  }
+
+  console.log(
+    `\n[mock-parse] Summary: ${pvpCount} PvP kills, ${explosionCount} explosions detected.`,
+  );
+  process.exit(0);
+}
+
 // ================== MAIN ==================
 if (MODE === "discord-test") {
   runDiscordTest();
@@ -880,6 +918,8 @@ if (MODE === "discord-test") {
   runDiscordHeatmapTest();
 } else if (MODE === "diagnose") {
   runDiagnose();
+} else if (MODE === "mock-parse") {
+  runMockParse();
 } else {
   runBot();
 }
