@@ -26,6 +26,7 @@ const {
 } = require("./src/utils/helpers");
 const { loadJSON, saveJSON } = require("./src/storage/jsonStore");
 const { loadState, saveState } = require("./src/storage/stateStore");
+const { loadHeat, saveHeat } = require("./src/storage/heatStore");
 
 const MODE = process.argv[2] || "run";
 
@@ -83,12 +84,6 @@ function setFileState(st, filePath, obj) {
 }
 
 // ================== ESTADO HEATMAP ==================
-function loadHeat() {
-  return loadJSON(HEAT_STATE_FILE, { points: [], lastSentCount: 0 });
-}
-function saveHeat(h) {
-  saveJSON(HEAT_STATE_FILE, h);
-}
 function addHeatPoint(x, y) {
   const h = loadHeat();
   const ts = Date.now();
