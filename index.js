@@ -27,6 +27,7 @@ const {
 const { loadJSON, saveJSON } = require("./src/storage/jsonStore");
 const { loadState, saveState } = require("./src/storage/stateStore");
 const { loadHeat, saveHeat } = require("./src/storage/heatStore");
+const { getFileState, setFileState } = require("./src/storage/fileStateStore");
 
 const MODE = process.argv[2] || "run";
 
@@ -73,15 +74,6 @@ const {
   HEAT_STATE_FILE,
   HEAT_IMG_PATH,
 } = config;
-
-// ================== ESTADO KILL-FEED ==================
-function getFileState(st, filePath) {
-  return st[filePath] || { size: 0, carry: "" };
-}
-function setFileState(st, filePath, obj) {
-  st[filePath] = obj;
-  saveState(st);
-}
 
 // ================== ESTADO HEATMAP ==================
 function addHeatPoint(x, y) {
