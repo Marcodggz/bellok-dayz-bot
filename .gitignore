@@ -1,0 +1,15 @@
+node_modules/
+.env
+.DS_Store
+
+# Runtime/generated files
+state.json
+heatmap.json
+heatmap.png
+
+# Logs
+*.log
+
+# Optional local data
+data/
+output/
