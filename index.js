@@ -4,80 +4,32 @@
 // - Heatmap: único mensaje "⚔️PVP heat-map 🥵"
 // - Precisión de puntos: calibración por min/max/offset/escala/flip
 
-require('dotenv').config();
 const axios = require('axios');
 const fs = require('fs');
 const { Client, GatewayIntentBits, EmbedBuilder, AttachmentBuilder } = require('discord.js');
 const { PNG } = require('pngjs');
 
+// Import config and helpers
+const config = require('./src/config/config');
+const { bufToText, looksLikeHtml, looksLikeRateLimit, tMadrid, clamp, escapeRegExp } = require('./src/utils/helpers');
+
 const MODE = process.argv[2] || 'run';
 
-// ================== CONFIG ==================
-const NIT_API    = 'https://api.nitrado.net';
-const SERVICE_ID = process.env.NITRADO_SERVICE_ID;
-const NIT_TOKEN  = process.env.NITRADO_TOKEN;
-const CHANNEL_ID = process.env.DISCORD_CHANNEL_ID;
+// Destructure config for convenience
+const {
+  NIT_API, SERVICE_ID, NIT_TOKEN, ADM_DIR, CHANNEL_ID, HEATMAP_CHANNEL_ID,
+  START_AT_END, RAW_TO_DISCORD, DEBUG, DEBUG_TICKS, POLL_MS, ROTATE_CHECK_MS, LIST_COOLDOWN_MS,
+  HEATMAP_INTERVAL_MS, HEATMAP_WIDTH, HEATMAP_HEIGHT, MAP_SIZE, HEATMAP_WINDOW_MIN,
+  HEATMAP_RESET_ON_ROTATE, CHERNARUS_MAP_PATH,
+  MAP_MIN_X, MAP_MAX_X, MAP_MIN_Y, MAP_MAX_Y, MAP_FLIP_Y, MAP_OFFSET_X, MAP_OFFSET_Y, MAP_SCALE_X, MAP_SCALE_Y,
+  HEAT_RADIUS, HEAT_GAMMA, HEAT_MIN_ALPHA, HEAT_HALFLIFE_MIN, HEAT_NORM_PERCENTILE,
+  HEAT_RECENT_MIN, HEAT_RECENT_DOT_RADIUS, HEAT_RECENT_DOT_ALPHA,
+  STATE_FILE, HEAT_STATE_FILE, HEAT_IMG_PATH
+} = config;
 
-const ADM_DIR        = process.env.NITRADO_ADM_DIR || ''; // /games_0/.../noftp/dayzps/config
-const START_AT_END   = process.env.START_AT_END === '1';
-const RAW_TO_DISCORD = process.env.RAW_TO_DISCORD === '1';
-const DEBUG          = process.env.DEBUG_KILLS === '1';
-const DEBUG_TICKS    = process.env.DEBUG_TICKS === '1';
-const POLL_MS        = Number(process.env.POLL_MS || 5000);
-const ROTATE_CHECK_MS= Number(process.env.ROTATE_CHECK_MS || 60000);
-const LIST_COOLDOWN_MS = Number(process.env.LIST_COOLDOWN_MS || 120000);
-
-// Heatmap
-const HEATMAP_CHANNEL_ID   = process.env.HEATMAP_CHANNEL_ID || '';
-const HEATMAP_INTERVAL_MS  = Number(process.env.HEATMAP_INTERVAL_MS || 600000);
-const HEATMAP_WIDTH        = Number(process.env.HEATMAP_WIDTH  || 512);
-const HEATMAP_HEIGHT       = Number(process.env.HEATMAP_HEIGHT || 512);
-const MAP_SIZE             = Number(process.env.MAP_SIZE || 15360);
-const HEATMAP_WINDOW_MIN   = Number(process.env.HEATMAP_WINDOW_MIN || 720);
-const HEATMAP_RESET_ON_ROTATE = process.env.HEATMAP_RESET_ON_ROTATE === '1';
-const CHERNARUS_MAP_PATH   = process.env.CHERNARUS_MAP_PATH || ''; // ej: images/chernarus.png
-
-// Calibración de mapa (para precisión de puntos)
-const MAP_MIN_X = Number(process.env.MAP_MIN_X || 0);
-const MAP_MAX_X = Number(process.env.MAP_MAX_X || MAP_SIZE);
-const MAP_MIN_Y = Number(process.env.MAP_MIN_Y || 0);
-const MAP_MAX_Y = Number(process.env.MAP_MAX_Y || MAP_SIZE);
-const MAP_FLIP_Y = (process.env.MAP_FLIP_Y ?? '1') !== '0';      // por defecto voltear vertical
-const MAP_OFFSET_X = Number(process.env.MAP_OFFSET_X || 0);      // desplazamiento normalizado
-const MAP_OFFSET_Y = Number(process.env.MAP_OFFSET_Y || 0);
-const MAP_SCALE_X  = Number(process.env.MAP_SCALE_X  || 1);      // escala normalizada
-const MAP_SCALE_Y  = Number(process.env.MAP_SCALE_Y  || 1);
-
-// Visual del heat-map
-const HEAT_RADIUS    = Number(process.env.HEAT_RADIUS || 0);     // 0 = auto
-const HEAT_GAMMA     = Number(process.env.HEAT_GAMMA || 0.6);
-const HEAT_MIN_ALPHA = Number(process.env.HEAT_MIN_ALPHA || 70);
-const HEAT_HALFLIFE_MIN     = Number(process.env.HEAT_HALFLIFE_MIN || 60);
-const HEAT_NORM_PERCENTILE  = Number(process.env.HEAT_NORM_PERCENTILE || 0.9);
-const HEAT_RECENT_MIN       = Number(process.env.HEAT_RECENT_MIN || 10);
-const HEAT_RECENT_DOT_RADIUS= Number(process.env.HEAT_RECENT_DOT_RADIUS || 6);
-const HEAT_RECENT_DOT_ALPHA = Number(process.env.HEAT_RECENT_DOT_ALPHA || 230);
-
-const STATE_FILE     = './state.json';
-const HEAT_STATE_FILE= './heatmap.json';
-const HEAT_IMG_PATH  = './heatmap.png';
-
-// ================== HELPERS ==================
-function bufToText(x){
-  try {
-    if (!x) return '';
-    if (Buffer.isBuffer(x)) return x.toString('utf8');
-    if (typeof x==='object') return JSON.stringify(x);
-    return String(x);
-  } catch { return String(x); }
-}
-function looksLikeHtml(txt){ return /^\s*<!DOCTYPE html>|^\s*<html/i.test(txt || ''); }
-function looksLikeRateLimit(txt){ return /rate\s*limit/i.test(txt || ''); }
-function tMadrid(ms){ return new Date(ms).toLocaleString('es-ES',{ timeZone:'Europe/Madrid' }); }
+// ================== HELPERS (still local) ==================
 function loadJSON(file, fallback){ try { return JSON.parse(fs.readFileSync(file,'utf8')); } catch { return fallback; } }
 function saveJSON(file, data){ fs.writeFileSync(file, JSON.stringify(data)); }
-function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
-function escapeRegExp(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 
 // ================== ESTADO KILL-FEED ==================
 function loadState(){ return loadJSON(STATE_FILE, {}); }
@@ -529,14 +481,14 @@ function renderHeatPng(points, outPath, baseMapPath = '') {
 // ================== DISCORD / BOOT ==================
 function checkEnv(){
   console.log('[boot] .env',
-    'DISCORD_TOKEN=', !!process.env.DISCORD_TOKEN,
+    'DISCORD_TOKEN=', !!config.DISCORD_TOKEN,
     'NITRADO_TOKEN=', !!NIT_TOKEN,
     'SERVICE_ID=', !!SERVICE_ID,
     'CHANNEL_ID=', !!CHANNEL_ID,
     'ADM_DIR=', !!ADM_DIR,
     'HEATMAP_CHANNEL_ID=', !!HEATMAP_CHANNEL_ID
   );
-  if (!NIT_TOKEN || !SERVICE_ID || !CHANNEL_ID || !process.env.DISCORD_TOKEN){
+  if (!NIT_TOKEN || !SERVICE_ID || !CHANNEL_ID || !config.DISCORD_TOKEN){
     console.error('Faltan .env: NITRADO_TOKEN, NITRADO_SERVICE_ID, DISCORD_CHANNEL_ID, DISCORD_TOKEN');
     process.exit(1);
   }
@@ -645,7 +597,7 @@ async function runBot(){
     setInterval(tick, POLL_MS);
   });
 
-  client.login(process.env.DISCORD_TOKEN).catch(e=>{
+  client.login(config.DISCORD_TOKEN).catch(e=>{
     console.error('[login error]', e?.message || e);
     process.exit(1);
   });
@@ -663,7 +615,7 @@ async function runDiscordTest(){
     }catch(e){ console.error('[discord-test] ERROR:', e?.code || e?.message || e); }
     finally { process.exit(0); }
   });
-  client.login(process.env.DISCORD_TOKEN).catch(e=>{ console.error('[login error]', e?.message||e); process.exit(1); });
+  client.login(config.DISCORD_TOKEN).catch(e=>{ console.error('[login error]', e?.message||e); process.exit(1); });
 }
 
 async function runDiscordHeatmapTest(){
@@ -678,7 +630,7 @@ async function runDiscordHeatmapTest(){
     }catch(e){ console.error('[discord-heatmap-test] ERROR:', e?.code || e?.message || e); }
     finally { process.exit(0); }
   });
-  client.login(process.env.DISCORD_TOKEN).catch(e=>{ console.error('[login error]', e?.message||e); process.exit(1); });
+  client.login(config.DISCORD_TOKEN).catch(e=>{ console.error('[login error]', e?.message||e); process.exit(1); });
 }
 
 async function runDiagnose(){
