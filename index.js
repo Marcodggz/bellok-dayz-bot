@@ -894,9 +894,54 @@ async function runMockParse() {
   for (const line of lines) {
     const event = parseKill(line);
     if (event) {
-      console.log("✅ DETECTED:", JSON.stringify(event, null, 2));
-      if (event.type === "pvp") pvpCount++;
-      else if (event.type === "explosion") explosionCount++;
+      console.log("✅ DETECTED:");
+      console.log(`  Type: ${event.type}`);
+
+      if (event.type === "pvp") {
+        console.log(`  Killer: ${event.killer}`);
+        console.log(`  Victim: ${event.victim}`);
+        console.log(`  Weapon: ${event.weapon || "N/A"}`);
+        console.log(
+          `  Distance: ${event.distanceMeters ? event.distanceMeters + " meters" : "N/A"}`,
+        );
+        console.log(`  Ammo: ${event.ammo || "N/A"}`);
+        console.log(`  Hit Zone: ${event.hitZone || "N/A"}`);
+        console.log(`  Damage: ${event.damage || "N/A"}`);
+
+        if (event.killerPosition) {
+          console.log(
+            `  Killer Location: ${event.killerPosition.x.toFixed(1)};${event.killerPosition.y.toFixed(1)};${event.killerPosition.z.toFixed(1)}`,
+          );
+        } else {
+          console.log(`  Killer Location: N/A`);
+        }
+
+        if (event.victimPosition) {
+          console.log(
+            `  Victim Location: ${event.victimPosition.x.toFixed(1)};${event.victimPosition.y.toFixed(1)};${event.victimPosition.z.toFixed(1)}`,
+          );
+        } else {
+          console.log(`  Victim Location: N/A`);
+        }
+
+        console.log(`  Time: ${event.t || "N/A"}`);
+        pvpCount++;
+      } else if (event.type === "explosion") {
+        console.log(`  Victim: ${event.victim}`);
+        console.log(`  Device: ${event.device || "N/A"}`);
+
+        if (event.victimPosition) {
+          console.log(
+            `  Location: ${event.victimPosition.x.toFixed(1)};${event.victimPosition.y.toFixed(1)};${event.victimPosition.z.toFixed(1)}`,
+          );
+        } else {
+          console.log(`  Location: N/A`);
+        }
+
+        console.log(`  Time: ${event.t || "N/A"}`);
+        explosionCount++;
+      }
+      console.log(""); // Empty line for readability
     } else {
       console.log(
         "❌ No kill event:",
