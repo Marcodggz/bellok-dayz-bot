@@ -36,6 +36,8 @@ const {
   createEmptyStats,
   updateStatsFromEvent,
   getPlayerStats,
+  handlePlayerConnect,
+  handlePlayerDisconnect,
 } = require("./src/features/stats/playerStats");
 
 const MODE = process.argv[2] || "run";
@@ -901,11 +903,76 @@ async function runMockParse() {
   let explosionCount = 0;
   const stats = createEmptyStats();
 
+  // Normalized chronological time tracking for midnight rollover
+  let previousRawTimeMs = null;
+  let dayOffsetMs = 0;
+
+  /**
+   * Parse HH:MM:SS to raw milliseconds since midnight
+   */
+  function parseRawTimeMs(timeStr) {
+    if (!timeStr) return null;
+    const match = timeStr.match(/^(\d{2}):(\d{2}):(\d{2})$/);
+    if (!match) return null;
+
+    const hours = parseInt(match[1], 10);
+    const minutes = parseInt(match[2], 10);
+    const seconds = parseInt(match[3], 10);
+
+    return (hours * 3600 + minutes * 60 + seconds) * 1000;
+  }
+
+  /**
+   * Get normalized chronological event time, handling midnight rollover
+   */
+  function getNormalizedEventTimeMs(timeStr) {
+    const rawTimeMs = parseRawTimeMs(timeStr);
+    if (rawTimeMs === null) return null;
+
+    // Detect midnight rollover: current time is less than previous time
+    if (previousRawTimeMs !== null && rawTimeMs < previousRawTimeMs) {
+      dayOffsetMs += 86400000; // Add 24 hours in milliseconds
+      console.log(
+        `[mock-parse] Midnight rollover detected at ${timeStr}, dayOffset now: ${dayOffsetMs / 3600000}h`,
+      );
+    }
+
+    previousRawTimeMs = rawTimeMs;
+    return dayOffsetMs + rawTimeMs;
+  }
+
   for (const line of lines) {
+    // Extract time from line
+    const timeMatch = line.match(/^\s*(\d{2}:\d{2}:\d{2})\s*\|/);
+    const timeStr = timeMatch ? timeMatch[1] : null;
+    const normalizedTimeMs = getNormalizedEventTimeMs(timeStr);
+
+    // Check for connect/disconnect events first
+    const connectMatch = line.match(
+      /Player\s+["'""](.+?)["'""].*?\(id=\d+\)\s+is connected/i,
+    );
+    if (connectMatch) {
+      const playerName = connectMatch[1].trim();
+      handlePlayerConnect(stats, playerName, normalizedTimeMs);
+      console.log(`🔌 CONNECT: ${playerName} connected at ${timeStr}`);
+      continue;
+    }
+
+    const disconnectMatch = line.match(
+      /Player\s+["'""](.+?)["'""].*?\(id=\d+\)\s+has been disconnected/i,
+    );
+    if (disconnectMatch) {
+      const playerName = disconnectMatch[1].trim();
+      handlePlayerDisconnect(stats, playerName, normalizedTimeMs);
+      console.log(`🔌 DISCONNECT: ${playerName} disconnected at ${timeStr}`);
+      continue;
+    }
+
+    // Parse kill events
     const event = parseKill(line);
     if (event) {
       // Update stats before displaying
-      updateStatsFromEvent(stats, event);
+      updateStatsFromEvent(stats, event, normalizedTimeMs);
 
       console.log("✅ DETECTED:");
       console.log(`  Type: ${event.type}`);

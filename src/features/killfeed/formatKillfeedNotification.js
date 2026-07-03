@@ -107,7 +107,13 @@ function formatPvPNotification(event, killerStats = null, victimStats = null) {
     lines.push(`**Rank:** N/A | **Score:** N/A`);
     lines.push(`**Kills:** N/A | **Deaths:** N/A | **KD:** N/A`);
   }
-  lines.push(`**Time Alive** N/A`);
+
+  // Time Alive - show lastTimeAlive if available
+  const timeAlive =
+    victimStats && victimStats.lastTimeAlive
+      ? victimStats.lastTimeAlive
+      : "N/A";
+  lines.push(`**Time Alive** ${timeAlive}`);
 
   return lines.join("\n");
 }
@@ -158,8 +164,12 @@ function formatExplosionNotification(event, victimStats = null) {
     lines.push(`**Location** N/A`);
   }
 
-  // Time Alive - bold label
-  lines.push(`**Time Alive** N/A`);
+  // Time Alive - show lastTimeAlive if available
+  const timeAlive =
+    victimStats && victimStats.lastTimeAlive
+      ? victimStats.lastTimeAlive
+      : "N/A";
+  lines.push(`**Time Alive** ${timeAlive}`);
 
   return lines.join("\n");
 }

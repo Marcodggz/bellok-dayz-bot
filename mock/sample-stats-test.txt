@@ -1,32 +1,22 @@
-14:00:00 | Player "ProPlayer" (id=12345678 pos=<7234.5, 5678.2, 302.1>) killed Player "Noob1" (id=87654321 pos=<7230.1, 5680.5, 301.8>) with M4A1 from 15.2 meters (Ammo: 5.56x45mm NATO, Hit: Torso, Damage: 85)
-14:01:00 | Player "ProPlayer" (id=12345678 pos=<7234.5, 5678.2, 302.1>) killed Player "Noob2" (id=87654322 pos=<7230.1, 5680.5, 301.8>) with M4A1 from 15.2 meters (Ammo: 5.56x45mm NATO, Hit: Torso, Damage: 85)
-14:02:00 | Player "ProPlayer" (id=12345678 pos=<7234.5, 5678.2, 302.1>) killed Player "Noob3" (id=87654323 pos=<7230.1, 5680.5, 301.8>) with M4A1 from 15.2 meters (Ammo: 5.56x45mm NATO, Hit: Torso, Damage: 85)
-14:03:00 | Player "ProPlayer" (id=12345678 pos=<7234.5, 5678.2, 302.1>) killed Player "Noob4" (id=87654324 pos=<7230.1, 5680.5, 301.8>) with M4A1 from 15.2 meters (Ammo: 5.56x45mm NATO, Hit: Torso, Damage: 85)
-14:04:00 | Player "ProPlayer" (id=12345678 pos=<7234.5, 5678.2, 302.1>) killed Player "Noob5" (id=87654325 pos=<7230.1, 5680.5, 301.8>) with M4A1 from 15.2 meters (Ammo: 5.56x45mm NATO, Hit: Torso, Damage: 85)
-14:05:00 | Player "ProPlayer" (id=12345678 pos=<7234.5, 5678.2, 302.1>) killed Player "Noob6" (id=87654326 pos=<7230.1, 5680.5, 301.8>) with M4A1 from 15.2 meters (Ammo: 5.56x45mm NATO, Hit: Torso, Damage: 85)
-14:06:00 | Player "ProPlayer" (id=12345678 pos=<7234.5, 5678.2, 302.1>) killed Player "Noob7" (id=87654327 pos=<7230.1, 5680.5, 301.8>) with M4A1 from 15.2 meters (Ammo: 5.56x45mm NATO, Hit: Torso, Damage: 85)
-14:07:00 | Player "ProPlayer" (id=12345678 pos=<7234.5, 5678.2, 302.1>) killed Player "Noob8" (id=87654328 pos=<7230.1, 5680.5, 301.8>) with M4A1 from 15.2 meters (Ammo: 5.56x45mm NATO, Hit: Torso, Damage: 85)
-14:08:00 | Player "ProPlayer" (id=12345678 pos=<7234.5, 5678.2, 302.1>) killed Player "Noob9" (id=87654329 pos=<7230.1, 5680.5, 301.8>) with M4A1 from 15.2 meters (Ammo: 5.56x45mm NATO, Hit: Torso, Damage: 85)
-14:09:00 | Player "ProPlayer" (id=12345678 pos=<7234.5, 5678.2, 302.1>) killed Player "Noob10" (id=87654330 pos=<7230.1, 5680.5, 301.8>) with M4A1 from 15.2 meters (Ammo: 5.56x45mm NATO, Hit: Torso, Damage: 85)
-14:10:00 | Player "ProPlayer" (id=12345678 pos=<7234.5, 5678.2, 302.1>) killed Player "Noob11" (id=87654331 pos=<7230.1, 5680.5, 301.8>) with M4A1 from 15.2 meters (Ammo: 5.56x45mm NATO, Hit: Torso, Damage: 85)
-14:11:00 | Player "ProPlayer" (id=12345678 pos=<7234.5, 5678.2, 302.1>) killed Player "Noob12" (id=87654332 pos=<7230.1, 5680.5, 301.8>) with M4A1 from 15.2 meters (Ammo: 5.56x45mm NATO, Hit: Torso, Damage: 85)
-14:12:00 | Player "ProPlayer" (id=12345678 pos=<7234.5, 5678.2, 302.1>) killed Player "Noob13" (id=87654333 pos=<7230.1, 5680.5, 301.8>) with M4A1 from 15.2 meters (Ammo: 5.56x45mm NATO, Hit: Torso, Damage: 85)
-14:13:00 | Player "ProPlayer" (id=12345678 pos=<7234.5, 5678.2, 302.1>) killed Player "Noob14" (id=87654334 pos=<7230.1, 5680.5, 301.8>) with M4A1 from 15.2 meters (Ammo: 5.56x45mm NATO, Hit: Torso, Damage: 85)
-14:14:00 | Player "ProPlayer" (id=12345678 pos=<7234.5, 5678.2, 302.1>) killed Player "Noob15" (id=87654335 pos=<7230.1, 5680.5, 301.8>) with M4A1 from 15.2 meters (Ammo: 5.56x45mm NATO, Hit: Torso, Damage: 85)
-14:15:00 | Player "Noob1" (id=87654321 pos=<7230.1, 5680.5, 301.8>) killed by Grenade explosion
-14:16:00 | Player "AveragePlayer" (id=11111111 pos=<7234.5, 5678.2, 302.1>) killed Player "ProPlayer" (id=12345678 pos=<7230.1, 5680.5, 301.8>) with AKM from 10.0 meters (Ammo: 7.62x39mm, Hit: Head, Damage: 110)
-14:17:00 | Player "ProPlayer" (id=12345678 pos=<7234.5, 5678.2, 302.1>) killed Player "Noob16" (id=87654336 pos=<7230.1, 5680.5, 301.8>) with M4A1 from 15.2 meters (Ammo: 5.56x45mm NATO, Hit: Torso, Damage: 85)
-14:18:00 | Player "ProPlayer" (id=12345678 pos=<7234.5, 5678.2, 302.1>) killed Player "Noob17" (id=87654337 pos=<7230.1, 5680.5, 301.8>) with M4A1 from 15.2 meters (Ammo: 5.56x45mm NATO, Hit: Torso, Damage: 85)
-14:19:00 | Player "ProPlayer" (id=12345678 pos=<7234.5, 5678.2, 302.1>) killed Player "Noob18" (id=87654338 pos=<7230.1, 5680.5, 301.8>) with M4A1 from 15.2 meters (Ammo: 5.56x45mm NATO, Hit: Torso, Damage: 85)
-14:20:00 | Player "ProPlayer" (id=12345678 pos=<7234.5, 5678.2, 302.1>) killed Player "Noob19" (id=87654339 pos=<7230.1, 5680.5, 301.8>) with M4A1 from 15.2 meters (Ammo: 5.56x45mm NATO, Hit: Torso, Damage: 85)
-14:21:00 | Player "ProPlayer" (id=12345678 pos=<7234.5, 5678.2, 302.1>) killed Player "Noob20" (id=87654340 pos=<7230.1, 5680.5, 301.8>) with M4A1 from 15.2 meters (Ammo: 5.56x45mm NATO, Hit: Torso, Damage: 85)
-14:22:00 | Player "ProPlayer" (id=12345678 pos=<7234.5, 5678.2, 302.1>) killed Player "Noob21" (id=87654341 pos=<7230.1, 5680.5, 301.8>) with M4A1 from 15.2 meters (Ammo: 5.56x45mm NATO, Hit: Torso, Damage: 85)
-14:23:00 | Player "ProPlayer" (id=12345678 pos=<7234.5, 5678.2, 302.1>) killed Player "Noob22" (id=87654342 pos=<7230.1, 5680.5, 301.8>) with M4A1 from 15.2 meters (Ammo: 5.56x45mm NATO, Hit: Torso, Damage: 85)
-14:24:00 | Player "ProPlayer" (id=12345678 pos=<7234.5, 5678.2, 302.1>) killed Player "Noob23" (id=87654343 pos=<7230.1, 5680.5, 301.8>) with M4A1 from 15.2 meters (Ammo: 5.56x45mm NATO, Hit: Torso, Damage: 85)
-14:25:00 | Player "ProPlayer" (id=12345678 pos=<7234.5, 5678.2, 302.1>) killed Player "Noob24" (id=87654344 pos=<7230.1, 5680.5, 301.8>) with M4A1 from 15.2 meters (Ammo: 5.56x45mm NATO, Hit: Torso, Damage: 85)
-14:26:00 | Player "ProPlayer" (id=12345678 pos=<7234.5, 5678.2, 302.1>) killed Player "Noob25" (id=87654345 pos=<7230.1, 5680.5, 301.8>) with M4A1 from 15.2 meters (Ammo: 5.56x45mm NATO, Hit: Torso, Damage: 85)
-14:27:00 | Player "ProPlayer" (id=12345678 pos=<7234.5, 5678.2, 302.1>) killed Player "Noob26" (id=87654346 pos=<7230.1, 5680.5, 301.8>) with M4A1 from 15.2 meters (Ammo: 5.56x45mm NATO, Hit: Torso, Damage: 85)
-14:28:00 | Player "ProPlayer" (id=12345678 pos=<7234.5, 5678.2, 302.1>) killed Player "Noob27" (id=87654347 pos=<7230.1, 5680.5, 301.8>) with M4A1 from 15.2 meters (Ammo: 5.56x45mm NATO, Hit: Torso, Damage: 85)
-14:29:00 | Player "ProPlayer" (id=12345678 pos=<7234.5, 5678.2, 302.1>) killed Player "Noob28" (id=87654348 pos=<7230.1, 5680.5, 301.8>) with M4A1 from 15.2 meters (Ammo: 5.56x45mm NATO, Hit: Torso, Damage: 85)
-14:30:00 | Player "ProPlayer" (id=12345678 pos=<7234.5, 5678.2, 302.1>) killed Player "Noob29" (id=87654349 pos=<7230.1, 5680.5, 301.8>) with M4A1 from 15.2 meters (Ammo: 5.56x45mm NATO, Hit: Torso, Damage: 85)
-14:31:00 | Player "ProPlayer" (id=12345678 pos=<7234.5, 5678.2, 302.1>) killed Player "AveragePlayer" (id=11111111 pos=<7230.1, 5680.5, 301.8>) with M4A1 from 15.2 meters (Ammo: 5.56x45mm NATO, Hit: Torso, Damage: 85)
+10:00:00 | Player "ProPlayer" (id=12345678) is connected
+10:00:00 | Player "BasicVictim" (id=87654321) is connected
+10:00:00 | Player "MonthSurvivor" (id=66778899) is connected
+11:00:00 | Player "MonthSurvivor" (id=66778899) has been disconnected
+13:00:00 | Player "ProPlayer" (id=12345678 pos=<7234.5, 5678.2, 302.1>) killed Player "BasicVictim" (id=87654321 pos=<7230.1, 5680.5, 301.8>) with M4A1 from 15.2 meters (Ammo: 5.56x45mm NATO, Hit: Torso, Damage: 85)
+13:05:00 | Player "HeadshotVictim" (id=87654322) is connected
+13:10:00 | Player "AveragePlayer" (id=11111111) is connected
+13:15:00 | Player "AveragePlayer" (id=11111111 pos=<7234.5, 5678.2, 302.1>) killed Player "HeadshotVictim" (id=87654322 pos=<7230.1, 5680.5, 301.8>) with AKM from 10.0 meters (Ammo: 7.62x39mm, Hit: Head, Damage: 110)
+13:20:00 | Player "ExplosionVictim" (id=87654323) is connected
+13:25:00 | Player "ExplosionVictim" (id=87654323 pos=<7230.1, 5680.5, 301.8>) killed by Grenade explosion
+13:30:00 | Player "ProPlayer" (id=12345678) has been disconnected
+13:35:00 | Player "ProPlayer" (id=12345678) is connected
+13:40:00 | Player "DisconnectTest" (id=87654324) is connected
+13:45:00 | Player "AveragePlayer" (id=11111111 pos=<7234.5, 5678.2, 302.1>) killed Player "DisconnectTest" (id=87654324 pos=<7230.1, 5680.5, 301.8>) with AKM from 10.0 meters (Ammo: 7.62x39mm, Hit: Head, Damage: 110)
+20:00:00 | Player "MonthSurvivor" (id=66778899) is connected
+22:00:00 | Player "TestKiller" (id=77777777) is connected
+22:00:00 | Player "Dummy1" (id=11111001) is connected
+22:00:00 | Player "Dummy1" (id=11111001 pos=<7234.5, 5678.2, 302.1>) killed Player "MonthSurvivor" (id=66778899 pos=<7230.1, 5680.5, 301.8>) with AKM from 10.0 meters (Ammo: 7.62x39mm, Hit: Head, Damage: 110)
+22:30:00 | Player "ShortMidnightSurvivor" (id=11223344) is connected
+22:35:00 | Player "MidnightSurvivor" (id=22334455) is connected
+02:30:00 | Player "TestKiller" (id=77777777 pos=<7234.5, 5678.2, 302.1>) killed Player "ShortMidnightSurvivor" (id=11223344 pos=<7230.1, 5680.5, 301.8>) with AKM from 10.0 meters (Ammo: 7.62x39mm, Hit: Head, Damage: 110)
+23:30:00 | Player "Dummy1" (id=11111001 pos=<7234.5, 5678.2, 302.1>) killed Player "MidnightSurvivor" (id=22334455 pos=<7230.1, 5680.5, 301.8>) with AKM from 10.0 meters (Ammo: 7.62x39mm, Hit: Head, Damage: 110)

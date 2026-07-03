@@ -12,8 +12,9 @@ function createEmptyStats() {
  * Update stats based on a kill event
  * @param {Object} stats - Current stats object (will be mutated)
  * @param {Object} event - Parsed kill event from parseKill
+ * @param {number} normalizedEventTimeMs - Normalized chronological event time in milliseconds
  */
-function updateStatsFromEvent(stats, event) {
+function updateStatsFromEvent(stats, event, normalizedEventTimeMs = null) {
   if (!event || !event.type) return;
 
   if (event.type === "pvp") {
@@ -37,6 +38,28 @@ function updateStatsFromEvent(stats, event) {
     // Update victim stats
     if (event.victim) {
       const victimStats = ensurePlayerStats(stats, event.victim);
+
+      // Calculate and store victim time alive
+      if (
+        victimStats.isConnected &&
+        victimStats.connectedSince !== null &&
+        normalizedEventTimeMs !== null
+      ) {
+        const sessionMs = normalizedEventTimeMs - victimStats.connectedSince;
+        const totalAliveMs = victimStats.accumulatedAliveMs + sessionMs;
+        victimStats.lastTimeAlive = formatTimeAlive(totalAliveMs);
+
+        // Reset accumulated time and restart from death time
+        victimStats.accumulatedAliveMs = 0;
+        victimStats.connectedSince = normalizedEventTimeMs; // Respawn starts now
+      } else {
+        // No connection info - cannot calculate time alive
+        victimStats.lastTimeAlive = "N/A";
+        console.warn(
+          `[mock-parse] WARNING: No connection info for victim ${event.victim}. Time Alive set to N/A.`,
+        );
+      }
+
       victimStats.deaths++;
       victimStats.killStreak = 0; // Reset kill streak on death
 
@@ -49,6 +72,28 @@ function updateStatsFromEvent(stats, event) {
     // Update victim stats for explosion deaths
     if (event.victim) {
       const victimStats = ensurePlayerStats(stats, event.victim);
+
+      // Calculate and store victim time alive
+      if (
+        victimStats.isConnected &&
+        victimStats.connectedSince !== null &&
+        normalizedEventTimeMs !== null
+      ) {
+        const sessionMs = normalizedEventTimeMs - victimStats.connectedSince;
+        const totalAliveMs = victimStats.accumulatedAliveMs + sessionMs;
+        victimStats.lastTimeAlive = formatTimeAlive(totalAliveMs);
+
+        // Reset accumulated time and restart from death time
+        victimStats.accumulatedAliveMs = 0;
+        victimStats.connectedSince = normalizedEventTimeMs; // Respawn starts now
+      } else {
+        // No connection info - cannot calculate time alive
+        victimStats.lastTimeAlive = "N/A";
+        console.warn(
+          `[mock-parse] WARNING: No connection info for victim ${event.victim}. Time Alive set to N/A.`,
+        );
+      }
+
       victimStats.deaths++;
       victimStats.killStreak = 0; // Reset kill streak on death
 
@@ -87,6 +132,11 @@ function ensurePlayerStats(stats, playerName) {
       killStreak: 0,
       score: 0.0,
       rank: "Private",
+      // Time Alive tracking
+      connectedSince: null, // Timestamp when player connected
+      accumulatedAliveMs: 0, // Total time alive accumulated across sessions
+      isConnected: false, // Whether player is currently connected
+      lastTimeAlive: null, // Last calculated time alive (formatted string)
     };
   }
   return stats[playerName];
@@ -151,9 +201,89 @@ function calculateRank(score) {
   return "Private";
 }
 
+/**
+ * Parse event time from HH:MM:SS format to milliseconds since midnight
+ * @param {string} timeStr - Time string in HH:MM:SS format
+ * @returns {number|null} - Milliseconds since midnight, or null if invalid
+ */
+function parseEventTime(timeStr) {
+  if (!timeStr) return null;
+  const match = timeStr.match(/^(\d{2}):(\d{2}):(\d{2})$/);
+  if (!match) return null;
+
+  const hours = parseInt(match[1], 10);
+  const minutes = parseInt(match[2], 10);
+  const seconds = parseInt(match[3], 10);
+
+  return (hours * 3600 + minutes * 60 + seconds) * 1000;
+}
+
+/**
+ * Format time alive from milliseconds to display format
+ * @param {number} ms - Milliseconds alive
+ * @returns {string} - Formatted time string (e.g., "01D 02H 33M 04S" or "03H 04M 00S")
+ */
+function formatTimeAlive(ms) {
+  if (ms === null || ms === undefined || ms < 0) return "N/A";
+
+  const totalSeconds = Math.floor(ms / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (days > 0) {
+    return `${String(days).padStart(2, "0")}D ${String(hours).padStart(2, "0")}H ${String(minutes).padStart(2, "0")}M ${String(seconds).padStart(2, "0")}S`;
+  } else {
+    return `${String(hours).padStart(2, "0")}H ${String(minutes).padStart(2, "0")}M ${String(seconds).padStart(2, "0")}S`;
+  }
+}
+
+/**
+ * Handle player connection event
+ * @param {Object} stats - Current stats object (will be mutated)
+ * @param {string} playerName - Name of the player
+ * @param {number} normalizedConnectTimeMs - Normalized chronological connection time in milliseconds
+ */
+function handlePlayerConnect(stats, playerName, normalizedConnectTimeMs) {
+  const playerStats = ensurePlayerStats(stats, playerName);
+
+  if (normalizedConnectTimeMs !== null) {
+    playerStats.isConnected = true;
+    playerStats.connectedSince = normalizedConnectTimeMs;
+    // Do NOT reset accumulatedAliveMs - reconnect continues same life
+  }
+}
+
+/**
+ * Handle player disconnection event
+ * @param {Object} stats - Current stats object (will be mutated)
+ * @param {string} playerName - Name of the player
+ * @param {number} normalizedDisconnectTimeMs - Normalized chronological disconnection time in milliseconds
+ */
+function handlePlayerDisconnect(stats, playerName, normalizedDisconnectTimeMs) {
+  const playerStats = ensurePlayerStats(stats, playerName);
+
+  if (
+    playerStats.isConnected &&
+    playerStats.connectedSince !== null &&
+    normalizedDisconnectTimeMs !== null
+  ) {
+    // Accumulate session time
+    const sessionMs = normalizedDisconnectTimeMs - playerStats.connectedSince;
+    playerStats.accumulatedAliveMs += sessionMs;
+  }
+
+  playerStats.isConnected = false;
+  playerStats.connectedSince = null;
+  // Do NOT reset accumulatedAliveMs - disconnect pauses life, doesn't reset it
+}
+
 // ================== EXPORTS ==================
 module.exports = {
   createEmptyStats,
   updateStatsFromEvent,
   getPlayerStats,
+  handlePlayerConnect,
+  handlePlayerDisconnect,
 };
