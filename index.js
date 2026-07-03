@@ -29,6 +29,9 @@ const { loadState, saveState } = require("./src/storage/stateStore");
 const { loadHeat, saveHeat } = require("./src/storage/heatStore");
 const { getFileState, setFileState } = require("./src/storage/fileStateStore");
 const { parseKill } = require("./src/parsers/killParser");
+const {
+  formatKillfeedNotification,
+} = require("./src/features/killfeed/formatKillfeedNotification");
 
 const MODE = process.argv[2] || "run";
 
@@ -941,6 +944,11 @@ async function runMockParse() {
         console.log(`  Time: ${event.t || "N/A"}`);
         explosionCount++;
       }
+
+      // Print formatted killfeed notification
+      console.log("\n📋 FORMATTED KILLFEED NOTIFICATION:");
+      console.log(formatKillfeedNotification(event));
+
       console.log(""); // Empty line for readability
     } else {
       console.log(
