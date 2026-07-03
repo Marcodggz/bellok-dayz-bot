@@ -32,6 +32,11 @@ const { parseKill } = require("./src/parsers/killParser");
 const {
   formatKillfeedNotification,
 } = require("./src/features/killfeed/formatKillfeedNotification");
+const {
+  createEmptyStats,
+  updateStatsFromEvent,
+  getPlayerStats,
+} = require("./src/features/stats/playerStats");
 
 const MODE = process.argv[2] || "run";
 
@@ -878,7 +883,8 @@ async function runDiagnose() {
 
 // ================== MOCK PARSE ==================
 async function runMockParse() {
-  const mockLogPath = "./mock/sample-adm.txt";
+  // Accept optional file path from command line, default to sample-adm.txt
+  const mockLogPath = process.argv[3] || "./mock/sample-adm.txt";
   console.log(`[mock-parse] Reading ${mockLogPath}...\n`);
 
   if (!fs.existsSync(mockLogPath)) {
@@ -893,10 +899,14 @@ async function runMockParse() {
 
   let pvpCount = 0;
   let explosionCount = 0;
+  const stats = createEmptyStats();
 
   for (const line of lines) {
     const event = parseKill(line);
     if (event) {
+      // Update stats before displaying
+      updateStatsFromEvent(stats, event);
+
       console.log("✅ DETECTED:");
       console.log(`  Type: ${event.type}`);
 
@@ -945,9 +955,17 @@ async function runMockParse() {
         explosionCount++;
       }
 
-      // Print formatted killfeed notification
+      // Get killer and victim stats for formatted notification
+      const killerStats = event.killer
+        ? getPlayerStats(stats, event.killer)
+        : null;
+      const victimStats = event.victim
+        ? getPlayerStats(stats, event.victim)
+        : null;
+
+      // Print formatted killfeed notification with stats
       console.log("\n📋 FORMATTED KILLFEED NOTIFICATION:");
-      console.log(formatKillfeedNotification(event));
+      console.log(formatKillfeedNotification(event, killerStats, victimStats));
 
       console.log(""); // Empty line for readability
     } else {
