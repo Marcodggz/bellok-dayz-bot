@@ -10,6 +10,7 @@ const ADM_DIR = process.env.NITRADO_ADM_DIR || '';
 // ================== DISCORD CONFIG ==================
 const CHANNEL_ID = process.env.DISCORD_CHANNEL_ID;
 const HEATMAP_CHANNEL_ID = process.env.HEATMAP_CHANNEL_ID || '';
+const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 
 // ================== POLLING & BEHAVIOR ==================
 const START_AT_END = process.env.START_AT_END === '1';
@@ -66,6 +67,7 @@ module.exports = {
   CHANNEL_ID,
   HEATMAP_CHANNEL_ID,
   DISCORD_TOKEN: process.env.DISCORD_TOKEN,
+  CLIENT_ID,
   
   // Polling
   START_AT_END,

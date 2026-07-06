@@ -43,6 +43,12 @@ const {
   handlePlayerConnect,
   handlePlayerDisconnect,
 } = require("./src/features/stats/playerStats");
+const {
+  handleCommandInteraction,
+} = require("./src/features/commands/commandHandler");
+const {
+  registerCommands,
+} = require("./src/features/commands/registerCommands");
 
 const MODE = process.argv[2] || "run";
 
@@ -774,9 +780,24 @@ async function runBot() {
     if (readyOnce) return;
     readyOnce = true;
     console.log(`✅ Bot online como ${client.user.tag}`);
+    
+    // Register slash commands
+    if (config.CLIENT_ID) {
+      try {
+        await registerCommands(config.DISCORD_TOKEN, config.CLIENT_ID);
+      } catch (error) {
+        console.warn("[commands] Failed to register slash commands:", error.message);
+      }
+    } else {
+      console.warn("[commands] DISCORD_CLIENT_ID not set, skipping command registration");
+    }
+    
     await ensureLatestAdmSelected();
     setInterval(tick, POLL_MS);
   });
+
+  // Handle slash command interactions
+  client.on("interactionCreate", handleCommandInteraction);
 
   client.login(config.DISCORD_TOKEN).catch((e) => {
     console.error("[login error]", e?.message || e);
