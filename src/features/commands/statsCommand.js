@@ -1,12 +1,17 @@
 // src/features/commands/statsCommand.js — Slash command for player stats
 
-const { SlashCommandBuilder } = require("discord.js");
+const {
+  SlashCommandBuilder,
+  EmbedBuilder,
+  AttachmentBuilder,
+} = require("discord.js");
 const {
   getGamertagByDiscordUserId,
   getDiscordUserIdByGamertag,
 } = require("../../storage/linkedGamertagsStore");
 const { loadMockStats } = require("../../storage/mockStatsStore");
 const { SERVER_NAME } = require("../../config/config");
+const { getRankBadgePath } = require("../../utils/rankBadges");
 
 /**
  * Define the /stats command
@@ -18,7 +23,9 @@ const statsCommand = {
     .addStringOption((option) =>
       option
         .setName("player")
-        .setDescription("Player gamertag (optional, uses your linked gamertag if not provided)")
+        .setDescription(
+          "Player gamertag (optional, uses your linked gamertag if not provided)",
+        )
         .setRequired(false),
     ),
 
@@ -41,7 +48,8 @@ const statsCommand = {
         gamertag = getGamertagByDiscordUserId(userId);
         if (!gamertag) {
           await interaction.reply({
-            content: "❌ You don't have a linked gamertag. Please use `/link gamertag` first, or provide a player name with `/stats player: Gamertag`",
+            content:
+              "❌ You don't have a linked gamertag. Please use `/link gamertag` first, or provide a player name with `/stats player: Gamertag`",
             ephemeral: true,
           });
           return;
@@ -64,11 +72,16 @@ const statsCommand = {
       const linkedUserId = getDiscordUserIdByGamertag(gamertag);
       const discordDisplay = linkedUserId ? `<@${linkedUserId}>` : "Not Linked";
 
-      // Format stats message
-      const statsMessage = formatStatsMessage(gamertag, playerStats, discordDisplay);
+      // Build stats embed
+      const { embed: statsEmbed, files } = buildStatsEmbed(
+        gamertag,
+        playerStats,
+        discordDisplay,
+      );
 
       await interaction.reply({
-        content: statsMessage,
+        embeds: [statsEmbed],
+        files: files,
         ephemeral: false,
       });
     } catch (error) {
@@ -82,18 +95,18 @@ const statsCommand = {
 };
 
 /**
- * Format stats into a message
+ * Build stats embed
  * @param {string} gamertag - Player gamertag
  * @param {Object} stats - Player stats object
  * @param {string} discordDisplay - Discord user mention or "Not Linked"
- * @returns {string} - Formatted stats message
+ * @returns {{embed: EmbedBuilder, files: Array}} - Discord embed with formatted stats and optional files
  */
-function formatStatsMessage(gamertag, stats, discordDisplay) {
+function buildStatsEmbed(gamertag, stats, discordDisplay) {
   const rank = stats.rank || "Private";
-  const score = stats.score ?? 0;
+  const score = (stats.score ?? 0).toFixed(1);
   const kills = stats.kills ?? 0;
   const deaths = stats.deaths ?? 0;
-  const kd = stats.kd ?? 0;
+  const kd = (stats.kd ?? 0).toFixed(2);
   const headshots = stats.headshots ?? 0;
   const killStreak = stats.killStreak ?? 0;
   const bestKillStreak = stats.bestKillStreak ?? killStreak;
@@ -102,47 +115,83 @@ function formatStatsMessage(gamertag, stats, discordDisplay) {
   const lastKill = stats.lastKill || "N/A";
   const lastDeath = stats.lastDeath || "N/A";
   const favouriteWeapon = stats.favouriteWeapon || "N/A";
-  const longestKill = stats.longestKill || "N/A";
+  const longestKill = stats.longestKill
+    ? `${stats.longestKill.toFixed(2)}m`
+    : "N/A";
   const timePlayed = stats.timePlayed || "N/A";
   const bestTimeAlive = stats.bestTimeAlive || "N/A";
   const timeAlive = stats.timeAlive || stats.lastTimeAlive || "N/A";
 
-  return `📊 **Player Stats** 📊
-**${SERVER_NAME}**
-**Stats:** ${gamertag}
+  const embed = new EmbedBuilder()
+    .setColor(0x00ae86)
+    .setTitle("📊 Player Stats 📊")
+    .setDescription(`**${SERVER_NAME}**\n **Stats:** ${gamertag}`);
 
-**Rank:** ${rank}
-**Score:** ${score}
-**Discord:** ${discordDisplay}
+  const files = [];
 
-**PVP Stats**
-**PVP Kills:** ${kills}
-**PVP Deaths:** ${deaths}
-**PVP KD:** ${kd}
+  // Try to add rank badge as thumbnail
+  const rankBadgePath = getRankBadgePath(rank);
+  if (rankBadgePath) {
+    const attachment = new AttachmentBuilder(rankBadgePath, {
+      name: "rank-badge.png",
+    });
+    files.push(attachment);
+    embed.setThumbnail("attachment://rank-badge.png");
+  }
 
-**Death Stats**
-**Deaths:** ${deaths}
-**KD:** ${kd}
+  // Stats header with rank, score, discord (with blank line before)
+  embed.addFields(
+    {
+      name: "\u200B",
+      value: `**Rank:** ${rank}\n**Score:** ${score}\n**Discord:** ${discordDisplay}`,
+      inline: false,
+    },
+    // First row: PVP Stats, horizontal spacer, Death Stats
+    {
+      name: "__PVP Stats__",
+      value: `PVP Kills: **${kills}**\nPVP Deaths: **${deaths}**\nPVP KD: **${kd}**`,
+      inline: true,
+    },
+    {
+      name: "\u200B",
+      value: "\u200B",
+      inline: true,
+    },
+    {
+      name: "__Death Stats__",
+      value: `Deaths: **${deaths}**\nKD: **${kd}**`,
+      inline: true,
+    },
+    // Second row: Streaks, horizontal spacer, Enemy Stats
+    {
+      name: "__Streaks__",
+      value: `Best Kill Streak: **${bestKillStreak}**\nKill Streak: **${killStreak}**\nWorst Death Streak: **${worstDeathStreak}**\nDeath Streak: **${deathStreak}**`,
+      inline: true,
+    },
+    {
+      name: "\u200B",
+      value: "\u200B",
+      inline: true,
+    },
+    {
+      name: "__Enemy Stats__",
+      value: `Last Kill: **${lastKill}**\nLast Death: **${lastDeath}**`,
+      inline: true,
+    },
+    // Full-width sections
+    {
+      name: "__Weapon Stats__",
+      value: `Favourite Weapon: **${favouriteWeapon}**\nLongest Kill: **${longestKill}**\nHeadshots: **${headshots}**`,
+      inline: false,
+    },
+    {
+      name: "__Time Stats__",
+      value: `Time Played: **${timePlayed}**\nBest Time Alive: **${bestTimeAlive}**\nTime Alive: **${timeAlive}**`,
+      inline: false,
+    },
+  );
 
-**Streaks**
-**Best Kill Streak:** ${bestKillStreak}
-**Kill Streak:** ${killStreak}
-**Worst Death Streak:** ${worstDeathStreak}
-**Death Streak:** ${deathStreak}
-
-**Enemy Stats**
-**Last Kill:** ${lastKill}
-**Last Death:** ${lastDeath}
-
-**Weapon Stats**
-**Favourite Weapon:** ${favouriteWeapon}
-**Longest Kill:** ${longestKill}
-**Headshots:** ${headshots}
-
-**Time Stats**
-**Time Played:** ${timePlayed}
-**Best Time Alive:** ${bestTimeAlive}
-**Time Alive:** ${timeAlive}`;
+  return { embed, files };
 }
 
 module.exports = {

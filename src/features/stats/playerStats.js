@@ -155,33 +155,24 @@ function calculateKD(kills, deaths) {
 }
 
 /**
- * Calculate score based on kills, headshots, kill streak, deaths, and KD multiplier
+ * Calculate score based on kills, headshots, kill streak, deaths, and KD
  * @param {Object} playerStats - Player stats object
  * @returns {number} - Calculated score formatted to 1 decimal
  */
 function calculateScore(playerStats) {
   const { kills, headshots, killStreak, deaths, kd } = playerStats;
 
-  // Base score calculation
-  const baseScore =
-    kills * 100 + headshots * 15 + killStreak * 20 - deaths * 80;
+  // New score formula - less aggressive scale
+  const score =
+    kills * 1.5 +
+    Math.sqrt(kills) * 10 +
+    headshots * 0.5 +
+    killStreak * 4 +
+    kd * 20 -
+    deaths * 0.5;
 
-  // Apply KD multiplier
-  let multiplier = 1.0;
-  if (kd < 0.5) {
-    multiplier = 0.8;
-  } else if (kd >= 0.5 && kd < 1) {
-    multiplier = 1.0;
-  } else if (kd >= 1 && kd < 2) {
-    multiplier = 1.1;
-  } else if (kd >= 2 && kd < 3) {
-    multiplier = 1.2;
-  } else if (kd >= 3) {
-    multiplier = 1.3;
-  }
-
-  // Calculate final score (never below 0)
-  const finalScore = Math.max(0, baseScore * multiplier);
+  // Clamp score to minimum 0
+  const finalScore = Math.max(0, score);
 
   // Format to 1 decimal place
   return parseFloat(finalScore.toFixed(1));
@@ -193,11 +184,10 @@ function calculateScore(playerStats) {
  * @returns {string} - Rank name
  */
 function calculateRank(score) {
-  if (score >= 10000) return "Captain";
-  if (score >= 6000) return "Lieutenant";
-  if (score >= 3000) return "Sergeant";
-  if (score >= 1500) return "Corporal";
-  if (score >= 500) return "Private First Class";
+  if (score >= 800) return "Specialist";
+  if (score >= 500) return "Corporal";
+  if (score >= 250) return "Lance Corporal";
+  if (score >= 100) return "Private First Class";
   return "Private";
 }
 
