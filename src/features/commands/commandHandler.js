@@ -1,11 +1,13 @@
 // src/features/commands/commandHandler.js — Handle slash command interactions
 
 const { linkCommand, unlinkCommand } = require("./linkCommands");
+const { statsCommand } = require("./statsCommand");
 
 // Map command names to their handlers
 const commands = new Map([
   [linkCommand.data.name, linkCommand],
   [unlinkCommand.data.name, unlinkCommand],
+  [statsCommand.data.name, statsCommand],
 ]);
 
 /**

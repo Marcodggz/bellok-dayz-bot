@@ -2,6 +2,7 @@
 
 const { REST, Routes } = require("discord.js");
 const { linkCommand, unlinkCommand } = require("./linkCommands");
+const { statsCommand } = require("./statsCommand");
 
 /**
  * Register slash commands with Discord
@@ -9,7 +10,11 @@ const { linkCommand, unlinkCommand } = require("./linkCommands");
  * @param {string} clientId - Discord application/client ID
  */
 async function registerCommands(discordToken, clientId) {
-  const commands = [linkCommand.data.toJSON(), unlinkCommand.data.toJSON()];
+  const commands = [
+    linkCommand.data.toJSON(),
+    unlinkCommand.data.toJSON(),
+    statsCommand.data.toJSON(),
+  ];
 
   const rest = new REST({ version: "10" }).setToken(discordToken);
 
@@ -41,7 +46,11 @@ async function registerCommands(discordToken, clientId) {
  * @param {string} guildId - Discord guild/server ID
  */
 async function registerGuildCommands(discordToken, clientId, guildId) {
-  const commands = [linkCommand.data.toJSON(), unlinkCommand.data.toJSON()];
+  const commands = [
+    linkCommand.data.toJSON(),
+    unlinkCommand.data.toJSON(),
+    statsCommand.data.toJSON(),
+  ];
 
   const rest = new REST({ version: "10" }).setToken(discordToken);
 
