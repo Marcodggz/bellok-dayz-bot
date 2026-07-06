@@ -11,7 +11,7 @@ heatmap.png
 *.log
 
 # Optional local data
-data/
+data/mock-player-stats.json
 output/
 
 # Local AI/dev notes

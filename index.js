@@ -28,6 +28,10 @@ const { loadJSON, saveJSON } = require("./src/storage/jsonStore");
 const { loadState, saveState } = require("./src/storage/stateStore");
 const { loadHeat, saveHeat } = require("./src/storage/heatStore");
 const { getFileState, setFileState } = require("./src/storage/fileStateStore");
+const {
+  loadMockStats,
+  saveMockStats,
+} = require("./src/storage/mockStatsStore");
 const { parseKill } = require("./src/parsers/killParser");
 const {
   formatKillfeedNotification,
@@ -901,7 +905,12 @@ async function runMockParse() {
 
   let pvpCount = 0;
   let explosionCount = 0;
-  const stats = createEmptyStats();
+
+  // Load existing stats from JSON file (empty object if file doesn't exist)
+  const stats = loadMockStats();
+  console.log(
+    `[mock-parse] Loaded stats for ${Object.keys(stats).length} players from persistent storage.\n`,
+  );
 
   // Normalized chronological time tracking for midnight rollover
   let previousRawTimeMs = null;
@@ -1046,6 +1055,13 @@ async function runMockParse() {
   console.log(
     `\n[mock-parse] Summary: ${pvpCount} PvP kills, ${explosionCount} explosions detected.`,
   );
+
+  // Save updated stats to JSON file
+  saveMockStats(stats);
+  console.log(
+    `[mock-parse] Saved stats for ${Object.keys(stats).length} players to persistent storage.`,
+  );
+
   process.exit(0);
 }
 
