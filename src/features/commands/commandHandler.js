@@ -2,12 +2,14 @@
 
 const { linkCommand, unlinkCommand } = require("./linkCommands");
 const { statsCommand } = require("./statsCommand");
+const { leaderboardCommand } = require("./leaderboardCommand");
 
 // Map command names to their handlers
 const commands = new Map([
   [linkCommand.data.name, linkCommand],
   [unlinkCommand.data.name, unlinkCommand],
   [statsCommand.data.name, statsCommand],
+  [leaderboardCommand.data.name, leaderboardCommand],
 ]);
 
 /**
@@ -27,8 +29,11 @@ async function handleCommandInteraction(interaction) {
   try {
     await command.execute(interaction);
   } catch (error) {
-    console.error(`[commands] Error executing ${interaction.commandName}:`, error);
-    
+    console.error(
+      `[commands] Error executing ${interaction.commandName}:`,
+      error,
+    );
+
     // Try to send an error message to the user
     const errorMessage = {
       content: "❌ An error occurred while executing this command.",

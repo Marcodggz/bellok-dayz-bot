@@ -3,6 +3,7 @@
 const { REST, Routes } = require("discord.js");
 const { linkCommand, unlinkCommand } = require("./linkCommands");
 const { statsCommand } = require("./statsCommand");
+const { leaderboardCommand } = require("./leaderboardCommand");
 
 /**
  * Register slash commands with Discord
@@ -14,6 +15,7 @@ async function registerCommands(discordToken, clientId) {
     linkCommand.data.toJSON(),
     unlinkCommand.data.toJSON(),
     statsCommand.data.toJSON(),
+    leaderboardCommand.data.toJSON(),
   ];
 
   const rest = new REST({ version: "10" }).setToken(discordToken);
@@ -50,6 +52,7 @@ async function registerGuildCommands(discordToken, clientId, guildId) {
     linkCommand.data.toJSON(),
     unlinkCommand.data.toJSON(),
     statsCommand.data.toJSON(),
+    leaderboardCommand.data.toJSON(),
   ];
 
   const rest = new REST({ version: "10" }).setToken(discordToken);
