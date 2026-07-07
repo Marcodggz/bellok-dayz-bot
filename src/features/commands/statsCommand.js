@@ -191,6 +191,12 @@ function buildStatsEmbed(gamertag, stats, discordDisplay) {
     },
   );
 
+  // Add footer with bot name (timestamp is handled by .setTimestamp())
+  embed.setFooter({
+    text: `Bellok Killfeed`,
+  });
+  embed.setTimestamp();
+
   return { embed, files };
 }
 
