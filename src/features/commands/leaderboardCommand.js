@@ -30,6 +30,11 @@ const leaderboardCommand = {
       subcommand
         .setName("kd")
         .setDescription("View top 15 players ranked by KD ratio"),
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName("headshots")
+        .setDescription("View top 15 players ranked by headshots"),
     ),
 
   /**
@@ -48,6 +53,8 @@ const leaderboardCommand = {
         await handleDeathsLeaderboard(interaction);
       } else if (subcommand === "kd") {
         await handleKdLeaderboard(interaction);
+      } else if (subcommand === "headshots") {
+        await handleHeadshotsLeaderboard(interaction);
       } else {
         await interaction.reply({
           content: "❌ Unknown subcommand.",
@@ -322,6 +329,74 @@ async function handleKdLeaderboard(interaction) {
     embed.addFields({
       name: `${position}. \`${player.gamertag}\``,
       value: `KD: ${player.kd.toFixed(2)}`,
+      inline: true,
+    });
+  });
+
+  // Add footer with bot name (timestamp is handled by .setTimestamp())
+  embed.setFooter({
+    text: `Bellok's Killfeed`,
+  });
+
+  await interaction.reply({
+    embeds: [embed],
+    ephemeral: false,
+  });
+}
+
+/**
+ * Handle /leaderboard headshots subcommand
+ * @param {import('discord.js').CommandInteraction} interaction
+ */
+async function handleHeadshotsLeaderboard(interaction) {
+  // Load all player stats
+  const allStats = loadMockStats();
+
+  // Convert stats object to array and filter out players with no activity
+  const playerArray = Object.entries(allStats)
+    .filter(([gamertag, stats]) => stats.kills > 0 || stats.deaths > 0)
+    .map(([gamertag, stats]) => ({
+      gamertag,
+      headshots: stats.headshots ?? 0,
+    }));
+
+  // Check if there are any stats
+  if (playerArray.length === 0) {
+    const emptyEmbed = new EmbedBuilder()
+      .setColor(0x00ae86)
+      .setTitle("Current Top 15 Headshots 🎯")
+      .setDescription(
+        `**${SERVER_NAME}**\n\nNo player stats available yet. Start playing to appear on the leaderboard!`,
+      )
+      .setTimestamp();
+
+    await interaction.reply({
+      embeds: [emptyEmbed],
+      ephemeral: false,
+    });
+    return;
+  }
+
+  // Sort by headshots descending
+  playerArray.sort((a, b) => b.headshots - a.headshots);
+
+  // Take top 15
+  const top15 = playerArray.slice(0, 15);
+
+  // Build the embed with 3-column layout using inline fields
+  const embed = new EmbedBuilder()
+    .setColor(0x00ae86)
+    .setTitle("Current Top 15 Headshots 🎯")
+    .setDescription(`**${SERVER_NAME}**`)
+    .setTimestamp();
+
+  // Add players as inline fields (3 per row)
+  top15.forEach((player, index) => {
+    const position = index + 1;
+
+    embed.addFields({
+      name: `${position}. \`${player.gamertag}\``,
+      value: `Headshots: ${player.headshots}`,
       inline: true,
     });
   });
