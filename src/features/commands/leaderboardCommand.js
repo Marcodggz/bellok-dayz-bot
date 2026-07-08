@@ -50,6 +50,11 @@ const leaderboardCommand = {
       subcommand
         .setName("longestkill")
         .setDescription("View top 15 players ranked by longest kill distance"),
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName("timealive")
+        .setDescription("View top 15 players ranked by total time alive"),
     ),
 
   /**
@@ -76,6 +81,8 @@ const leaderboardCommand = {
         await handleDeathStreakLeaderboard(interaction);
       } else if (subcommand === "longestkill") {
         await handleLongestKillLeaderboard(interaction);
+      } else if (subcommand === "timealive") {
+        await handleTimeAliveLeaderboard(interaction);
       } else {
         await interaction.reply({
           content: "❌ Unknown subcommand.",
@@ -612,7 +619,9 @@ async function handleLongestKillLeaderboard(interaction) {
     const emptyEmbed = new EmbedBuilder()
       .setColor(0x00ae86)
       .setTitle("Current Top 15 Longest Kills 🔭")
-      .setDescription(`**${SERVER_NAME}**\n\nNo player stats available yet. Start playing to appear on the leaderboard!`)
+      .setDescription(
+        `**${SERVER_NAME}**\n\nNo player stats available yet. Start playing to appear on the leaderboard!`,
+      )
       .setTimestamp()
       .setFooter({
         text: `Bellok's Killfeed`,
@@ -660,6 +669,113 @@ async function handleLongestKillLeaderboard(interaction) {
     embeds: [embed],
     ephemeral: false,
   });
+}
+
+/**
+ * Handle /leaderboard timealive subcommand
+ * @param {import('discord.js').CommandInteraction} interaction
+ */
+async function handleTimeAliveLeaderboard(interaction) {
+  // Load all player stats
+  const allStats = loadMockStats();
+
+  // Convert stats object to array and filter out players with no activity
+  const playerArray = Object.entries(allStats)
+    .filter(
+      ([gamertag, stats]) =>
+        stats.kills > 0 ||
+        stats.deaths > 0 ||
+        (stats.accumulatedAliveMs ?? 0) > 0,
+    )
+    .map(([gamertag, stats]) => ({
+      gamertag,
+      accumulatedAliveMs: stats.accumulatedAliveMs ?? 0,
+    }));
+
+  // Check if there are any stats
+  if (playerArray.length === 0) {
+    const emptyEmbed = new EmbedBuilder()
+      .setColor(0x00ae86)
+      .setTitle("Current Top 15 Lives ⏳")
+      .setDescription(
+        `**${SERVER_NAME}**\n\nNo player stats available yet. Start playing to appear on the leaderboard!`,
+      )
+      .setTimestamp()
+      .setFooter({
+        text: `Bellok's Killfeed`,
+      });
+
+    await interaction.reply({
+      embeds: [emptyEmbed],
+      ephemeral: false,
+    });
+    return;
+  }
+
+  // Sort by accumulated alive time descending
+  playerArray.sort((a, b) => b.accumulatedAliveMs - a.accumulatedAliveMs);
+
+  // Take top 15
+  const top15 = playerArray.slice(0, 15);
+
+  // Build the embed with 3-column layout using inline fields
+  const embed = new EmbedBuilder()
+    .setColor(0x00ae86)
+    .setTitle("Current Top 15 Lives ⏳")
+    .setDescription(`**${SERVER_NAME}**`)
+    .setTimestamp();
+
+  // Add players as inline fields (3 per row)
+  top15.forEach((player, index) => {
+    const position = index + 1;
+    const formattedTime = formatTimeAliveForLeaderboard(
+      player.accumulatedAliveMs,
+    );
+
+    embed.addFields({
+      name: `${position}. \`${player.gamertag}\``,
+      value: formattedTime,
+      inline: true,
+    });
+  });
+
+  // Add footer with bot name (timestamp is handled by .setTimestamp())
+  embed.setFooter({
+    text: `Bellok's Killfeed`,
+  });
+
+  await interaction.reply({
+    embeds: [embed],
+    ephemeral: false,
+  });
+}
+
+/**
+ * Format time alive from milliseconds for leaderboard display
+ * @param {number} ms - Milliseconds alive
+ * @returns {string} - Formatted time string (e.g., "03D 13H 36M", "21H 34M 42S", "00M")
+ */
+function formatTimeAliveForLeaderboard(ms) {
+  if (ms === null || ms === undefined || ms < 0) return "00M";
+
+  const totalSeconds = Math.floor(ms / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  // Use days only when time is at least 1 day
+  if (days > 0) {
+    return `${String(days).padStart(2, "0")}D ${String(hours).padStart(2, "0")}H ${String(minutes).padStart(2, "0")}M`;
+  }
+
+  // Use seconds only when time is less than 1 day
+  if (hours > 0 || minutes > 0 || seconds > 0) {
+    return `${String(hours).padStart(2, "0")}H ${String(minutes).padStart(2, "0")}M ${String(seconds).padStart(2, "0")}S`;
+  }
+
+  // No time accumulated
+  return "00M";
 }
 
 module.exports = {
