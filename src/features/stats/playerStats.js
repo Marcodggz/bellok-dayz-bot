@@ -29,6 +29,13 @@ function updateStatsFromEvent(stats, event, normalizedEventTimeMs = null) {
         killerStats.headshots++;
       }
 
+      // Track longest kill (backward compatible with existing players)
+      const currentLongest = killerStats.longestKill ?? 0;
+      if (event.distanceMeters && event.distanceMeters > currentLongest) {
+        killerStats.longestKill = event.distanceMeters;
+        killerStats.longestKillWeapon = event.weapon || "Unknown";
+      }
+
       // Recalculate KD and score
       killerStats.kd = calculateKD(killerStats.kills, killerStats.deaths);
       killerStats.score = calculateScore(killerStats);
@@ -132,6 +139,9 @@ function ensurePlayerStats(stats, playerName) {
       killStreak: 0,
       score: 0.0,
       rank: "Private",
+      // Longest kill tracking
+      longestKill: 0,
+      longestKillWeapon: null,
       // Time Alive tracking
       connectedSince: null, // Timestamp when player connected
       accumulatedAliveMs: 0, // Total time alive accumulated across sessions

@@ -45,6 +45,11 @@ const leaderboardCommand = {
       subcommand
         .setName("deathstreak")
         .setDescription("View top 15 players ranked by death streak"),
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName("longestkill")
+        .setDescription("View top 15 players ranked by longest kill distance"),
     ),
 
   /**
@@ -69,6 +74,8 @@ const leaderboardCommand = {
         await handleKillStreakLeaderboard(interaction);
       } else if (subcommand === "deathstreak") {
         await handleDeathStreakLeaderboard(interaction);
+      } else if (subcommand === "longestkill") {
+        await handleLongestKillLeaderboard(interaction);
       } else {
         await interaction.reply({
           content: "❌ Unknown subcommand.",
@@ -568,6 +575,78 @@ async function handleDeathStreakLeaderboard(interaction) {
     embed.addFields({
       name: `${position}. \`${player.gamertag}\``,
       value: `Death Streak: ${player.deathStreak}`,
+      inline: true,
+    });
+  });
+
+  // Add footer with bot name (timestamp is handled by .setTimestamp())
+  embed.setFooter({
+    text: `Bellok's Killfeed`,
+  });
+
+  await interaction.reply({
+    embeds: [embed],
+    ephemeral: false,
+  });
+}
+
+/**
+ * Handle /leaderboard longestkill subcommand
+ * @param {import('discord.js').CommandInteraction} interaction
+ */
+async function handleLongestKillLeaderboard(interaction) {
+  // Load all player stats
+  const allStats = loadMockStats();
+
+  // Convert stats object to array and filter out players with no activity
+  const playerArray = Object.entries(allStats)
+    .filter(([gamertag, stats]) => stats.kills > 0 || stats.deaths > 0)
+    .map(([gamertag, stats]) => ({
+      gamertag,
+      longestKill: stats.longestKill ?? 0,
+      longestKillWeapon: stats.longestKillWeapon ?? null,
+    }));
+
+  // Check if there are any stats
+  if (playerArray.length === 0) {
+    const emptyEmbed = new EmbedBuilder()
+      .setColor(0x00ae86)
+      .setTitle("Current Top 15 Longest Kills 🔭")
+      .setDescription(`**${SERVER_NAME}**\n\nNo player stats available yet. Start playing to appear on the leaderboard!`)
+      .setTimestamp()
+      .setFooter({
+        text: `Bellok's Killfeed`,
+      });
+
+    await interaction.reply({
+      embeds: [emptyEmbed],
+      ephemeral: false,
+    });
+    return;
+  }
+
+  // Sort by longest kill descending
+  playerArray.sort((a, b) => b.longestKill - a.longestKill);
+
+  // Take top 15
+  const top15 = playerArray.slice(0, 15);
+
+  // Build the embed with 3-column layout using inline fields
+  const embed = new EmbedBuilder()
+    .setColor(0x00ae86)
+    .setTitle("Current Top 15 Longest Kills 🔭")
+    .setDescription(`**${SERVER_NAME}**`)
+    .setTimestamp();
+
+  // Add players as inline fields (3 per row)
+  top15.forEach((player, index) => {
+    const position = index + 1;
+    const weapon = player.longestKillWeapon || "Unknown";
+    const distance = player.longestKill ?? 0;
+
+    embed.addFields({
+      name: `${position}. \`${player.gamertag}\``,
+      value: `${weapon} (${distance}m)`,
       inline: true,
     });
   });
