@@ -56,6 +56,10 @@ function updateStatsFromEvent(stats, event, normalizedEventTimeMs = null) {
         const totalAliveMs = victimStats.accumulatedAliveMs + sessionMs;
         victimStats.lastTimeAlive = formatTimeAlive(totalAliveMs);
 
+        // Accumulate total played time (does NOT reset on death)
+        victimStats.accumulatedPlayedMs =
+          (victimStats.accumulatedPlayedMs ?? 0) + sessionMs;
+
         // Reset accumulated time and restart from death time
         victimStats.accumulatedAliveMs = 0;
         victimStats.connectedSince = normalizedEventTimeMs; // Respawn starts now
@@ -89,6 +93,10 @@ function updateStatsFromEvent(stats, event, normalizedEventTimeMs = null) {
         const sessionMs = normalizedEventTimeMs - victimStats.connectedSince;
         const totalAliveMs = victimStats.accumulatedAliveMs + sessionMs;
         victimStats.lastTimeAlive = formatTimeAlive(totalAliveMs);
+
+        // Accumulate total played time (does NOT reset on death)
+        victimStats.accumulatedPlayedMs =
+          (victimStats.accumulatedPlayedMs ?? 0) + sessionMs;
 
         // Reset accumulated time and restart from death time
         victimStats.accumulatedAliveMs = 0;
@@ -147,6 +155,8 @@ function ensurePlayerStats(stats, playerName) {
       accumulatedAliveMs: 0, // Total time alive accumulated across sessions
       isConnected: false, // Whether player is currently connected
       lastTimeAlive: null, // Last calculated time alive (formatted string)
+      // Time Played tracking
+      accumulatedPlayedMs: 0, // Total time played accumulated across all sessions
     };
   }
   return stats[playerName];
@@ -272,6 +282,9 @@ function handlePlayerDisconnect(stats, playerName, normalizedDisconnectTimeMs) {
     // Accumulate session time
     const sessionMs = normalizedDisconnectTimeMs - playerStats.connectedSince;
     playerStats.accumulatedAliveMs += sessionMs;
+    // Accumulate total played time (does NOT reset on death)
+    playerStats.accumulatedPlayedMs =
+      (playerStats.accumulatedPlayedMs ?? 0) + sessionMs;
   }
 
   playerStats.isConnected = false;
