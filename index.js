@@ -282,6 +282,7 @@ async function ensureLatestAdmSelected() {
       const h = loadHeat();
       h.points = [];
       h.lastSentCount = 0;
+      // Keep messageId so we continue editing the same message after reset
       saveHeat(h);
     }
   }
@@ -537,6 +538,18 @@ function renderHeatPng(points, outPath, baseMapPath = "") {
       let t = denom > 0 ? Math.min(1, inten[i] / denom) : 0;
       if (HEAT_GAMMA > 0 && HEAT_GAMMA !== 1) t = Math.pow(t, HEAT_GAMMA);
 
+      // Only apply color where there's meaningful heat (skip near-zero intensity)
+      const HEAT_THRESHOLD = 0.02; // Only render pixels with >2% intensity
+      if (t < HEAT_THRESHOLD) {
+        // Keep pixel transparent (no heat)
+        const o = i * 4;
+        overlay.data[o + 0] = 0;
+        overlay.data[o + 1] = 0;
+        overlay.data[o + 2] = 0;
+        overlay.data[o + 3] = 0;
+        continue;
+      }
+
       // Paleta fire: naranja → rojo
       const r = t < 0.6 ? 245 : 225;
       const g = t < 0.6 ? 158 : 29;
@@ -658,6 +671,7 @@ let lastHeatSentAt = 0;
 
 async function maybeSendHeatmap(client) {
   if (!HEATMAP_CHANNEL_ID) return;
+
   const now = Date.now();
   if (now - lastHeatSentAt < HEATMAP_INTERVAL_MS) return;
 
@@ -671,16 +685,66 @@ async function maybeSendHeatmap(client) {
   try {
     renderHeatPng(h.points, HEAT_IMG_PATH, CHERNARUS_MAP_PATH);
     await new Promise((r) => setTimeout(r, 80));
+
     const ch = await client.channels
       .fetch(HEATMAP_CHANNEL_ID)
       .catch(() => null);
+
     if (!ch || typeof ch.send !== "function") {
       console.warn("[heatmap] canal inválido");
       return;
     }
+
     const file = new AttachmentBuilder(HEAT_IMG_PATH);
-    await ch.send({ content: "⚔️PVP heat-map 🥵", files: [file] }); // único mensaje
+
+    // Create embed for heatmap
+    const updatedTimestamp = Math.floor((now - 60_000) / 1000);
+    const embed = new EmbedBuilder()
+      .setTitle("🗺️ • PvP Heatmap")
+      .setDescription(
+        `• **Updated:** <t:${updatedTimestamp}:R>\n` +
+          `• **Entries:** ${h.points.length}`,
+      )
+      .setImage(`attachment://${HEAT_IMG_PATH.split("/").pop()}`)
+      .setColor(0x00ae86)
+      .setFooter({ text: "Bellok's Killfeed • Chernarus" })
+      .setTimestamp(now);
+
+    const payload = { content: "", embeds: [embed], files: [file] };
+
+    // Try to edit existing message, or send new one if it doesn't exist
+    let sent = false;
+    if (h.messageId) {
+      try {
+        const existingMsg = await ch.messages
+          .fetch(h.messageId)
+          .catch(() => null);
+        if (existingMsg) {
+          await existingMsg.edit(payload);
+          sent = true;
+          console.log("[heatmap] edited existing message", h.messageId);
+        } else {
+          console.log("[heatmap] previous message not found, sending new one");
+          h.messageId = null;
+        }
+      } catch (e) {
+        console.warn(
+          "[heatmap] failed to edit message, sending new one:",
+          e?.code || e?.message,
+        );
+        h.messageId = null;
+      }
+    }
+
+    // Send new message if we couldn't edit
+    if (!sent) {
+      const newMsg = await ch.send(payload);
+      h.messageId = newMsg.id;
+      console.log("[heatmap] sent new message", h.messageId);
+    }
+
     h.lastSentCount = h.points.length;
+    h.lastUpdate = now;
     saveHeat(h);
     lastHeatSentAt = now;
   } catch (e) {
@@ -697,6 +761,10 @@ async function runBot() {
 
   async function tick() {
     try {
+      // Check and send heatmap first, before ADM processing
+      // This ensures heatmap updates even if CURRENT_ADM is missing
+      await maybeSendHeatmap(client);
+
       await ensureLatestAdmSelected();
       if (!CURRENT_ADM) {
         if (DEBUG_TICKS) console.log("[tick] sin CURRENT_ADM");
@@ -709,7 +777,6 @@ async function runBot() {
           `[tick] ${new Date().toLocaleTimeString()}  +${lines.length} líneas nuevas`,
         );
       if (!lines.length) {
-        await maybeSendHeatmap(client);
         return;
       }
 
@@ -757,8 +824,6 @@ async function runBot() {
         if (pos && Number.isFinite(pos.x) && Number.isFinite(pos.y))
           addHeatPoint(pos.x, pos.y);
       }
-
-      await maybeSendHeatmap(client);
     } catch (e) {
       const status = e?.response?.status;
       const txt = bufToText(e?.response?.data);
@@ -780,18 +845,23 @@ async function runBot() {
     if (readyOnce) return;
     readyOnce = true;
     console.log(`✅ Bot online como ${client.user.tag}`);
-    
+
     // Register slash commands
     if (config.CLIENT_ID) {
       try {
         await registerCommands(config.DISCORD_TOKEN, config.CLIENT_ID);
       } catch (error) {
-        console.warn("[commands] Failed to register slash commands:", error.message);
+        console.warn(
+          "[commands] Failed to register slash commands:",
+          error.message,
+        );
       }
     } else {
-      console.warn("[commands] DISCORD_CLIENT_ID not set, skipping command registration");
+      console.warn(
+        "[commands] DISCORD_CLIENT_ID not set, skipping command registration",
+      );
     }
-    
+
     await ensureLatestAdmSelected();
     setInterval(tick, POLL_MS);
   });

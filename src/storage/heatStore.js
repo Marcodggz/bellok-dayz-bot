@@ -5,10 +5,15 @@ const { HEAT_STATE_FILE } = require("../config/config");
 
 /**
  * Load heatmap state from disk
- * @returns {Object} Heatmap state with points array and lastSentCount
+ * @returns {Object} Heatmap state with points array, lastSentCount, messageId, and lastUpdate
  */
 function loadHeat() {
-  return loadJSON(HEAT_STATE_FILE, { points: [], lastSentCount: 0 });
+  return loadJSON(HEAT_STATE_FILE, {
+    points: [],
+    lastSentCount: 0,
+    messageId: null,
+    lastUpdate: 0,
+  });
 }
 
 /**
