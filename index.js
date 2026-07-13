@@ -448,7 +448,86 @@ function buildKillEmbed(k) {
   return null;
 }
 
-// ================== HEATMAP RENDER (con calibración + mejoras) ==================
+// ================== HEATMAP CLUSTERING ==================
+function buildHeatClusters(points) {
+  const MERGE_RADIUS_METERS = 125; // 100-150m range for clustering nearby kills
+  const clusters = [];
+
+  for (const p of points) {
+    let merged = false;
+    for (const c of clusters) {
+      const dx = p.x - c.x;
+      const dy = p.y - c.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist <= MERGE_RADIUS_METERS) {
+        // Merge into this cluster
+        c.count++;
+        c.x = (c.x * (c.count - 1) + p.x) / c.count;
+        c.y = (c.y * (c.count - 1) + p.y) / c.count;
+        merged = true;
+        break;
+      }
+    }
+    if (!merged) {
+      clusters.push({ x: p.x, y: p.y, count: 1 });
+    }
+  }
+
+  return clusters;
+}
+
+// ================== HEATMAP RENDER (compact clustered dots) ==================
+// Helper: Draw soft heat bridge between two points using distance-to-line-segment
+function drawSoftBridge(png, x1, y1, x2, y2, radius, r, g, b, maxAlpha, W, H) {
+  // Bounding box for efficiency
+  const minX = Math.max(0, Math.min(x1, x2) - radius - 1);
+  const maxX = Math.min(W - 1, Math.max(x1, x2) + radius + 1);
+  const minY = Math.max(0, Math.min(y1, y2) - radius - 1);
+  const maxY = Math.min(H - 1, Math.max(y1, y2) + radius + 1);
+
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const segmentLengthSq = dx * dx + dy * dy;
+
+  for (let y = minY; y <= maxY; y++) {
+    for (let x = minX; x <= maxX; x++) {
+      // Calculate distance from pixel (x,y) to line segment (x1,y1)-(x2,y2)
+      let distance;
+
+      if (segmentLengthSq === 0) {
+        // Degenerate case: segment is a point
+        distance = Math.sqrt((x - x1) ** 2 + (y - y1) ** 2);
+      } else {
+        // Project point onto line segment
+        const t = Math.max(
+          0,
+          Math.min(1, ((x - x1) * dx + (y - y1) * dy) / segmentLengthSq),
+        );
+        const projX = x1 + t * dx;
+        const projY = y1 + t * dy;
+        distance = Math.sqrt((x - projX) ** 2 + (y - projY) ** 2);
+      }
+
+      if (distance <= radius) {
+        // Soft falloff
+        const falloff = 1 - distance / radius;
+        const alpha = Math.round(maxAlpha * Math.pow(falloff, 1.5));
+
+        // Alpha blend with existing pixel
+        const o = (y * W + x) * 4;
+        const existingAlpha = png.data[o + 3];
+
+        if (alpha > existingAlpha) {
+          png.data[o + 0] = r;
+          png.data[o + 1] = g;
+          png.data[o + 2] = b;
+          png.data[o + 3] = alpha;
+        }
+      }
+    }
+  }
+}
+
 function renderHeatPng(points, outPath, baseMapPath = "") {
   let basePng = null;
   let W = HEATMAP_WIDTH,
@@ -469,142 +548,279 @@ function renderHeatPng(points, outPath, baseMapPath = "") {
     );
   }
 
-  // 2) Buffer de intensidad
-  const inten = new Float32Array(W * H);
-
-  // Radio del “pincel”
-  const radius =
-    HEAT_RADIUS > 0
-      ? Math.floor(HEAT_RADIUS)
-      : Math.max(10, Math.floor(Math.min(W, H) / 30));
-
-  const sigma = radius / 2;
-  const twoSigma2 = 2 * sigma * sigma;
-
-  // Kernel gaussiano
-  const ker = [];
-  for (let dy = -radius; dy <= radius; dy++) {
-    for (let dx = -radius; dx <= radius; dx++) {
-      const d2 = dx * dx + dy * dy;
-      if (d2 <= radius * radius)
-        ker.push({ dx, dy, w: Math.exp(-d2 / twoSigma2) });
-    }
-  }
-
-  // 3) Proyectar puntos con peso temporal (recientes pesan más)
-  const now = Date.now();
+  // 2) Build clusters from world coordinates
   const hp = loadHeat().points;
-  for (const p of hp) {
-    const ageMin = (now - p.ts) / 60000;
-    const timeWeight =
-      HEAT_HALFLIFE_MIN > 0 ? Math.pow(0.5, ageMin / HEAT_HALFLIFE_MIN) : 1;
+  const clusters = buildHeatClusters(hp);
 
-    const { px, py } = mapToPixelCoords(p.x, p.y, W, H);
-    for (const k of ker) {
-      const x = px + k.dx,
-        y = py + k.dy;
-      if (x >= 0 && x < W && y >= 0 && y < H)
-        inten[y * W + x] += k.w * timeWeight;
-    }
-  }
-
-  // 4) Normalización por percentil (evita que un hotspot apague lo demás)
-  let maxv = 0;
-  for (let i = 0; i < inten.length; i++) if (inten[i] > maxv) maxv = inten[i];
-
+  // 3) Create transparent overlay
   const overlay = new PNG({ width: W, height: H });
+  overlay.data.fill(0);
 
-  if (maxv > 0) {
-    let denom = maxv;
-    if (HEAT_NORM_PERCENTILE > 0 && HEAT_NORM_PERCENTILE < 1) {
-      const sampleStep = Math.max(1, Math.floor(inten.length / 100000));
-      const vals = [];
-      for (let i = 0; i < inten.length; i += sampleStep)
-        if (inten[i] > 0) vals.push(inten[i]);
-      if (vals.length) {
-        vals.sort((a, b) => a - b);
-        const idx = Math.max(
-          0,
-          Math.min(
-            vals.length - 1,
-            Math.floor(vals.length * HEAT_NORM_PERCENTILE) - 1,
-          ),
-        );
-        denom = Math.max(vals[idx], maxv * 0.6);
+  // 4) Identify 5+ clusters for visual bridge connections
+  const fivePlusClusters = clusters.filter((c) => c.count >= 5);
+  const bridgeConnections = [];
+
+  // Find pairs of 5+ clusters that should have visual bridges
+  for (let i = 0; i < fivePlusClusters.length; i++) {
+    for (let j = i + 1; j < fivePlusClusters.length; j++) {
+      const c1 = fivePlusClusters[i];
+      const c2 = fivePlusClusters[j];
+
+      // Calculate world distance
+      const dx = c2.x - c1.x;
+      const dy = c2.y - c1.y;
+      const worldDist = Math.sqrt(dx * dx + dy * dy);
+
+      // Connect if between 125m and 300m (close but not merged)
+      if (worldDist >= 125 && worldDist <= 300) {
+        bridgeConnections.push({ c1, c2, worldDist });
       }
     }
-
-    for (let i = 0; i < inten.length; i++) {
-      let t = denom > 0 ? Math.min(1, inten[i] / denom) : 0;
-      if (HEAT_GAMMA > 0 && HEAT_GAMMA !== 1) t = Math.pow(t, HEAT_GAMMA);
-
-      // Only apply color where there's meaningful heat (skip near-zero intensity)
-      const HEAT_THRESHOLD = 0.02; // Only render pixels with >2% intensity
-      if (t < HEAT_THRESHOLD) {
-        // Keep pixel transparent (no heat)
-        const o = i * 4;
-        overlay.data[o + 0] = 0;
-        overlay.data[o + 1] = 0;
-        overlay.data[o + 2] = 0;
-        overlay.data[o + 3] = 0;
-        continue;
-      }
-
-      // Paleta fire: naranja → rojo
-      const r = t < 0.6 ? 245 : 225;
-      const g = t < 0.6 ? 158 : 29;
-      const b = t < 0.6 ? 11 : 72;
-
-      const a = Math.round(
-        clamp(HEAT_MIN_ALPHA + (255 - HEAT_MIN_ALPHA) * t, HEAT_MIN_ALPHA, 255),
-      );
-
-      const o = i * 4;
-      overlay.data[o + 0] = r;
-      overlay.data[o + 1] = g;
-      overlay.data[o + 2] = b;
-      overlay.data[o + 3] = a;
-    }
-  } else {
-    overlay.data.fill(0);
   }
 
-  // 5) Puntos ROJOS para muertes recientes (siempre visibles)
-  if (HEAT_RECENT_MIN > 0) {
-    const R =
-      HEAT_RECENT_DOT_RADIUS > 0
-        ? HEAT_RECENT_DOT_RADIUS
-        : Math.max(4, Math.floor(Math.min(W, H) / 180));
-    const A = clamp(HEAT_RECENT_DOT_ALPHA, 0, 255);
-    const rr = R * R;
-    const red = 225,
-      green = 29,
-      blue = 72; // #E11D48
+  // 5) Draw heat bridges between nearby 5+ clusters (BEFORE drawing dots)
+  for (const { c1, c2 } of bridgeConnections) {
+    const p1 = mapToPixelCoords(c1.x, c1.y, W, H);
+    const p2 = mapToPixelCoords(c2.x, c2.y, W, H);
 
-    for (const p of hp) {
-      if (now - p.ts > HEAT_RECENT_MIN * 60 * 1000) continue;
-      const { px, py } = mapToPixelCoords(p.x, p.y, W, H);
+    // Multi-layer bridge: outer blue → middle green → inner orange
+    // Using distance-to-line-segment for true elongated heat corridors
+    drawSoftBridge(
+      overlay,
+      p1.px,
+      p1.py,
+      p2.px,
+      p2.py,
+      28,
+      59,
+      130,
+      246,
+      95,
+      W,
+      H,
+    ); // Blue outer
+    drawSoftBridge(
+      overlay,
+      p1.px,
+      p1.py,
+      p2.px,
+      p2.py,
+      18,
+      34,
+      197,
+      94,
+      90,
+      W,
+      H,
+    ); // Green middle
+    drawSoftBridge(
+      overlay,
+      p1.px,
+      p1.py,
+      p2.px,
+      p2.py,
+      9,
+      234,
+      179,
+      8,
+      70,
+      W,
+      H,
+    ); // Orange inner
+  }
 
-      for (let dy = -R; dy <= R; dy++) {
-        for (let dx = -R; dx <= R; dx++) {
-          if (dx * dx + dy * dy > rr) continue;
-          const x = px + dx,
-            y = py + dy;
-          if (x < 0 || x >= W || y < 0 || y >= H) continue;
-          const o = (y * W + x) * 4;
+  // 6) Draw all clusters as normal radial dots (on top of bridges)
+  for (const cluster of clusters) {
+    const { px, py } = mapToPixelCoords(cluster.x, cluster.y, W, H);
 
-          if (overlay.data[o + 3] < A) {
-            overlay.data[o + 0] = red;
-            overlay.data[o + 1] = green;
-            overlay.data[o + 2] = blue;
-            overlay.data[o + 3] = A;
+    // Visual count capped at 5
+    const visualCount = Math.min(cluster.count, 5);
+
+    // Clear visibility radii - larger dots for higher counts
+    // outer = blue halo, core = green/orange/red center
+    let coreRadius, outerRadius;
+    if (visualCount === 1) {
+      coreRadius = 5;
+      outerRadius = 16;
+    } else if (visualCount === 2) {
+      coreRadius = 7;
+      outerRadius = 18;
+    } else if (visualCount === 3) {
+      coreRadius = 8;
+      outerRadius = 21;
+    } else if (visualCount === 4) {
+      coreRadius = 10;
+      outerRadius = 24;
+    } else {
+      // 5+
+      coreRadius = 12;
+      outerRadius = 28;
+    }
+
+    const maxRadius = outerRadius;
+
+    // Draw radial heat gradient from center outward
+    for (let dy = -maxRadius; dy <= maxRadius; dy++) {
+      for (let dx = -maxRadius; dx <= maxRadius; dx++) {
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist > maxRadius) continue;
+
+        const x = px + dx;
+        const y = py + dy;
+        if (x < 0 || x >= W || y < 0 || y >= H) continue;
+
+        // Normalized distance from center (0 = center, 1 = edge)
+        const normDist = dist / maxRadius;
+
+        // Moderate falloff for visibility with soft edges
+        const falloff = Math.pow(1 - normDist, 1.6);
+        const coreRatio = coreRadius / maxRadius;
+        let r, g, b, alpha;
+
+        if (visualCount === 1) {
+          // 1 kill: blue dot + tiny green center (NO orange)
+          if (normDist > 0.5) {
+            // Blue outer halo
+            r = 59;
+            g = 130;
+            b = 246; // #3B82F6 blue
+            alpha = Math.round(100 + falloff * 30);
+          } else if (normDist > coreRatio) {
+            // Brighter blue inner
+            r = 59;
+            g = 130;
+            b = 246;
+            alpha = Math.round(120 + falloff * 40);
+          } else {
+            // Tiny green center
+            r = 34;
+            g = 197;
+            b = 94; // #22C55E green
+            alpha = Math.round(145 + falloff * 30);
           }
+        } else if (visualCount === 2) {
+          // 2 kills: blue halo + clearly visible green center (NO orange)
+          if (normDist > 0.55) {
+            // Blue outer halo
+            r = 59;
+            g = 130;
+            b = 246; // #3B82F6
+            alpha = Math.round(85 + falloff * 30);
+          } else if (normDist > coreRatio * 1.2) {
+            // Blue-green transition
+            const t = (normDist - coreRatio * 1.2) / (0.55 - coreRatio * 1.2);
+            r = Math.round(59 + (34 - 59) * (1 - t));
+            g = Math.round(130 + (197 - 130) * (1 - t));
+            b = Math.round(246 + (94 - 246) * (1 - t));
+            alpha = Math.round(120 + falloff * 40);
+          } else {
+            // Clear bright green center
+            r = 74;
+            g = 222;
+            b = 128; // #4ADE80 bright green
+            alpha = Math.round(150 + falloff * 30);
+          }
+        } else if (visualCount === 3) {
+          // 3 kills: blue/green + small orange center (FIRST orange appearance)
+          if (normDist > 0.6) {
+            // Blue outer halo
+            r = 59;
+            g = 130;
+            b = 246; // #3B82F6
+            alpha = Math.round(90 + falloff * 30);
+          } else if (normDist > coreRatio * 1.5) {
+            // Green mid layer
+            r = 34;
+            g = 197;
+            b = 94; // #22C55E
+            alpha = Math.round(135 + falloff * 40);
+          } else if (normDist > coreRatio) {
+            // Yellow transition
+            r = 234;
+            g = 179;
+            b = 8; // #EAB308 yellow
+            alpha = Math.round(165 + falloff * 35);
+          } else {
+            // Small orange center
+            r = 251;
+            g = 146;
+            b = 60; // #FB923C orange
+            alpha = Math.round(190 + falloff * 30);
+          }
+        } else if (visualCount === 4) {
+          // 4 kills: blue/green + larger orange center
+          if (normDist > 0.62) {
+            // Blue outer halo
+            r = 59;
+            g = 130;
+            b = 246; // #3B82F6
+            alpha = Math.round(95 + falloff * 30);
+          } else if (normDist > coreRatio * 1.6) {
+            // Green mid layer
+            r = 34;
+            g = 197;
+            b = 94; // #22C55E
+            alpha = Math.round(145 + falloff * 40);
+          } else if (normDist > coreRatio * 1.1) {
+            // Yellow layer
+            r = 234;
+            g = 179;
+            b = 8; // #EAB308
+            alpha = Math.round(175 + falloff * 30);
+          } else {
+            // Larger bright orange center
+            r = 249;
+            g = 115;
+            b = 22; // #F97316 orange
+            alpha = Math.round(200 + falloff * 25);
+          }
+        } else {
+          // 5+ kills: blue/green + strong orange/red center
+          if (normDist > 0.65) {
+            // Blue outer halo
+            r = 59;
+            g = 130;
+            b = 246; // #3B82F6
+            alpha = Math.round(100 + falloff * 30);
+          } else if (normDist > coreRatio * 1.7) {
+            // Green mid layer
+            r = 34;
+            g = 197;
+            b = 94; // #22C55E
+            alpha = Math.round(155 + falloff * 40);
+          } else if (normDist > coreRatio * 1.2) {
+            // Yellow layer
+            r = 234;
+            g = 179;
+            b = 8; // #EAB308
+            alpha = Math.round(180 + falloff * 30);
+          } else if (normDist > coreRatio * 0.6) {
+            // Orange layer
+            r = 249;
+            g = 115;
+            b = 22; // #F97316
+            alpha = Math.round(205 + falloff * 25);
+          } else {
+            // Strong red center
+            r = 239;
+            g = 68;
+            b = 68; // #EF4444 red
+            alpha = Math.round(215 + falloff * 15);
+          }
+        }
+
+        const o = (y * W + x) * 4;
+        if (overlay.data[o + 3] < alpha) {
+          overlay.data[o + 0] = r;
+          overlay.data[o + 1] = g;
+          overlay.data[o + 2] = b;
+          overlay.data[o + 3] = alpha;
         }
       }
     }
   }
 
-  // 6) Componer sobre el mapa base
+  // 7) Compose onto base map
   let outPng;
   if (basePng) {
     outPng = new PNG({ width: W, height: H });
