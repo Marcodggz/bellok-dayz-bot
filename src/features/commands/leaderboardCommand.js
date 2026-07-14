@@ -292,10 +292,8 @@ async function handleDeathsLeaderboard(interaction) {
  * @param {import('discord.js').CommandInteraction} interaction
  */
 async function handleKdLeaderboard(interaction) {
-  // Load all player stats
-  const allStats = loadMockStats();
+  const allStats = loadPlayerStatsForLeaderboard();
 
-  // Convert stats object to array and filter out players with no activity
   const playerArray = Object.entries(allStats)
     .filter(([gamertag, stats]) => stats.kills > 0 || stats.deaths > 0)
     .map(([gamertag, stats]) => ({
@@ -303,59 +301,14 @@ async function handleKdLeaderboard(interaction) {
       kd: stats.kd ?? 0,
     }));
 
-  // Check if there are any stats
-  if (playerArray.length === 0) {
-    const emptyEmbed = new EmbedBuilder()
-      .setColor(0x00ae86)
-      .setTitle("Current Top 15 KD ⚔️")
-      .setDescription(
-        `**${SERVER_NAME}**\n\nNo player stats available yet. Start playing to appear on the leaderboard!`,
-      )
-      .setTimestamp()
-      .setFooter({
-        text: `Bellok's Killfeed`,
-      });
+  const top15 = getTopPlayers(playerArray, (a, b) => b.kd - a.kd);
 
-    await interaction.reply({
-      embeds: [emptyEmbed],
-      ephemeral: false,
-    });
-    return;
-  }
-
-  // Sort by KD descending
-  playerArray.sort((a, b) => b.kd - a.kd);
-
-  // Take top 15
-  const top15 = playerArray.slice(0, 15);
-
-  // Build the embed with 3-column layout using inline fields
-  const embed = new EmbedBuilder()
-    .setColor(0x00ae86)
-    .setTitle("Current Top 15 KD ⚔️")
-    .setDescription(`**${SERVER_NAME}**`)
-    .setTimestamp();
-
-  // Add players as inline fields (3 per row)
-  top15.forEach((player, index) => {
-    const position = index + 1;
-
-    embed.addFields({
-      name: `${position}. \`${player.gamertag}\``,
-      value: `KD: ${player.kd.toFixed(2)}`,
-      inline: true,
-    });
-  });
-
-  // Add footer with bot name (timestamp is handled by .setTimestamp())
-  embed.setFooter({
-    text: `Bellok's Killfeed`,
-  });
-
-  await interaction.reply({
-    embeds: [embed],
-    ephemeral: false,
-  });
+  await replyLeaderboard(
+    interaction,
+    "Current Top 15 KD ⚔️",
+    top15,
+    (player) => `KD: ${player.kd.toFixed(2)}`,
+  );
 }
 
 /**
@@ -414,10 +367,8 @@ async function handleKillStreakLeaderboard(interaction) {
  * @param {import('discord.js').CommandInteraction} interaction
  */
 async function handleDeathStreakLeaderboard(interaction) {
-  // Load all player stats
-  const allStats = loadMockStats();
+  const allStats = loadPlayerStatsForLeaderboard();
 
-  // Convert stats object to array and filter out players with no activity
   const playerArray = Object.entries(allStats)
     .filter(([gamertag, stats]) => stats.kills > 0 || stats.deaths > 0)
     .map(([gamertag, stats]) => ({
@@ -425,59 +376,17 @@ async function handleDeathStreakLeaderboard(interaction) {
       deathStreak: stats.deathStreak ?? 0,
     }));
 
-  // Check if there are any stats
-  if (playerArray.length === 0) {
-    const emptyEmbed = new EmbedBuilder()
-      .setColor(0x00ae86)
-      .setTitle("Current Top 15 Death Streaks 💀")
-      .setDescription(
-        `**${SERVER_NAME}**\n\nNo player stats available yet. Start playing to appear on the leaderboard!`,
-      )
-      .setTimestamp()
-      .setFooter({
-        text: `Bellok's Killfeed`,
-      });
+  const top15 = getTopPlayers(
+    playerArray,
+    (a, b) => b.deathStreak - a.deathStreak,
+  );
 
-    await interaction.reply({
-      embeds: [emptyEmbed],
-      ephemeral: false,
-    });
-    return;
-  }
-
-  // Sort by death streak descending
-  playerArray.sort((a, b) => b.deathStreak - a.deathStreak);
-
-  // Take top 15
-  const top15 = playerArray.slice(0, 15);
-
-  // Build the embed with 3-column layout using inline fields
-  const embed = new EmbedBuilder()
-    .setColor(0x00ae86)
-    .setTitle("Current Top 15 Death Streaks 💀")
-    .setDescription(`**${SERVER_NAME}**`)
-    .setTimestamp();
-
-  // Add players as inline fields (3 per row)
-  top15.forEach((player, index) => {
-    const position = index + 1;
-
-    embed.addFields({
-      name: `${position}. \`${player.gamertag}\``,
-      value: `Death Streak: ${player.deathStreak}`,
-      inline: true,
-    });
-  });
-
-  // Add footer with bot name (timestamp is handled by .setTimestamp())
-  embed.setFooter({
-    text: `Bellok's Killfeed`,
-  });
-
-  await interaction.reply({
-    embeds: [embed],
-    ephemeral: false,
-  });
+  await replyLeaderboard(
+    interaction,
+    "Current Top 15 Death Streaks 💀",
+    top15,
+    (player) => `Death Streak: ${player.deathStreak}`,
+  );
 }
 
 /**
