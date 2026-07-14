@@ -3,6 +3,7 @@
 const { PNG } = require("pngjs");
 const fs = require("fs");
 const { clamp } = require("./helpers");
+const { mapToPixelCoords } = require("./coordinateMapper");
 const {
   loadWeekendHeat,
   saveWeekendHeat,
@@ -16,15 +17,6 @@ const {
   HEATMAP_WIDTH,
   HEATMAP_HEIGHT,
   MAP_SIZE,
-  MAP_MIN_X,
-  MAP_MAX_X,
-  MAP_MIN_Y,
-  MAP_MAX_Y,
-  MAP_FLIP_Y,
-  MAP_OFFSET_X,
-  MAP_OFFSET_Y,
-  MAP_SCALE_X,
-  MAP_SCALE_Y,
 } = require("../config/config");
 const { EmbedBuilder, AttachmentBuilder } = require("discord.js");
 
@@ -77,32 +69,6 @@ function addWeekendHeatPoint(name, x, y) {
 function pruneWeekendHeat(wh) {
   const minTs = Date.now() - WEEKEND_HEATMAP_WINDOW_MIN * 60 * 1000;
   wh.points = wh.points.filter((p) => p.ts >= minTs);
-}
-
-function mapToPixelCoords(x, y, W, H) {
-  const nx = (x - MAP_MIN_X) / Math.max(1, MAP_MAX_X - MAP_MIN_X);
-  const ny = (y - MAP_MIN_Y) / Math.max(1, MAP_MAX_Y - MAP_MIN_Y);
-  const sx = nx * MAP_SCALE_X + MAP_OFFSET_X;
-  const sy = ny * MAP_SCALE_Y + MAP_OFFSET_Y;
-
-  const side = Math.min(W, H);
-  const offX = (W - side) / 2;
-  const offY = (H - side) / 2;
-
-  const INSET_L = Number(process.env.MAP_PIX_INSET_L || 0);
-  const INSET_R = Number(process.env.MAP_PIX_INSET_R || 0);
-  const INSET_T = Number(process.env.MAP_PIX_INSET_T || 0);
-  const INSET_B = Number(process.env.MAP_PIX_INSET_B || 0);
-
-  const innerW = Math.max(1, side - INSET_L - INSET_R);
-  const innerH = Math.max(1, side - INSET_T - INSET_B);
-
-  const u = clamp(sx, 0, 1);
-  const v = clamp(MAP_FLIP_Y ? 1 - sy : sy, 0, 1);
-
-  const px = Math.floor(offX + INSET_L + u * innerW);
-  const py = Math.floor(offY + INSET_T + v * innerH);
-  return { px, py };
 }
 
 /**
