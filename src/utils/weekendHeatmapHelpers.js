@@ -29,35 +29,31 @@ const {
 const { EmbedBuilder, AttachmentBuilder } = require("discord.js");
 
 /**
- * Check if weekend heatmap is currently active
+ * Weekend heatmap runs on Friday, Saturday, and Sunday
  * @param {Date} date - Date to check (defaults to now)
  * @returns {boolean} True if Friday, Saturday, or Sunday
  */
 function isWeekendHeatmapActive(date = new Date()) {
-  const day = date.getDay(); // 0 = Sunday, 5 = Friday, 6 = Saturday
+  const day = date.getDay();
   return day === 0 || day === 5 || day === 6;
 }
 
 /**
- * Add a player position point to weekend heatmap
+ * Track player position for weekend heatmap (Fri-Sun only)
  * @param {string} name - Player name
  * @param {number} x - X coordinate
  * @param {number} y - Y coordinate
  */
 function addWeekendHeatPoint(name, x, y) {
-  // Only store positions on Friday, Saturday, Sunday
-  if (!isWeekendHeatmapActive()) {
-    return; // Don't store positions outside weekend (prevents Monday-Thursday growth)
-  }
+  if (!isWeekendHeatmapActive()) return;
 
   const wh = loadWeekendHeat();
   const ts = Date.now();
 
-  // Validate coordinates
   if (!Number.isFinite(x) || !Number.isFinite(y)) return;
   if (x < 0 || x > MAP_SIZE || y < 0 || y > MAP_SIZE) return;
 
-  // Avoid duplicate positions for same player in short time window (5 seconds)
+  // Prevent duplicate positions within 5-second window
   const recentDuplicate = wh.points.some(
     (p) =>
       p.name === name &&
@@ -78,23 +74,11 @@ function addWeekendHeatPoint(name, x, y) {
   saveWeekendHeat(wh);
 }
 
-/**
- * Prune old points from weekend heatmap
- * @param {Object} wh - Weekend heatmap state
- */
 function pruneWeekendHeat(wh) {
   const minTs = Date.now() - WEEKEND_HEATMAP_WINDOW_MIN * 60 * 1000;
   wh.points = wh.points.filter((p) => p.ts >= minTs);
 }
 
-/**
- * Map world coordinates to pixel coordinates (reuses PvP heatmap logic)
- * @param {number} x - World X coordinate
- * @param {number} y - World Y coordinate
- * @param {number} W - Image width
- * @param {number} H - Image height
- * @returns {Object} Pixel coordinates {px, py}
- */
 function mapToPixelCoords(x, y, W, H) {
   const nx = (x - MAP_MIN_X) / Math.max(1, MAP_MAX_X - MAP_MIN_X);
   const ny = (y - MAP_MIN_Y) / Math.max(1, MAP_MAX_Y - MAP_MIN_Y);

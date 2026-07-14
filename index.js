@@ -1,8 +1,9 @@
-// index.js — DayZ (Nitrado PS4) → Kill-feed + Heatmap (Discord, fondo Chernarus)
-// - PvP rojo: "<killer>" killed "<victim>" with "<gun>"
-// - Explosión naranja: "<player>" died from an "<explosive>" explosion
-// - Heatmap: único mensaje "⚔️PVP heat-map 🥵"
-// - Precisión de puntos: calibración por min/max/offset/escala/flip
+// index.js — DayZ Nitrado PS4 → Discord Kill-feed + Heatmap
+// - PvP kills: red embed with killer/victim/weapon details
+// - Explosion deaths: orange embed
+// - PvP Heatmap: single editable message with clustered death locations
+// - Weekend Heatmap: single editable message with player position density (Fri-Sun only)
+// - Coordinate calibration: min/max/offset/scale/flip for accurate map overlay
 
 const axios = require("axios");
 const fs = require("fs");
@@ -133,7 +134,7 @@ async function flushKillfeedQueue(client) {
   try {
     const ch = await client.channels.fetch(CHANNEL_ID).catch(() => null);
     if (!ch || typeof ch.send !== "function") {
-      console.warn("[killfeed] Missing Access / canal no válido.");
+      console.warn("[killfeed] Invalid channel or missing permissions");
       return;
     }
 
@@ -203,7 +204,7 @@ async function flushKillfeedQueue(client) {
   }
 }
 
-// ================== ESTADO HEATMAP ==================
+// ================== PVP HEATMAP STATE ==================
 function addHeatPoint(x, y) {
   const h = loadHeat();
   const ts = Date.now();
@@ -268,9 +269,9 @@ async function nitDownload(filePath) {
   } catch (e) {
     const status = e?.response?.status;
     const txt = bufToText(e?.response?.data);
-    if (looksLikeHtml(txt)) console.warn("[download] HTML intermedio.");
+    if (looksLikeHtml(txt)) console.warn("[download] Unexpected HTML response");
     else if (status === 429 || looksLikeRateLimit(txt))
-      console.warn("[download] Rate-limit Nitrado.");
+      console.warn("[download] Nitrado rate limit");
     else
       console.warn(
         "[download] error:",
@@ -281,9 +282,9 @@ async function nitDownload(filePath) {
   }
 }
 
-// ===== list con backoff + cooldown + caché =====
+// ================== NITRADO ADM LIST (with backoff + cooldown + cache) ==================
 let listCooldownUntil = 0;
-const listCache = new Map(); // dir → [{name,path}]
+const listCache = new Map();
 let lastRotateCheck = 0;
 
 function tsFromName(n) {
@@ -360,24 +361,24 @@ async function listAdmNames(dir, force = false) {
   return listCache.get(dir) || [];
 }
 
-// ================== ROTACIÓN ==================
+// ================== ADM FILE ROTATION ==================
 let CURRENT_ADM = null;
 let INITIALIZED = false;
 
 async function ensureLatestAdmSelected() {
   if (!ADM_DIR) {
-    console.warn("[rotate] Falta NITRADO_ADM_DIR");
+    console.warn("[rotate] Missing NITRADO_ADM_DIR");
     return;
   }
   const rows = await listAdmNames(ADM_DIR, !INITIALIZED /*force*/);
   if (!rows.length) {
-    if (DEBUG) console.log("[rotate] sin rows en listado");
+    if (DEBUG) console.log("[rotate] No ADM files found");
     return;
   }
   const latest = rows[0].path;
   if (latest !== CURRENT_ADM) {
     CURRENT_ADM = latest;
-    console.log("[rotate] nuevo ADM →", CURRENT_ADM);
+    console.log("[rotate] New ADM file →", CURRENT_ADM);
     const st = loadState();
     const dl = await nitDownload(CURRENT_ADM);
     const buf = dl.error ? Buffer.alloc(0) : dl.buffer;
@@ -389,7 +390,6 @@ async function ensureLatestAdmSelected() {
       const h = loadHeat();
       h.points = [];
       h.lastSentCount = 0;
-      // Keep messageId so we continue editing the same message after reset
       saveHeat(h);
     }
   }
@@ -432,8 +432,7 @@ async function readNewLines(filePath) {
   return chunk ? chunk.split(/\r?\n/).filter(Boolean) : [];
 }
 
-// ================== POSICIONES ==================
-// — rastrear posiciones por nombre (última conocida) —
+// ================== PLAYER POSITIONS ==================
 const lastPosByName = new Map();
 function updatePositionsFromLine(line) {
   const re =
@@ -445,7 +444,6 @@ function updatePositionsFromLine(line) {
     const y = +m[3];
     if (!Number.isNaN(x) && !Number.isNaN(y)) {
       lastPosByName.set(name, { x, y, ts: Date.now() });
-      // Add to weekend heatmap if valid
       addWeekendHeatPoint(name, x, y);
     }
   }
@@ -463,21 +461,20 @@ function posForVictimFromLine(victim, line) {
   return last ? { x: last.x, y: last.y } : null;
 }
 
-// ================== MAPEO COORDENADAS → PIXELES ==================
+// ================== WORLD COORDINATES → PIXEL MAPPING ==================
 function mapToPixelCoords(x, y, W, H) {
-  // --- 1) Normaliza (aplican recortes/offset/escala si usas MAP_MIN/MAX/OFFSET/SCALE) ---
+  // Normalize world coordinates with optional cropping/offset/scale
   const nx = (x - MAP_MIN_X) / Math.max(1, MAP_MAX_X - MAP_MIN_X);
   const ny = (y - MAP_MIN_Y) / Math.max(1, MAP_MAX_Y - MAP_MIN_Y);
   const sx = nx * MAP_SCALE_X + MAP_OFFSET_X;
   const sy = ny * MAP_SCALE_Y + MAP_OFFSET_Y;
 
-  // --- 2) Letterbox: usa SIEMPRE el cuadrado centrado de la imagen ---
-  //     (en tu PNG 1500×1356 → side=1356, offX=72, offY=0)
+  // Letterbox: center square within image dimensions
   const side = Math.min(W, H);
   const offX = (W - side) / 2;
   const offY = (H - side) / 2;
 
-  // --- 3) Insets en píxeles para recortar el marco interior del mapa ---
+  // Pixel insets to crop inner map border
   const INSET_L = Number(process.env.MAP_PIX_INSET_L || 0);
   const INSET_R = Number(process.env.MAP_PIX_INSET_R || 0);
   const INSET_T = Number(process.env.MAP_PIX_INSET_T || 0);
@@ -486,17 +483,17 @@ function mapToPixelCoords(x, y, W, H) {
   const innerW = Math.max(1, side - INSET_L - INSET_R);
   const innerH = Math.max(1, side - INSET_T - INSET_B);
 
-  // --- 4) Proyección u,v (0..1), flip vertical opcional ---
+  // Project to normalized UV (0..1), optional vertical flip
   const u = clamp(sx, 0, 1);
   const v = clamp(MAP_FLIP_Y ? 1 - sy : sy, 0, 1);
 
-  // --- 5) A píxeles dentro del cuadrado centrado + insets ---
+  // Final pixel coordinates within centered square + insets
   const px = Math.floor(offX + INSET_L + u * innerW);
   const py = Math.floor(offY + INSET_T + v * innerH);
   return { px, py };
 }
 
-// ================== DEDUPE 20s ==================
+// ================== KILL EVENT DEDUPLICATION (20s buckets) ==================
 function typeRank(tp) {
   return tp === "pvp" ? 2 : tp === "explosion" ? 1 : 0;
 }
@@ -1216,12 +1213,14 @@ function checkEnv() {
   );
   if (!NIT_TOKEN || !SERVICE_ID || !CHANNEL_ID || !config.DISCORD_TOKEN) {
     console.error(
-      "Faltan .env: NITRADO_TOKEN, NITRADO_SERVICE_ID, DISCORD_CHANNEL_ID, DISCORD_TOKEN",
+      "Missing .env variables: NITRADO_TOKEN, NITRADO_SERVICE_ID, DISCORD_CHANNEL_ID, DISCORD_TOKEN",
     );
     process.exit(1);
   }
   if (!ADM_DIR && MODE === "run") {
-    console.error("Falta NITRADO_ADM_DIR (apunta a /noftp/.../dayzps/config)");
+    console.error(
+      "Missing NITRADO_ADM_DIR (should point to /noftp/.../dayzps/config)",
+    );
     process.exit(1);
   }
 }
@@ -1252,7 +1251,7 @@ async function maybeSendHeatmap(client) {
       .catch(() => null);
 
     if (!ch || typeof ch.send !== "function") {
-      console.warn("[heatmap] canal inválido");
+      console.warn("[heatmap] Invalid channel or missing permissions");
       return;
     }
 
@@ -1322,23 +1321,19 @@ async function runBot() {
 
   async function tick() {
     try {
-      // Check and send heatmap first, before ADM processing
-      // This ensures heatmap updates even if CURRENT_ADM is missing
       await maybeSendHeatmap(client);
-
-      // Check and send weekend heatmap (independent of PvP heatmap)
       await maybeSendWeekendHeatmap(client);
 
       await ensureLatestAdmSelected();
       if (!CURRENT_ADM) {
-        if (DEBUG_TICKS) console.log("[tick] sin CURRENT_ADM");
+        if (DEBUG_TICKS) console.log("[tick] No current ADM file");
         return;
       }
 
       const lines = await readNewLines(CURRENT_ADM);
       if (DEBUG_TICKS)
         console.log(
-          `[tick] ${new Date().toLocaleTimeString()}  +${lines.length} líneas nuevas`,
+          `[tick] ${new Date().toLocaleTimeString()}  +${lines.length} new lines`,
         );
       if (!lines.length) {
         return;
@@ -1352,7 +1347,7 @@ async function runBot() {
         if (e) events.push(e);
       }
 
-      // agrupar por víctima/ventana de 20s y priorizar pvp>explosion
+      // Group by victim + 20s time bucket, prioritize PvP over explosion
       const groups = new Map();
       for (const k of events) {
         const key = victimBucketKey(k.victim, k.t);
@@ -1363,7 +1358,6 @@ async function runBot() {
       for (const [key, k] of groups) {
         if (alreadySentBucket(key)) continue;
 
-        // Queue the killfeed event for batched delivery instead of sending immediately
         queueKillfeedEvent(
           {
             kill: k,
@@ -1375,7 +1369,6 @@ async function runBot() {
           key,
         );
 
-        // sumar punto al heatmap con la última posición conocida de la víctima
         const pos = posForVictimFromLine(k.victim, k.line || "");
         if (pos && Number.isFinite(pos.x) && Number.isFinite(pos.y))
           addHeatPoint(pos.x, pos.y);
@@ -1385,7 +1378,7 @@ async function runBot() {
       const txt = bufToText(e?.response?.data);
       if (looksLikeHtml(txt) || status === 429 || looksLikeRateLimit(txt)) {
         if (Date.now() >= listCooldownUntil)
-          console.warn("[tick] Nitrado ocupado; cooldown.");
+          console.warn("[tick] Nitrado busy; entering cooldown");
         listCooldownUntil = Date.now() + LIST_COOLDOWN_MS;
       } else {
         console.warn(
@@ -1400,7 +1393,7 @@ async function runBot() {
   client.once("ready", async () => {
     if (readyOnce) return;
     readyOnce = true;
-    console.log(`✅ Bot online como ${client.user.tag}`);
+    console.log(`✅ Bot online as ${client.user.tag}`);
 
     // Register slash commands
     if (config.CLIENT_ID) {
@@ -1448,11 +1441,13 @@ async function runDiscordTest() {
         embeds: [
           new EmbedBuilder()
             .setColor(0x22c55e)
-            .setDescription("✅ Prueba: el bot puede enviar mensajes aquí.")
+            .setDescription("✅ Test: bot can send messages here")
             .setTimestamp(new Date()),
         ],
       });
-      console.log("[discord-test] enviado OK al canal de kill-feed");
+      console.log(
+        "[discord-test] Message sent successfully to killfeed channel",
+      );
     } catch (e) {
       console.error("[discord-test] ERROR:", e?.code || e?.message || e);
     } finally {
@@ -1468,7 +1463,7 @@ async function runDiscordTest() {
 async function runDiscordHeatmapTest() {
   checkEnv();
   if (!HEATMAP_CHANNEL_ID) {
-    console.error("Falta HEATMAP_CHANNEL_ID en .env");
+    console.error("Missing HEATMAP_CHANNEL_ID in .env");
     process.exit(1);
   }
   const client = new Client({ intents: [GatewayIntentBits.Guilds] });
@@ -1479,11 +1474,13 @@ async function runDiscordHeatmapTest() {
         embeds: [
           new EmbedBuilder()
             .setColor(0x3b82f6)
-            .setDescription("🧪 Prueba: canal de heat-map OK")
+            .setDescription("🧪 Test: heatmap channel OK")
             .setTimestamp(new Date()),
         ],
       });
-      console.log("[discord-heatmap-test] enviado OK al canal de heat-map");
+      console.log(
+        "[discord-heatmap-test] Message sent successfully to heatmap channel",
+      );
     } catch (e) {
       console.error(
         "[discord-heatmap-test] ERROR:",
@@ -1501,29 +1498,29 @@ async function runDiscordHeatmapTest() {
 
 async function runDiagnose() {
   checkEnv();
-  console.log("\n[diagnose] Directorio .ADM:", ADM_DIR);
-  const rows = await listAdmNames(ADM_DIR, true); // force
+  console.log("\n[diagnose] ADM directory:", ADM_DIR);
+  const rows = await listAdmNames(ADM_DIR, true);
   if (!rows.length) {
     console.log(
-      "[diagnose] ❌ No se listan .ADM (rate-limit o ruta incorrecta).",
+      "[diagnose] ❌ No ADM files listed (rate-limit or incorrect path)",
     );
     process.exit(1);
   }
-  console.log("[diagnose] Top 5 archivos:");
+  console.log("[diagnose] Top 5 files:");
   for (const r of rows.slice(0, 5)) {
     const ts = tsFromName(r.name);
-    console.log("  -", r.name, "→", ts ? tMadrid(ts) : "(sin fecha)");
+    console.log("  -", r.name, "→", ts ? tMadrid(ts) : "(no date)");
   }
   const latest = rows[0].path;
-  console.log("[diagnose] Último ADM:", latest);
+  console.log("[diagnose] Latest ADM:", latest);
   const dl = await nitDownload(latest);
   if (dl.error) {
-    console.log("[diagnose] ❌ No se pudo descargar el ADM");
+    console.log("[diagnose] ❌ Could not download ADM file");
     process.exit(1);
   }
   const lines = dl.buffer.toString("utf8").split(/\r?\n/).filter(Boolean);
   const tail = lines.slice(-40);
-  console.log("\n[diagnose] Últimas 40 líneas:\n" + tail.join("\n"));
+  console.log("\n[diagnose] Last 40 lines:\n" + tail.join("\n"));
 
   let pvp = 0,
     exp = 0;
@@ -1535,7 +1532,7 @@ async function runDiagnose() {
     }
   }
   console.log(
-    `\n[diagnose] Detectado en tail → PvP: ${pvp}  Explosiones: ${exp}`,
+    `\n[diagnose] Detected in tail → PvP: ${pvp}  Explosions: ${exp}`,
   );
   process.exit(0);
 }
