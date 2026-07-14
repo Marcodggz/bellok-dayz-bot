@@ -65,6 +65,7 @@ const {
   buildHeatClusters,
   drawHeatCluster,
   composeHeatmapOverlay,
+  drawSoftBridge,
 } = require("./src/utils/heatmapRenderer");
 const {
   runDiscordTest,
@@ -399,57 +400,6 @@ function alreadySentBucket(key) {
 }
 
 // ================== HEATMAP RENDER (compact clustered dots) ==================
-// Helper: Draw soft heat bridge between two points using distance-to-line-segment
-function drawSoftBridge(png, x1, y1, x2, y2, radius, r, g, b, maxAlpha, W, H) {
-  // Bounding box for efficiency
-  const minX = Math.max(0, Math.min(x1, x2) - radius - 1);
-  const maxX = Math.min(W - 1, Math.max(x1, x2) + radius + 1);
-  const minY = Math.max(0, Math.min(y1, y2) - radius - 1);
-  const maxY = Math.min(H - 1, Math.max(y1, y2) + radius + 1);
-
-  const dx = x2 - x1;
-  const dy = y2 - y1;
-  const segmentLengthSq = dx * dx + dy * dy;
-
-  for (let y = minY; y <= maxY; y++) {
-    for (let x = minX; x <= maxX; x++) {
-      // Calculate distance from pixel (x,y) to line segment (x1,y1)-(x2,y2)
-      let distance;
-
-      if (segmentLengthSq === 0) {
-        // Degenerate case: segment is a point
-        distance = Math.sqrt((x - x1) ** 2 + (y - y1) ** 2);
-      } else {
-        // Project point onto line segment
-        const t = Math.max(
-          0,
-          Math.min(1, ((x - x1) * dx + (y - y1) * dy) / segmentLengthSq),
-        );
-        const projX = x1 + t * dx;
-        const projY = y1 + t * dy;
-        distance = Math.sqrt((x - projX) ** 2 + (y - projY) ** 2);
-      }
-
-      if (distance <= radius) {
-        // Soft falloff
-        const falloff = 1 - distance / radius;
-        const alpha = Math.round(maxAlpha * Math.pow(falloff, 1.5));
-
-        // Alpha blend with existing pixel
-        const o = (y * W + x) * 4;
-        const existingAlpha = png.data[o + 3];
-
-        if (alpha > existingAlpha) {
-          png.data[o + 0] = r;
-          png.data[o + 1] = g;
-          png.data[o + 2] = b;
-          png.data[o + 3] = alpha;
-        }
-      }
-    }
-  }
-}
-
 function renderHeatPng(points, outPath, baseMapPath = "") {
   let basePng = null;
   let W = HEATMAP_WIDTH,

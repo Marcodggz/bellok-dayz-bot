@@ -8,6 +8,7 @@ const {
   buildHeatClusters,
   drawHeatCluster,
   composeHeatmapOverlay,
+  drawSoftBridge,
 } = require("./heatmapRenderer");
 const {
   loadWeekendHeat,
@@ -108,6 +109,74 @@ function renderWeekendHeatPng(points, outPath, baseMapPath = "") {
   // Create transparent overlay
   const overlay = new PNG({ width: W, height: H });
   overlay.data.fill(0);
+
+  // Identify 5+ clusters for bridge connections
+  const fivePlusClusters = clusters.filter((c) => c.count >= 5);
+  const bridgeConnections = [];
+
+  for (let i = 0; i < fivePlusClusters.length; i++) {
+    for (let j = i + 1; j < fivePlusClusters.length; j++) {
+      const c1 = fivePlusClusters[i];
+      const c2 = fivePlusClusters[j];
+
+      const dx = c2.x - c1.x;
+      const dy = c2.y - c1.y;
+      const worldDist = Math.sqrt(dx * dx + dy * dy);
+
+      if (worldDist >= 125 && worldDist <= 300) {
+        bridgeConnections.push({ c1, c2, worldDist });
+      }
+    }
+  }
+
+  // Draw heat bridges before cluster dots
+  for (const { c1, c2 } of bridgeConnections) {
+    const p1 = mapToPixelCoords(c1.x, c1.y, W, H);
+    const p2 = mapToPixelCoords(c2.x, c2.y, W, H);
+
+    drawSoftBridge(
+      overlay,
+      p1.px,
+      p1.py,
+      p2.px,
+      p2.py,
+      28,
+      59,
+      130,
+      246,
+      95,
+      W,
+      H,
+    );
+    drawSoftBridge(
+      overlay,
+      p1.px,
+      p1.py,
+      p2.px,
+      p2.py,
+      18,
+      34,
+      197,
+      94,
+      90,
+      W,
+      H,
+    );
+    drawSoftBridge(
+      overlay,
+      p1.px,
+      p1.py,
+      p2.px,
+      p2.py,
+      9,
+      234,
+      179,
+      8,
+      70,
+      W,
+      H,
+    );
+  }
 
   // Draw all clusters as radial dots
   for (const cluster of clusters) {

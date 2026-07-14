@@ -234,8 +234,68 @@ function composeHeatmapOverlay(basePng, overlay, width, height) {
   return outPng;
 }
 
+/**
+ * Draw soft heat bridge between two points using distance-to-line-segment
+ * @param {PNG} png - PNG overlay to draw on
+ * @param {number} x1 - Start X in pixels
+ * @param {number} y1 - Start Y in pixels
+ * @param {number} x2 - End X in pixels
+ * @param {number} y2 - End Y in pixels
+ * @param {number} radius - Bridge radius in pixels
+ * @param {number} r - Red value (0-255)
+ * @param {number} g - Green value (0-255)
+ * @param {number} b - Blue value (0-255)
+ * @param {number} maxAlpha - Maximum alpha value (0-255)
+ * @param {number} W - Canvas width
+ * @param {number} H - Canvas height
+ */
+function drawSoftBridge(png, x1, y1, x2, y2, radius, r, g, b, maxAlpha, W, H) {
+  const minX = Math.max(0, Math.min(x1, x2) - radius - 1);
+  const maxX = Math.min(W - 1, Math.max(x1, x2) + radius + 1);
+  const minY = Math.max(0, Math.min(y1, y2) - radius - 1);
+  const maxY = Math.min(H - 1, Math.max(y1, y2) + radius + 1);
+
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const segmentLengthSq = dx * dx + dy * dy;
+
+  for (let y = minY; y <= maxY; y++) {
+    for (let x = minX; x <= maxX; x++) {
+      let distance;
+
+      if (segmentLengthSq === 0) {
+        distance = Math.sqrt((x - x1) ** 2 + (y - y1) ** 2);
+      } else {
+        const t = Math.max(
+          0,
+          Math.min(1, ((x - x1) * dx + (y - y1) * dy) / segmentLengthSq),
+        );
+        const projX = x1 + t * dx;
+        const projY = y1 + t * dy;
+        distance = Math.sqrt((x - projX) ** 2 + (y - projY) ** 2);
+      }
+
+      if (distance <= radius) {
+        const falloff = 1 - distance / radius;
+        const alpha = Math.round(maxAlpha * Math.pow(falloff, 1.5));
+
+        const o = (y * W + x) * 4;
+        const existingAlpha = png.data[o + 3];
+
+        if (alpha > existingAlpha) {
+          png.data[o + 0] = r;
+          png.data[o + 1] = g;
+          png.data[o + 2] = b;
+          png.data[o + 3] = alpha;
+        }
+      }
+    }
+  }
+}
+
 module.exports = {
   buildHeatClusters,
   drawHeatCluster,
   composeHeatmapOverlay,
+  drawSoftBridge,
 };
