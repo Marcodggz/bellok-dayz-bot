@@ -106,6 +106,67 @@ const leaderboardCommand = {
   },
 };
 
+function loadPlayerStatsForLeaderboard() {
+  return loadMockStats();
+}
+
+function buildEmptyLeaderboardEmbed(title) {
+  return new EmbedBuilder()
+    .setColor(0x00ae86)
+    .setTitle(title)
+    .setDescription(
+      `**${SERVER_NAME}**\n\nNo player stats available yet. Start playing to appear on the leaderboard!`,
+    )
+    .setTimestamp()
+    .setFooter({
+      text: `Bellok's Killfeed`,
+    });
+}
+
+function buildLeaderboardEmbed(title, players, formatValue) {
+  const embed = new EmbedBuilder()
+    .setColor(0x00ae86)
+    .setTitle(title)
+    .setDescription(`**${SERVER_NAME}**`)
+    .setTimestamp();
+
+  players.forEach((player, index) => {
+    const position = index + 1;
+    embed.addFields({
+      name: `${position}. \`${player.gamertag}\``,
+      value: formatValue(player),
+      inline: true,
+    });
+  });
+
+  embed.setFooter({
+    text: `Bellok's Killfeed`,
+  });
+
+  return embed;
+}
+
+function getTopPlayers(players, sortFn, limit = 15) {
+  return players.sort(sortFn).slice(0, limit);
+}
+
+async function replyLeaderboard(interaction, title, playerArray, formatValue) {
+  if (playerArray.length === 0) {
+    const emptyEmbed = buildEmptyLeaderboardEmbed(title);
+    await interaction.reply({
+      embeds: [emptyEmbed],
+      ephemeral: false,
+    });
+    return;
+  }
+
+  const embed = buildLeaderboardEmbed(title, playerArray, formatValue);
+  await interaction.reply({
+    embeds: [embed],
+    ephemeral: false,
+  });
+}
+
 /**
  * Handle /leaderboard rank subcommand
  * @param {import('discord.js').CommandInteraction} interaction
@@ -183,10 +244,8 @@ async function handleRankLeaderboard(interaction) {
  * @param {import('discord.js').CommandInteraction} interaction
  */
 async function handleKillsLeaderboard(interaction) {
-  // Load all player stats
-  const allStats = loadMockStats();
+  const allStats = loadPlayerStatsForLeaderboard();
 
-  // Convert stats object to array and filter out players with no activity
   const playerArray = Object.entries(allStats)
     .filter(([gamertag, stats]) => stats.kills > 0 || stats.deaths > 0)
     .map(([gamertag, stats]) => ({
@@ -194,59 +253,14 @@ async function handleKillsLeaderboard(interaction) {
       kills: stats.kills ?? 0,
     }));
 
-  // Check if there are any stats
-  if (playerArray.length === 0) {
-    const emptyEmbed = new EmbedBuilder()
-      .setColor(0x00ae86)
-      .setTitle("Current Top 15 Kills 🔫")
-      .setDescription(
-        `**${SERVER_NAME}**\n\nNo player stats available yet. Start playing to appear on the leaderboard!`,
-      )
-      .setTimestamp()
-      .setFooter({
-        text: `Bellok's Killfeed`,
-      });
+  const top15 = getTopPlayers(playerArray, (a, b) => b.kills - a.kills);
 
-    await interaction.reply({
-      embeds: [emptyEmbed],
-      ephemeral: false,
-    });
-    return;
-  }
-
-  // Sort by kills descending
-  playerArray.sort((a, b) => b.kills - a.kills);
-
-  // Take top 15
-  const top15 = playerArray.slice(0, 15);
-
-  // Build the embed with 3-column layout using inline fields
-  const embed = new EmbedBuilder()
-    .setColor(0x00ae86)
-    .setTitle("Current Top 15 Kills 🔫")
-    .setDescription(`**${SERVER_NAME}**`)
-    .setTimestamp();
-
-  // Add players as inline fields (3 per row)
-  top15.forEach((player, index) => {
-    const position = index + 1;
-
-    embed.addFields({
-      name: `${position}. \`${player.gamertag}\``,
-      value: `Kills: ${player.kills}`,
-      inline: true,
-    });
-  });
-
-  // Add footer with bot name (timestamp is handled by .setTimestamp())
-  embed.setFooter({
-    text: `Bellok's Killfeed`,
-  });
-
-  await interaction.reply({
-    embeds: [embed],
-    ephemeral: false,
-  });
+  await replyLeaderboard(
+    interaction,
+    "Current Top 15 Kills 🔫",
+    top15,
+    (player) => `Kills: ${player.kills}`,
+  );
 }
 
 /**
@@ -254,10 +268,8 @@ async function handleKillsLeaderboard(interaction) {
  * @param {import('discord.js').CommandInteraction} interaction
  */
 async function handleDeathsLeaderboard(interaction) {
-  // Load all player stats
-  const allStats = loadMockStats();
+  const allStats = loadPlayerStatsForLeaderboard();
 
-  // Convert stats object to array and filter out players with no activity
   const playerArray = Object.entries(allStats)
     .filter(([gamertag, stats]) => stats.kills > 0 || stats.deaths > 0)
     .map(([gamertag, stats]) => ({
@@ -265,59 +277,14 @@ async function handleDeathsLeaderboard(interaction) {
       deaths: stats.deaths ?? 0,
     }));
 
-  // Check if there are any stats
-  if (playerArray.length === 0) {
-    const emptyEmbed = new EmbedBuilder()
-      .setColor(0x00ae86)
-      .setTitle("Current Top 15 Deaths ☠️")
-      .setDescription(
-        `**${SERVER_NAME}**\n\nNo player stats available yet. Start playing to appear on the leaderboard!`,
-      )
-      .setTimestamp()
-      .setFooter({
-        text: `Bellok's Killfeed`,
-      });
+  const top15 = getTopPlayers(playerArray, (a, b) => b.deaths - a.deaths);
 
-    await interaction.reply({
-      embeds: [emptyEmbed],
-      ephemeral: false,
-    });
-    return;
-  }
-
-  // Sort by deaths descending
-  playerArray.sort((a, b) => b.deaths - a.deaths);
-
-  // Take top 15
-  const top15 = playerArray.slice(0, 15);
-
-  // Build the embed with 3-column layout using inline fields
-  const embed = new EmbedBuilder()
-    .setColor(0x00ae86)
-    .setTitle("Current Top 15 Deaths ☠️")
-    .setDescription(`**${SERVER_NAME}**`)
-    .setTimestamp();
-
-  // Add players as inline fields (3 per row)
-  top15.forEach((player, index) => {
-    const position = index + 1;
-
-    embed.addFields({
-      name: `${position}. \`${player.gamertag}\``,
-      value: `Deaths: ${player.deaths}`,
-      inline: true,
-    });
-  });
-
-  // Add footer with bot name (timestamp is handled by .setTimestamp())
-  embed.setFooter({
-    text: `Bellok's Killfeed`,
-  });
-
-  await interaction.reply({
-    embeds: [embed],
-    ephemeral: false,
-  });
+  await replyLeaderboard(
+    interaction,
+    "Current Top 15 Deaths ☠️",
+    top15,
+    (player) => `Deaths: ${player.deaths}`,
+  );
 }
 
 /**
