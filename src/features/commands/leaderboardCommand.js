@@ -1,8 +1,11 @@
 // src/features/commands/leaderboardCommand.js — Slash command for leaderboards
 
-const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
-const { loadMockStats } = require("../../storage/mockStatsStore");
-const { SERVER_NAME } = require("../../config/config");
+const { SlashCommandBuilder } = require("discord.js");
+const {
+  loadPlayerStatsForLeaderboard,
+  getTopPlayers,
+  replyLeaderboard,
+} = require("./leaderboardHelpers");
 
 /**
  * Define the /leaderboard command with subcommands
@@ -105,67 +108,6 @@ const leaderboardCommand = {
     }
   },
 };
-
-function loadPlayerStatsForLeaderboard() {
-  return loadMockStats();
-}
-
-function buildEmptyLeaderboardEmbed(title) {
-  return new EmbedBuilder()
-    .setColor(0x00ae86)
-    .setTitle(title)
-    .setDescription(
-      `**${SERVER_NAME}**\n\nNo player stats available yet. Start playing to appear on the leaderboard!`,
-    )
-    .setTimestamp()
-    .setFooter({
-      text: `Bellok's Killfeed`,
-    });
-}
-
-function buildLeaderboardEmbed(title, players, formatValue) {
-  const embed = new EmbedBuilder()
-    .setColor(0x00ae86)
-    .setTitle(title)
-    .setDescription(`**${SERVER_NAME}**`)
-    .setTimestamp();
-
-  players.forEach((player, index) => {
-    const position = index + 1;
-    embed.addFields({
-      name: `${position}. \`${player.gamertag}\``,
-      value: formatValue(player),
-      inline: true,
-    });
-  });
-
-  embed.setFooter({
-    text: `Bellok's Killfeed`,
-  });
-
-  return embed;
-}
-
-function getTopPlayers(players, sortFn, limit = 15) {
-  return players.sort(sortFn).slice(0, limit);
-}
-
-async function replyLeaderboard(interaction, title, playerArray, formatValue) {
-  if (playerArray.length === 0) {
-    const emptyEmbed = buildEmptyLeaderboardEmbed(title);
-    await interaction.reply({
-      embeds: [emptyEmbed],
-      ephemeral: false,
-    });
-    return;
-  }
-
-  const embed = buildLeaderboardEmbed(title, playerArray, formatValue);
-  await interaction.reply({
-    embeds: [embed],
-    ephemeral: false,
-  });
-}
 
 /**
  * Handle /leaderboard rank subcommand
