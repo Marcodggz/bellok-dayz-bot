@@ -4,6 +4,7 @@ const { PNG } = require("pngjs");
 const fs = require("fs");
 const { clamp } = require("./helpers");
 const { mapToPixelCoords } = require("./coordinateMapper");
+const { buildHeatClusters } = require("./heatmapRenderer");
 const {
   loadWeekendHeat,
   saveWeekendHeat,
@@ -72,37 +73,6 @@ function pruneWeekendHeat(wh) {
 }
 
 /**
- * Build clusters for weekend heatmap (player positions)
- * @param {Array} points - Array of {name, x, y, ts} points
- * @returns {Array} Array of clusters with {x, y, count}
- */
-function buildWeekendHeatClusters(points) {
-  const MERGE_RADIUS_METERS = 125;
-  const clusters = [];
-
-  for (const p of points) {
-    let merged = false;
-    for (const c of clusters) {
-      const dx = p.x - c.x;
-      const dy = p.y - c.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist <= MERGE_RADIUS_METERS) {
-        c.count++;
-        c.x = (c.x * (c.count - 1) + p.x) / c.count;
-        c.y = (c.y * (c.count - 1) + p.y) / c.count;
-        merged = true;
-        break;
-      }
-    }
-    if (!merged) {
-      clusters.push({ x: p.x, y: p.y, count: 1 });
-    }
-  }
-
-  return clusters;
-}
-
-/**
  * Render weekend heatmap image
  * @param {Array} points - Array of {name, x, y, ts} points
  * @param {string} outPath - Output image path
@@ -129,7 +99,7 @@ function renderWeekendHeatPng(points, outPath, baseMapPath = "") {
   }
 
   // Build clusters
-  const clusters = buildWeekendHeatClusters(points);
+  const clusters = buildHeatClusters(points);
 
   // Create transparent overlay
   const overlay = new PNG({ width: W, height: H });

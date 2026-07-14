@@ -61,6 +61,7 @@ const {
   maybeSendWeekendHeatmap,
 } = require("./src/utils/weekendHeatmapHelpers");
 const { mapToPixelCoords } = require("./src/utils/coordinateMapper");
+const { buildHeatClusters } = require("./src/utils/heatmapRenderer");
 const {
   runDiscordTest,
   runDiscordHeatmapTest,
@@ -391,34 +392,6 @@ function alreadySentBucket(key) {
   if (sentBuckets.has(key)) return true;
   sentBuckets.set(key, now);
   return false;
-}
-
-// ================== HEATMAP CLUSTERING ==================
-function buildHeatClusters(points) {
-  const MERGE_RADIUS_METERS = 125; // 100-150m range for clustering nearby kills
-  const clusters = [];
-
-  for (const p of points) {
-    let merged = false;
-    for (const c of clusters) {
-      const dx = p.x - c.x;
-      const dy = p.y - c.y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist <= MERGE_RADIUS_METERS) {
-        // Merge into this cluster
-        c.count++;
-        c.x = (c.x * (c.count - 1) + p.x) / c.count;
-        c.y = (c.y * (c.count - 1) + p.y) / c.count;
-        merged = true;
-        break;
-      }
-    }
-    if (!merged) {
-      clusters.push({ x: p.x, y: p.y, count: 1 });
-    }
-  }
-
-  return clusters;
 }
 
 // ================== HEATMAP RENDER (compact clustered dots) ==================
