@@ -22,7 +22,6 @@ const {
   looksLikeRateLimit,
   tMadrid,
   clamp,
-  escapeRegExp,
 } = require("./src/utils/helpers");
 const { loadJSON, saveJSON } = require("./src/storage/jsonStore");
 const { loadState, saveState } = require("./src/storage/stateStore");
@@ -56,7 +55,6 @@ const {
   registerCommands,
 } = require("./src/features/commands/registerCommands");
 const {
-  addWeekendHeatPoint,
   maybeSendWeekendHeatmap,
 } = require("./src/utils/weekendHeatmapHelpers");
 const { mapToPixelCoords } = require("./src/utils/coordinateMapper");
@@ -66,6 +64,10 @@ const {
   composeHeatmapOverlay,
   drawSoftBridge,
 } = require("./src/utils/heatmapRenderer");
+const {
+  updatePositionsFromLine,
+  posForVictimFromLine,
+} = require("./src/features/tracking/positionTracker");
 const {
   runDiscordTest,
   runDiscordHeatmapTest,
@@ -199,35 +201,6 @@ async function readNewLines(filePath) {
   setFileState(st, filePath, fsState);
 
   return chunk ? chunk.split(/\r?\n/).filter(Boolean) : [];
-}
-
-// ================== PLAYER POSITIONS ==================
-const lastPosByName = new Map();
-function updatePositionsFromLine(line) {
-  const re =
-    /Player\s+["'“”]([^"'“”]+)["'“”]\s*\([^)]*?pos=<\s*([0-9.]+)\s*,\s*([0-9.]+)\s*,\s*([0-9.\-]+)\s*>\)/gi;
-  let m;
-  while ((m = re.exec(line)) !== null) {
-    const name = m[1];
-    const x = +m[2];
-    const y = +m[3];
-    if (!Number.isNaN(x) && !Number.isNaN(y)) {
-      lastPosByName.set(name, { x, y, ts: Date.now() });
-      addWeekendHeatPoint(name, x, y);
-    }
-  }
-}
-function posForVictimFromLine(victim, line) {
-  const rex = new RegExp(
-    `Player\\s+["'“”]${escapeRegExp(victim)}["'“”][^\\n]*?pos=<\\s*([0-9.]+)\\s*,\\s*([0-9.]+)\\s*,\\s*([0-9.\\-]+)\\s*>`,
-    "i",
-  );
-  const m = line.match(rex);
-  if (m) {
-    return { x: +m[1], y: +m[2] };
-  }
-  const last = lastPosByName.get(victim);
-  return last ? { x: last.x, y: last.y } : null;
 }
 
 // ================== KILL EVENT DEDUPLICATION (20s buckets) ==================
