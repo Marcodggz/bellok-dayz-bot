@@ -1,5 +1,7 @@
 // src/utils/heatmapRenderer.js — Shared heatmap rendering utilities
 
+const { PNG } = require("pngjs");
+
 /**
  * Build spatial clusters from point array using proximity merging
  * @param {Array} points - Array of {x, y} world coordinates
@@ -194,7 +196,46 @@ function drawHeatCluster(overlay, pixelX, pixelY, visualCount, width, height) {
   }
 }
 
+/**
+ * Compose overlay onto base map using alpha blending
+ * @param {PNG|null} basePng - Base map PNG or null
+ * @param {PNG} overlay - Heat overlay PNG
+ * @param {number} width - Canvas width
+ * @param {number} height - Canvas height
+ * @returns {PNG} Composed PNG (or overlay if no base map)
+ */
+function composeHeatmapOverlay(basePng, overlay, width, height) {
+  if (!basePng) {
+    return overlay;
+  }
+
+  const outPng = new PNG({ width, height });
+  for (let i = 0; i < width * height; i++) {
+    const o = i * 4;
+    const br = basePng.data[o + 0],
+      bg = basePng.data[o + 1],
+      bb = basePng.data[o + 2],
+      ba = basePng.data[o + 3] / 255;
+    const or = overlay.data[o + 0],
+      og = overlay.data[o + 1],
+      ob = overlay.data[o + 2],
+      oa = overlay.data[o + 3] / 255;
+
+    const aOut = Math.min(1, oa + ba * (1 - oa));
+    const rOut = Math.round((or * oa + br * ba * (1 - oa)) / (aOut || 1));
+    const gOut = Math.round((og * oa + bg * ba * (1 - oa)) / (aOut || 1));
+    const bOut = Math.round((ob * oa + bb * ba * (1 - oa)) / (aOut || 1));
+
+    outPng.data[o + 0] = rOut;
+    outPng.data[o + 1] = gOut;
+    outPng.data[o + 2] = bOut;
+    outPng.data[o + 3] = Math.round(aOut * 255);
+  }
+  return outPng;
+}
+
 module.exports = {
   buildHeatClusters,
   drawHeatCluster,
+  composeHeatmapOverlay,
 };

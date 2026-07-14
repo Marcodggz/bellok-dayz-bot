@@ -64,6 +64,7 @@ const { mapToPixelCoords } = require("./src/utils/coordinateMapper");
 const {
   buildHeatClusters,
   drawHeatCluster,
+  composeHeatmapOverlay,
 } = require("./src/utils/heatmapRenderer");
 const {
   runDiscordTest,
@@ -558,33 +559,7 @@ function renderHeatPng(points, outPath, baseMapPath = "") {
   }
 
   // 7) Compose onto base map
-  let outPng;
-  if (basePng) {
-    outPng = new PNG({ width: W, height: H });
-    for (let i = 0; i < W * H; i++) {
-      const o = i * 4;
-      const br = basePng.data[o + 0],
-        bg = basePng.data[o + 1],
-        bb = basePng.data[o + 2],
-        ba = basePng.data[o + 3] / 255;
-      const or = overlay.data[o + 0],
-        og = overlay.data[o + 1],
-        ob = overlay.data[o + 2],
-        oa = overlay.data[o + 3] / 255;
-
-      const aOut = Math.min(1, oa + ba * (1 - oa));
-      const rOut = Math.round((or * oa + br * ba * (1 - oa)) / (aOut || 1));
-      const gOut = Math.round((og * oa + bg * ba * (1 - oa)) / (aOut || 1));
-      const bOut = Math.round((ob * oa + bb * ba * (1 - oa)) / (aOut || 1));
-
-      outPng.data[o + 0] = rOut;
-      outPng.data[o + 1] = gOut;
-      outPng.data[o + 2] = bOut;
-      outPng.data[o + 3] = Math.round(aOut * 255);
-    }
-  } else {
-    outPng = overlay;
-  }
+  const outPng = composeHeatmapOverlay(basePng, overlay, W, H);
 
   fs.writeFileSync(outPath, PNG.sync.write(outPng));
 }
