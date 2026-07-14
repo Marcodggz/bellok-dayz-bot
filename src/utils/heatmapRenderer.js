@@ -31,6 +31,170 @@ function buildHeatClusters(points) {
   return clusters;
 }
 
+/**
+ * Draw radial heat gradient for a single cluster
+ * @param {PNG} overlay - PNG overlay object to draw on
+ * @param {number} pixelX - Center X coordinate in pixels
+ * @param {number} pixelY - Center Y coordinate in pixels
+ * @param {number} visualCount - Cluster count (1-5)
+ * @param {number} width - Canvas width
+ * @param {number} height - Canvas height
+ */
+function drawHeatCluster(overlay, pixelX, pixelY, visualCount, width, height) {
+  let coreRadius, outerRadius;
+  if (visualCount === 1) {
+    coreRadius = 5;
+    outerRadius = 16;
+  } else if (visualCount === 2) {
+    coreRadius = 7;
+    outerRadius = 18;
+  } else if (visualCount === 3) {
+    coreRadius = 8;
+    outerRadius = 21;
+  } else if (visualCount === 4) {
+    coreRadius = 10;
+    outerRadius = 24;
+  } else {
+    coreRadius = 12;
+    outerRadius = 28;
+  }
+
+  const maxRadius = outerRadius;
+
+  for (let dy = -maxRadius; dy <= maxRadius; dy++) {
+    for (let dx = -maxRadius; dx <= maxRadius; dx++) {
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist > maxRadius) continue;
+
+      const x = pixelX + dx;
+      const y = pixelY + dy;
+      if (x < 0 || x >= width || y < 0 || y >= height) continue;
+
+      const normDist = dist / maxRadius;
+      const falloff = Math.pow(1 - normDist, 1.6);
+      const coreRatio = coreRadius / maxRadius;
+      let r, g, b, alpha;
+
+      if (visualCount === 1) {
+        if (normDist > 0.5) {
+          r = 59;
+          g = 130;
+          b = 246;
+          alpha = Math.round(100 + falloff * 30);
+        } else if (normDist > coreRatio) {
+          r = 59;
+          g = 130;
+          b = 246;
+          alpha = Math.round(120 + falloff * 40);
+        } else {
+          r = 34;
+          g = 197;
+          b = 94;
+          alpha = Math.round(145 + falloff * 30);
+        }
+      } else if (visualCount === 2) {
+        if (normDist > 0.55) {
+          r = 59;
+          g = 130;
+          b = 246;
+          alpha = Math.round(85 + falloff * 30);
+        } else if (normDist > coreRatio * 1.2) {
+          const t = (normDist - coreRatio * 1.2) / (0.55 - coreRatio * 1.2);
+          r = Math.round(59 + (34 - 59) * (1 - t));
+          g = Math.round(130 + (197 - 130) * (1 - t));
+          b = Math.round(246 + (94 - 246) * (1 - t));
+          alpha = Math.round(120 + falloff * 40);
+        } else {
+          r = 74;
+          g = 222;
+          b = 128;
+          alpha = Math.round(150 + falloff * 30);
+        }
+      } else if (visualCount === 3) {
+        if (normDist > 0.6) {
+          r = 59;
+          g = 130;
+          b = 246;
+          alpha = Math.round(90 + falloff * 30);
+        } else if (normDist > coreRatio * 1.5) {
+          r = 34;
+          g = 197;
+          b = 94;
+          alpha = Math.round(135 + falloff * 40);
+        } else if (normDist > coreRatio) {
+          r = 234;
+          g = 179;
+          b = 8;
+          alpha = Math.round(165 + falloff * 35);
+        } else {
+          r = 251;
+          g = 146;
+          b = 60;
+          alpha = Math.round(190 + falloff * 30);
+        }
+      } else if (visualCount === 4) {
+        if (normDist > 0.62) {
+          r = 59;
+          g = 130;
+          b = 246;
+          alpha = Math.round(95 + falloff * 30);
+        } else if (normDist > coreRatio * 1.6) {
+          r = 34;
+          g = 197;
+          b = 94;
+          alpha = Math.round(145 + falloff * 40);
+        } else if (normDist > coreRatio * 1.1) {
+          r = 234;
+          g = 179;
+          b = 8;
+          alpha = Math.round(175 + falloff * 30);
+        } else {
+          r = 249;
+          g = 115;
+          b = 22;
+          alpha = Math.round(200 + falloff * 25);
+        }
+      } else {
+        if (normDist > 0.65) {
+          r = 59;
+          g = 130;
+          b = 246;
+          alpha = Math.round(100 + falloff * 30);
+        } else if (normDist > coreRatio * 1.7) {
+          r = 34;
+          g = 197;
+          b = 94;
+          alpha = Math.round(155 + falloff * 40);
+        } else if (normDist > coreRatio * 1.2) {
+          r = 234;
+          g = 179;
+          b = 8;
+          alpha = Math.round(180 + falloff * 30);
+        } else if (normDist > coreRatio * 0.6) {
+          r = 249;
+          g = 115;
+          b = 22;
+          alpha = Math.round(205 + falloff * 25);
+        } else {
+          r = 239;
+          g = 68;
+          b = 68;
+          alpha = Math.round(215 + falloff * 15);
+        }
+      }
+
+      const o = (y * width + x) * 4;
+      if (overlay.data[o + 3] < alpha) {
+        overlay.data[o + 0] = r;
+        overlay.data[o + 1] = g;
+        overlay.data[o + 2] = b;
+        overlay.data[o + 3] = alpha;
+      }
+    }
+  }
+}
+
 module.exports = {
   buildHeatClusters,
+  drawHeatCluster,
 };
