@@ -49,6 +49,10 @@ const {
 const {
   registerCommands,
 } = require("./src/features/commands/registerCommands");
+const {
+  addWeekendHeatPoint,
+  maybeSendWeekendHeatmap,
+} = require("./src/utils/weekendHeatmapHelpers");
 
 const MODE = process.argv[2] || "run";
 
@@ -439,8 +443,11 @@ function updatePositionsFromLine(line) {
     const name = m[1];
     const x = +m[2];
     const y = +m[3];
-    if (!Number.isNaN(x) && !Number.isNaN(y))
+    if (!Number.isNaN(x) && !Number.isNaN(y)) {
       lastPosByName.set(name, { x, y, ts: Date.now() });
+      // Add to weekend heatmap if valid
+      addWeekendHeatPoint(name, x, y);
+    }
   }
 }
 function posForVictimFromLine(victim, line) {
@@ -1318,6 +1325,9 @@ async function runBot() {
       // Check and send heatmap first, before ADM processing
       // This ensures heatmap updates even if CURRENT_ADM is missing
       await maybeSendHeatmap(client);
+
+      // Check and send weekend heatmap (independent of PvP heatmap)
+      await maybeSendWeekendHeatmap(client);
 
       await ensureLatestAdmSelected();
       if (!CURRENT_ADM) {
