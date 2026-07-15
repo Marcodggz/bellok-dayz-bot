@@ -37,7 +37,6 @@ const {
 const { buildKillEmbed } = require("./src/features/killfeed/embedBuilders");
 const {
   KILLFEED_FLUSH_INTERVAL_MS,
-  queueKillfeedEvent,
   flushKillfeedQueue,
 } = require("./src/features/killfeed/killfeedQueue");
 const {
@@ -64,9 +63,6 @@ const {
   drawSoftBridge,
 } = require("./src/utils/heatmapRenderer");
 const {
-  posForVictimFromLine,
-} = require("./src/features/tracking/positionTracker");
-const {
   runDiscordTest,
   runDiscordHeatmapTest,
   runDiagnose,
@@ -84,11 +80,11 @@ const {
   readNewLines,
 } = require("./src/features/polling/admFilePoller");
 const {
-  alreadySentBucket,
-} = require("./src/features/killfeed/killEventDeduplicator");
-const {
   processKillEvents,
 } = require("./src/features/killfeed/killEventProcessor");
+const {
+  handleKillEvents,
+} = require("./src/features/killfeed/killEventHandler");
 
 const MODE = process.argv[2] || "run";
 
@@ -402,23 +398,9 @@ async function runBot() {
 
       const groups = processKillEvents(lines);
 
-      for (const [key, k] of groups) {
-        if (alreadySentBucket(key)) continue;
-
-        queueKillfeedEvent(
-          {
-            kill: k,
-            line: lines.find(
-              (l) =>
-                l.includes(`"${k.victim}"`) && (k.t ? l.startsWith(k.t) : true),
-            ),
-          },
-          key,
-        );
-
-        const pos = posForVictimFromLine(k.victim, k.line || "");
-        if (pos && Number.isFinite(pos.x) && Number.isFinite(pos.y))
-          addHeatPoint(pos.x, pos.y);
+      const heatmapPoints = handleKillEvents(groups, lines);
+      for (const pos of heatmapPoints) {
+        addHeatPoint(pos.x, pos.y);
       }
     } catch (e) {
       const status = e?.response?.status;
