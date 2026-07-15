@@ -64,7 +64,6 @@ const {
   drawSoftBridge,
 } = require("./src/utils/heatmapRenderer");
 const {
-  updatePositionsFromLine,
   posForVictimFromLine,
 } = require("./src/features/tracking/positionTracker");
 const {
@@ -85,10 +84,11 @@ const {
   readNewLines,
 } = require("./src/features/polling/admFilePoller");
 const {
-  typeRank,
-  victimBucketKey,
   alreadySentBucket,
 } = require("./src/features/killfeed/killEventDeduplicator");
+const {
+  processKillEvents,
+} = require("./src/features/killfeed/killEventProcessor");
 
 const MODE = process.argv[2] || "run";
 
@@ -400,21 +400,7 @@ async function runBot() {
         return;
       }
 
-      for (const ln of lines) updatePositionsFromLine(ln);
-
-      const events = [];
-      for (const ln of lines) {
-        const e = parseKill(ln);
-        if (e) events.push(e);
-      }
-
-      // Group by victim + 20s time bucket, prioritize PvP over explosion
-      const groups = new Map();
-      for (const k of events) {
-        const key = victimBucketKey(k.victim, k.t);
-        const cur = groups.get(key);
-        if (!cur || typeRank(k.type) > typeRank(cur.type)) groups.set(key, k);
-      }
+      const groups = processKillEvents(lines);
 
       for (const [key, k] of groups) {
         if (alreadySentBucket(key)) continue;
