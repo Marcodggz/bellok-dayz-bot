@@ -84,6 +84,11 @@ const {
   ensureLatestAdmSelected,
   readNewLines,
 } = require("./src/features/polling/admFilePoller");
+const {
+  typeRank,
+  victimBucketKey,
+  alreadySentBucket,
+} = require("./src/features/killfeed/killEventDeduplicator");
 
 const MODE = process.argv[2] || "run";
 
@@ -133,36 +138,6 @@ function addHeatPoint(x, y) {
 function pruneHeat(h) {
   const minTs = Date.now() - HEATMAP_WINDOW_MIN * 60 * 1000;
   h.points = h.points.filter((p) => p.ts >= minTs);
-}
-
-// ================== KILL EVENT DEDUPLICATION (20s buckets) ==================
-function typeRank(tp) {
-  return tp === "pvp" ? 2 : tp === "explosion" ? 1 : 0;
-}
-function timeToSec(t) {
-  if (!t) return null;
-  const [hh, mm, ss] = t.split(":").map(Number);
-  if ([hh, mm, ss].some(Number.isNaN)) return null;
-  return hh * 3600 + mm * 60 + ss;
-}
-const BUCKET_S = 20;
-function victimBucketKey(victim, t) {
-  const s = timeToSec(t);
-  const b =
-    s == null
-      ? Math.floor(Date.now() / 1000 / BUCKET_S)
-      : Math.floor(s / BUCKET_S);
-  return `${victim}|${b}`;
-}
-const sentBuckets = new Map();
-const SENT_TTL_MS = 60 * 60 * 1000;
-function alreadySentBucket(key) {
-  const now = Date.now();
-  for (const [kk, ts] of sentBuckets)
-    if (now - ts > SENT_TTL_MS) sentBuckets.delete(kk);
-  if (sentBuckets.has(key)) return true;
-  sentBuckets.set(key, now);
-  return false;
 }
 
 // ================== HEATMAP RENDER (compact clustered dots) ==================
