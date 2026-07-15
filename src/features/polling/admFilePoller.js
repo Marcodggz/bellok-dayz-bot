@@ -50,7 +50,7 @@ async function readNewLines(filePath) {
   if (dl.error) return [];
   const buf = dl.buffer;
 
-  if (buf.length <= fsState.size) return [];
+  if (buf.length === fsState.size) return [];
 
   const rotated = buf.length < fsState.size;
   let from = rotated ? 0 : Math.min(fsState.size, buf.length);
