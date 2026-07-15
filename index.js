@@ -26,7 +26,6 @@ const {
 const { loadJSON, saveJSON } = require("./src/storage/jsonStore");
 const { loadState, saveState } = require("./src/storage/stateStore");
 const { loadHeat, saveHeat } = require("./src/storage/heatStore");
-const { getFileState, setFileState } = require("./src/storage/fileStateStore");
 const {
   loadMockStats,
   saveMockStats,
@@ -81,6 +80,10 @@ const {
   tsFromName,
   startListCooldown,
 } = require("./src/api/nitradoClient");
+const {
+  ensureLatestAdmSelected,
+  readNewLines,
+} = require("./src/features/polling/admFilePoller");
 
 const MODE = process.argv[2] || "run";
 
@@ -130,77 +133,6 @@ function addHeatPoint(x, y) {
 function pruneHeat(h) {
   const minTs = Date.now() - HEATMAP_WINDOW_MIN * 60 * 1000;
   h.points = h.points.filter((p) => p.ts >= minTs);
-}
-
-// ================== ADM FILE ROTATION ==================
-let CURRENT_ADM = null;
-let INITIALIZED = false;
-
-async function ensureLatestAdmSelected() {
-  if (!ADM_DIR) {
-    console.warn("[rotate] Missing NITRADO_ADM_DIR");
-    return;
-  }
-  const rows = await listAdmNames(ADM_DIR, !INITIALIZED /*force*/);
-  if (!rows.length) {
-    if (DEBUG) console.log("[rotate] No ADM files found");
-    return;
-  }
-  const latest = rows[0].path;
-  if (latest !== CURRENT_ADM) {
-    CURRENT_ADM = latest;
-    console.log("[rotate] New ADM file →", CURRENT_ADM);
-    const st = loadState();
-    const dl = await nitDownload(CURRENT_ADM);
-    const buf = dl.error ? Buffer.alloc(0) : dl.buffer;
-    const startSize = INITIALIZED ? 0 : START_AT_END ? buf.length : 0;
-    setFileState(st, CURRENT_ADM, { size: startSize, carry: "" });
-    INITIALIZED = true;
-
-    if (HEATMAP_RESET_ON_ROTATE) {
-      const h = loadHeat();
-      h.points = [];
-      h.lastSentCount = 0;
-      saveHeat(h);
-    }
-  }
-}
-
-// ================== TAIL ==================
-async function readNewLines(filePath) {
-  const st = loadState();
-  const fsState = getFileState(st, filePath);
-
-  const dl = await nitDownload(filePath);
-  if (dl.error) return [];
-  const buf = dl.buffer;
-
-  if (buf.length <= fsState.size) return [];
-
-  const rotated = buf.length < fsState.size;
-  let from = rotated ? 0 : Math.min(fsState.size, buf.length);
-  let chunk = buf.slice(from).toString("utf8");
-
-  if (fsState.carry) {
-    chunk = fsState.carry + chunk;
-    fsState.carry = "";
-  }
-
-  if (chunk && !/\r?\n$/.test(chunk)) {
-    const lastNL = chunk.lastIndexOf("\n");
-    if (lastNL === -1) {
-      fsState.carry = chunk;
-      chunk = "";
-    } else {
-      fsState.carry = chunk.slice(lastNL + 1);
-      chunk = chunk.slice(0, lastNL + 1);
-    }
-  }
-
-  fsState.size = buf.length;
-  setFileState(st, filePath, fsState);
-
-  return chunk ? chunk.split(/\r?\n/).filter(Boolean) : [];
 }
 
 // ================== KILL EVENT DEDUPLICATION (20s buckets) ==================
@@ -478,13 +410,13 @@ async function runBot() {
       await maybeSendHeatmap(client);
       await maybeSendWeekendHeatmap(client);
 
-      await ensureLatestAdmSelected();
-      if (!CURRENT_ADM) {
+      const currentAdm = await ensureLatestAdmSelected();
+      if (!currentAdm) {
         if (DEBUG_TICKS) console.log("[tick] No current ADM file");
         return;
       }
 
-      const lines = await readNewLines(CURRENT_ADM);
+      const lines = await readNewLines(currentAdm);
       if (DEBUG_TICKS)
         console.log(
           `[tick] ${new Date().toLocaleTimeString()}  +${lines.length} new lines`,
