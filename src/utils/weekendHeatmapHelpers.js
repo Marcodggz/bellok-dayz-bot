@@ -26,6 +26,9 @@ const {
 } = require("../config/config");
 const { EmbedBuilder, AttachmentBuilder } = require("discord.js");
 
+// Prevent concurrent weekend heatmap sends
+let weekendHeatmapSending = false;
+
 /**
  * Weekend heatmap runs on Friday, Saturday, and Sunday
  * @param {Date} date - Date to check (defaults to now)
@@ -209,16 +212,19 @@ async function maybeSendWeekendHeatmap(client) {
   // Respect interval
   if (now - wh.lastUpdate < WEEKEND_HEATMAP_INTERVAL_MS) return;
 
-  // Prune old points
-  pruneWeekendHeat(wh);
-
-  // Skip if no points
-  if (!wh.points.length) {
-    console.log("[weekend-heatmap] No points to render");
-    return;
-  }
+  // Prevent concurrent sends
+  if (weekendHeatmapSending) return;
+  weekendHeatmapSending = true;
 
   try {
+    // Prune old points
+    pruneWeekendHeat(wh);
+
+    // Skip if no points
+    if (!wh.points.length) {
+      console.log("[weekend-heatmap] No points to render");
+      return;
+    }
     // Render image
     renderWeekendHeatPng(
       wh.points,
@@ -239,11 +245,16 @@ async function maybeSendWeekendHeatmap(client) {
     // Build embed
     const updatedTimestamp = Math.floor((now - 60_000) / 1000);
     const file = new AttachmentBuilder(WEEKEND_HEATMAP_IMG_PATH);
+
+    // Calculate unique players
+    const uniquePlayers = new Set(wh.points.map((p) => p.name)).size;
+
     const embed = new EmbedBuilder()
       .setTitle("🗺️ • Weekend Heatmap")
       .setDescription(
         `• **Updated:** <t:${updatedTimestamp}:R>\n` +
-          `• **Entries:** ${wh.points.length}`,
+          `• **Players:** ${uniquePlayers}\n` +
+          `• **Position Samples:** ${wh.points.length}`,
       )
       .setImage(`attachment://${WEEKEND_HEATMAP_IMG_PATH.split("/").pop()}`)
       .setColor(0x00ae86)
@@ -292,6 +303,8 @@ async function maybeSendWeekendHeatmap(client) {
     saveWeekendHeat(wh);
   } catch (e) {
     console.warn("[weekend-heatmap] Send error:", e?.code || e?.message || e);
+  } finally {
+    weekendHeatmapSending = false;
   }
 }
 

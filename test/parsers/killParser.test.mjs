@@ -264,5 +264,26 @@ describe("killParser", () => {
         parser.shouldIgnore("14:23:45 | Player killed Player with M4A1"),
       ).toBe(false);
     });
+
+    test("regression test: parses real sample ADM position correctly", () => {
+      // Real sample from user's ADM log: pos=<13044.9, 7786.9, 5.6>
+      // X=13044.9 (horizontal), Y=7786.9 (horizontal), Z=5.6 (elevation)
+      const line =
+        '14:23:45 | Player "RealPlayer" (id=12345678 pos=<13044.9, 7786.9, 5.6>) killed Player "TestVictim" (id=87654321 pos=<13050.0, 7790.0, 5.8>) with M4A1 from 6.2 meters';
+
+      const result = parser.parseKill(line);
+
+      expect(result).not.toBeNull();
+      expect(result.killerPosition).toEqual({
+        x: 13044.9,
+        y: 7786.9,
+        z: 5.6,
+      });
+      expect(result.victimPosition).toEqual({
+        x: 13050.0,
+        y: 7790.0,
+        z: 5.8,
+      });
+    });
   });
 });

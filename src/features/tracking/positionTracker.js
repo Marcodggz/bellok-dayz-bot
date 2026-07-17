@@ -1,4 +1,5 @@
 // Player position tracking from ADM log lines
+// ADM pos=<X, Y, Z>: X/Y are map coordinates; Z is elevation.
 
 const { escapeRegExp } = require("../../utils/helpers");
 const { addWeekendHeatPoint } = require("../../utils/weekendHeatmapHelpers");

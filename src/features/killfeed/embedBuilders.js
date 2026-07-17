@@ -1,4 +1,5 @@
 // src/features/killfeed/embedBuilders.js — Killfeed Discord embed builders
+// ADM pos=<X, Y, Z>: X/Y are map coordinates; Z is elevation.
 
 const { EmbedBuilder } = require("discord.js");
 
@@ -12,6 +13,30 @@ function getRandomPvpAction(killer, victim) {
   const seed = (killer || "").length + (victim || "").length * 3;
   const index = seed % actions.length;
   return actions[index];
+}
+
+// Normalize stats object to ensure all fields are safe for display
+function normalizeStats(stats) {
+  if (!stats) {
+    return {
+      rank: "Unranked",
+      score: 0,
+      kills: 0,
+      deaths: 0,
+      kd: 0,
+      killStreak: 0,
+      lastTimeAlive: "0m",
+    };
+  }
+  return {
+    rank: stats.rank || "Unranked",
+    score: stats.score ?? 0,
+    kills: stats.kills ?? 0,
+    deaths: stats.deaths ?? 0,
+    kd: stats.kd ?? 0,
+    killStreak: stats.killStreak ?? 0,
+    lastTimeAlive: stats.lastTimeAlive || "0m",
+  };
 }
 
 function embedPvp(
@@ -96,38 +121,27 @@ function embedPvp(
 
   lines.push("");
 
+  const normalizedKillerStats = normalizeStats(killerStats);
   lines.push(`__**Killer:**__ \`${killerName}\``);
-  if (killerStats) {
-    lines.push(
-      `**Rank:** ${killerStats.rank} | **Score:** ${killerStats.score.toFixed(1)}`,
-    );
-    lines.push(
-      `**Kills:** ${killerStats.kills} | **Deaths:** ${killerStats.deaths} | **KD:** ${killerStats.kd.toFixed(2)}`,
-    );
-    lines.push(`**Kill Streak:** ${killerStats.killStreak}`);
-  } else {
-    lines.push(`**Rank:** N/A | **Score:** N/A`);
-    lines.push(`**Kills:** N/A | **Deaths:** N/A | **KD:** N/A`);
-    lines.push(`**Kill Streak:** N/A`);
-  }
+  lines.push(
+    `**Rank:** ${normalizedKillerStats.rank} | **Score:** ${normalizedKillerStats.score.toFixed(1)}`,
+  );
+  lines.push(
+    `**Kills:** ${normalizedKillerStats.kills} | **Deaths:** ${normalizedKillerStats.deaths} | **KD:** ${normalizedKillerStats.kd.toFixed(2)}`,
+  );
+  lines.push(`**Kill Streak:** ${normalizedKillerStats.killStreak}`);
 
   lines.push("");
 
+  const normalizedVictimStats = normalizeStats(victimStats);
   lines.push(`__**Victim:**__ \`${victimName}\``);
-  if (victimStats) {
-    lines.push(
-      `**Rank:** ${victimStats.rank} | **Score:** ${victimStats.score.toFixed(1)}`,
-    );
-    lines.push(
-      `**Kills:** ${victimStats.kills} | **Deaths:** ${victimStats.deaths} | **KD:** ${victimStats.kd.toFixed(2)}`,
-    );
-    const timeAlive = victimStats.lastTimeAlive || "N/A";
-    lines.push(`**Time Alive:** ${timeAlive}`);
-  } else {
-    lines.push(`**Rank:** N/A | **Score:** N/A`);
-    lines.push(`**Kills:** N/A | **Deaths:** N/A | **KD:** N/A`);
-    lines.push(`**Time Alive:** N/A`);
-  }
+  lines.push(
+    `**Rank:** ${normalizedVictimStats.rank} | **Score:** ${normalizedVictimStats.score.toFixed(1)}`,
+  );
+  lines.push(
+    `**Kills:** ${normalizedVictimStats.kills} | **Deaths:** ${normalizedVictimStats.deaths} | **KD:** ${normalizedVictimStats.kd.toFixed(2)}`,
+  );
+  lines.push(`**Time Alive:** ${normalizedVictimStats.lastTimeAlive}`);
 
   return {
     embeds: [
@@ -196,21 +210,15 @@ function embedExplosion(
 
   lines.push("");
 
+  const normalizedVictimStats = normalizeStats(victimStats);
   lines.push(`__**Victim:**__ \`${victimName}\``);
-  if (victimStats) {
-    lines.push(
-      `**Rank:** ${victimStats.rank} | **Score:** ${victimStats.score.toFixed(1)}`,
-    );
-    lines.push(
-      `**Kills:** ${victimStats.kills} | **Deaths:** ${victimStats.deaths} | **KD:** ${victimStats.kd.toFixed(2)}`,
-    );
-    const timeAlive = victimStats.lastTimeAlive || "N/A";
-    lines.push(`**Time Alive:** ${timeAlive}`);
-  } else {
-    lines.push(`**Rank:** N/A | **Score:** N/A`);
-    lines.push(`**Kills:** N/A | **Deaths:** N/A | **KD:** N/A`);
-    lines.push(`**Time Alive:** N/A`);
-  }
+  lines.push(
+    `**Rank:** ${normalizedVictimStats.rank} | **Score:** ${normalizedVictimStats.score.toFixed(1)}`,
+  );
+  lines.push(
+    `**Kills:** ${normalizedVictimStats.kills} | **Deaths:** ${normalizedVictimStats.deaths} | **KD:** ${normalizedVictimStats.kd.toFixed(2)}`,
+  );
+  lines.push(`**Time Alive:** ${normalizedVictimStats.lastTimeAlive}`);
 
   return {
     embeds: [

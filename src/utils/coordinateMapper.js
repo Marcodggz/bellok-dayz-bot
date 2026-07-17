@@ -13,7 +13,7 @@ const {
   MAP_SCALE_Y,
 } = require("../config/config");
 
-function mapToPixelCoords(x, y, W, H) {
+function mapToPixelCoords(x, y, W, H, debug = false) {
   // Normalize world coordinates with optional cropping/offset/scale
   const nx = (x - MAP_MIN_X) / Math.max(1, MAP_MAX_X - MAP_MIN_X);
   const ny = (y - MAP_MIN_Y) / Math.max(1, MAP_MAX_Y - MAP_MIN_Y);
@@ -41,6 +41,14 @@ function mapToPixelCoords(x, y, W, H) {
   // Final pixel coordinates within centered square + insets
   const px = Math.floor(offX + INSET_L + u * innerW);
   const py = Math.floor(offY + INSET_T + v * innerH);
+
+  // Diagnostic logging when debug flag is set
+  if (debug) {
+    console.log(
+      `[coord-map] Raw: (${x.toFixed(1)}, ${y.toFixed(1)}) → Normalized: (${nx.toFixed(3)}, ${ny.toFixed(3)}) → Scaled: (${sx.toFixed(3)}, ${sy.toFixed(3)}) → UV: (${u.toFixed(3)}, ${v.toFixed(3)}) → Pixel: (${px}, ${py})`,
+    );
+  }
+
   return { px, py };
 }
 

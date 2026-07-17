@@ -1,4 +1,5 @@
 // src/parsers/killParser.js — Parse DayZ kill events from log lines
+// ADM pos=<X, Y, Z>: X/Y are map coordinates; Z is elevation.
 
 // ================== PARSER CONSTANTS ==================
 const TIME_RE = /^\s*(\d{2}:\d{2}:\d{2})\s*\|/;
@@ -24,7 +25,9 @@ const PVP_PATTERNS = [
  */
 function cleanPlayerName(name) {
   if (!name) return null;
-  return String(name).replace(/^["'""]|["'""]$/g, '').trim();
+  return String(name)
+    .replace(/^["'""]|["'""]$/g, "")
+    .trim();
 }
 
 /**
