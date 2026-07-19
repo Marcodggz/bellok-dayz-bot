@@ -98,7 +98,7 @@ describe("embedBuilders", () => {
       // Should show coordinates as X;Y;Z format and link with X,Y
       expect(description).toContain("13044.9;7786.9;250.5");
       expect(description).toContain(
-        "https://www.izurvive.com/chernarusplus#location=13044.9;7786.9",
+        "https://www.izurvive.com/livonia/#location=13044.9;7786.9",
       );
     });
 
@@ -254,7 +254,7 @@ describe("embedBuilders", () => {
       // Should show coordinates as X;Y;Z format and link with X,Y
       expect(description).toContain("13044.9;7786.9;250.5");
       expect(description).toContain(
-        "https://www.izurvive.com/chernarusplus#location=13044.9;7786.9",
+        "https://www.izurvive.com/livonia/#location=13044.9;7786.9",
       );
     });
 

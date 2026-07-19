@@ -30,6 +30,10 @@ const {
   loadMockStats,
   saveMockStats,
 } = require("./src/storage/mockStatsStore");
+const {
+  loadPlayerStats,
+  savePlayerStats,
+} = require("./src/storage/playerStatsStore");
 const { parseKill } = require("./src/parsers/killParser");
 const {
   formatKillfeedNotification,
@@ -46,6 +50,10 @@ const {
   handlePlayerConnect,
   handlePlayerDisconnect,
 } = require("./src/features/stats/playerStats");
+const {
+  createEventTimeNormalizer,
+  processPlayerSessionLine,
+} = require("./src/features/stats/playerSessionProcessor");
 const {
   handleCommandInteraction,
 } = require("./src/features/commands/commandHandler");
@@ -109,7 +117,8 @@ const {
   MAP_SIZE,
   HEATMAP_WINDOW_MIN,
   HEATMAP_RESET_ON_ROTATE,
-  CHERNARUS_MAP_PATH,
+  MAP_IMAGE_PATH,
+  MAP_DISPLAY_NAME,
   HEAT_RADIUS,
   HEAT_GAMMA,
   HEAT_MIN_ALPHA,
@@ -152,14 +161,13 @@ function renderHeatPng(points, outPath, baseMapPath = "") {
     }
   } catch (e) {
     console.warn(
-      "[heatmap] no se pudo leer CHERNARUS_MAP_PATH, uso lienzo transparente:",
+      "[heatmap] no se pudo leer MAP_IMAGE_PATH, uso lienzo transparente:",
       e.message,
     );
   }
 
-  // 2) Build clusters from world coordinates
-  const hp = loadHeat().points;
-  const clusters = buildHeatClusters(hp);
+  // 2) Build clusters from the already-pruned world coordinates
+  const clusters = buildHeatClusters(points);
 
   // 3) Create transparent overlay
   const overlay = new PNG({ width: W, height: H });
@@ -284,25 +292,26 @@ function checkEnv() {
 
 // ================== LOOP PRINCIPAL ==================
 let heatmapSending = false;
-let lastHeatSentAt = 0;
+let lastHeatmapsSentAt = 0;
+let heatmapsCycleRunning = false;
 
 async function maybeSendHeatmap(client) {
   if (!HEATMAP_CHANNEL_ID) return;
 
   const now = Date.now();
-  if (now - lastHeatSentAt < HEATMAP_INTERVAL_MS) return;
 
   const h = loadHeat();
+  const previousPointCount = h.points.length;
   pruneHeat(h);
-  if (!h.points.length) return;
+
+  if (h.points.length !== previousPointCount) {
+    saveHeat(h);
+  }
 
   if (heatmapSending) return;
   heatmapSending = true;
 
   try {
-    renderHeatPng(h.points, HEAT_IMG_PATH, CHERNARUS_MAP_PATH);
-    await new Promise((r) => setTimeout(r, 80));
-
     const ch = await client.channels
       .fetch(HEATMAP_CHANNEL_ID)
       .catch(() => null);
@@ -312,22 +321,41 @@ async function maybeSendHeatmap(client) {
       return;
     }
 
-    const file = new AttachmentBuilder(HEAT_IMG_PATH);
-
-    // Create embed for heatmap
-    const updatedTimestamp = Math.floor((now - 60_000) / 1000);
+    const updatedTimestamp = Math.floor(now / 1000);
     const embed = new EmbedBuilder()
       .setTitle("🗺️ • PvP Heatmap")
-      .setDescription(
-        `• **Updated:** <t:${updatedTimestamp}:R>\n` +
-          `• **Entries:** ${h.points.length}`,
-      )
-      .setImage(`attachment://${HEAT_IMG_PATH.split("/").pop()}`)
       .setColor(0x00ae86)
-      .setFooter({ text: "Bellok's Killfeed • Chernarus" })
+      .setFooter({ text: `Bellok's Killfeed • ${MAP_DISPLAY_NAME}` })
       .setTimestamp(now);
 
-    const payload = { content: "", embeds: [embed], files: [file] };
+    let payload;
+
+    if (h.points.length) {
+      renderHeatPng(h.points, HEAT_IMG_PATH, MAP_IMAGE_PATH);
+      await new Promise((r) => setTimeout(r, 80));
+
+      const file = new AttachmentBuilder(HEAT_IMG_PATH);
+
+      embed
+        .setDescription(
+          `• **Updated:** <t:${updatedTimestamp}:R>\n` +
+            `• **Entries:** ${h.points.length}`,
+        )
+        .setImage(`attachment://${HEAT_IMG_PATH.split("/").pop()}`);
+
+      payload = { content: "", embeds: [embed], files: [file] };
+    } else {
+      embed.setDescription(
+        `No PvP activity in the last ${HEATMAP_WINDOW_MIN} minutes.`,
+      );
+
+      payload = {
+        content: "",
+        embeds: [embed],
+        files: [],
+        attachments: [],
+      };
+    }
 
     // Try to edit existing message, or send new one if it doesn't exist
     let sent = false;
@@ -363,7 +391,6 @@ async function maybeSendHeatmap(client) {
     h.lastSentCount = h.points.length;
     h.lastUpdate = now;
     saveHeat(h);
-    lastHeatSentAt = now;
   } catch (e) {
     console.warn("[heatmap] send error:", e?.code || e?.message || e);
   } finally {
@@ -374,12 +401,43 @@ async function maybeSendHeatmap(client) {
 async function runBot() {
   checkEnv();
   const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+  const stats = loadPlayerStats();
+  const normalizeEventTime = createEventTimeNormalizer();
   let readyOnce = false;
+
+  // Active sessions cannot safely continue across bot restarts because ADM
+  // timestamps are normalized relative to the current process.
+  let resetStaleSessions = false;
+  for (const playerStats of Object.values(stats)) {
+    if (playerStats.isConnected || playerStats.connectedSince !== null) {
+      playerStats.isConnected = false;
+      playerStats.connectedSince = null;
+      resetStaleSessions = true;
+    }
+  }
+
+  if (resetStaleSessions) {
+    savePlayerStats(stats);
+  }
 
   async function tick() {
     try {
-      await maybeSendHeatmap(client);
-      await maybeSendWeekendHeatmap(client);
+      const now = Date.now();
+
+      if (
+        !heatmapsCycleRunning &&
+        now - lastHeatmapsSentAt >= HEATMAP_INTERVAL_MS
+      ) {
+        heatmapsCycleRunning = true;
+        lastHeatmapsSentAt = now;
+
+        try {
+          await maybeSendHeatmap(client);
+          await maybeSendWeekendHeatmap(client);
+        } finally {
+          heatmapsCycleRunning = false;
+        }
+      }
 
       const currentAdm = await ensureLatestAdmSelected();
       if (!currentAdm) {
@@ -396,9 +454,31 @@ async function runBot() {
         return;
       }
 
+      const normalizedEventTimes = new Map();
       const groups = processKillEvents(lines);
 
-      const heatmapPoints = handleKillEvents(groups, lines);
+      const processSessionLine = (line) => {
+        const sessionEvent = processPlayerSessionLine(
+          line,
+          stats,
+          normalizeEventTime,
+          handlePlayerConnect,
+          handlePlayerDisconnect,
+        );
+
+        normalizedEventTimes.set(line, sessionEvent.normalizedTimeMs);
+      };
+
+      const heatmapPoints = handleKillEvents(
+        groups,
+        lines,
+        stats,
+        normalizedEventTimes,
+        processSessionLine,
+      );
+
+      savePlayerStats(stats);
+
       for (const pos of heatmapPoints) {
         addHeatPoint(pos.x, pos.y);
       }

@@ -1,6 +1,6 @@
 // src/features/commands/leaderboardCommand.js — Slash command for leaderboards
 
-const { SlashCommandBuilder } = require("discord.js");
+const { SlashCommandBuilder, MessageFlags } = require("discord.js");
 const {
   loadPlayerStatsForLeaderboard,
   getTopPlayers,
@@ -96,14 +96,14 @@ const leaderboardCommand = {
       } else {
         await interaction.reply({
           content: "❌ Unknown subcommand.",
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       }
     } catch (error) {
       console.error("[leaderboard command error]", error);
       await interaction.reply({
         content: "❌ An error occurred while retrieving the leaderboard.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
   },

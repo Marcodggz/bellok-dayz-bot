@@ -16,10 +16,10 @@ const {
 } = require("../storage/weekendHeatStore");
 const {
   WEEKEND_HEATMAP_WINDOW_MIN,
-  WEEKEND_HEATMAP_INTERVAL_MS,
   WEEKEND_HEATMAP_CHANNEL_ID,
   WEEKEND_HEATMAP_IMG_PATH,
-  CHERNARUS_MAP_PATH,
+  MAP_IMAGE_PATH,
+  MAP_DISPLAY_NAME,
   HEATMAP_WIDTH,
   HEATMAP_HEIGHT,
   MAP_SIZE,
@@ -54,30 +54,34 @@ function addWeekendHeatPoint(name, x, y) {
   if (!Number.isFinite(x) || !Number.isFinite(y)) return;
   if (x < 0 || x > MAP_SIZE || y < 0 || y > MAP_SIZE) return;
 
-  // Prevent duplicate positions within 5-second window
-  const recentDuplicate = wh.points.some(
-    (p) =>
-      p.name === name &&
-      Math.abs(p.x - x) < 1 &&
-      Math.abs(p.y - y) < 1 &&
-      ts - p.ts < 5000,
-  );
-
-  if (recentDuplicate) return;
-
-  wh.points.push({
+  const point = {
     name,
     x: clamp(x, 0, MAP_SIZE),
     y: clamp(y, 0, MAP_SIZE),
     ts,
-  });
+  };
+
+  // Keep exactly one position per player.
+  wh.points = wh.points.filter((p) => p.name !== name);
+  wh.points.push(point);
 
   saveWeekendHeat(wh);
 }
 
 function pruneWeekendHeat(wh) {
   const minTs = Date.now() - WEEKEND_HEATMAP_WINDOW_MIN * 60 * 1000;
-  wh.points = wh.points.filter((p) => p.ts >= minTs);
+  const latestByPlayer = new Map();
+
+  for (const point of wh.points) {
+    if (point.ts < minTs) continue;
+
+    const previous = latestByPlayer.get(point.name);
+    if (!previous || point.ts > previous.ts) {
+      latestByPlayer.set(point.name, point);
+    }
+  }
+
+  wh.points = Array.from(latestByPlayer.values());
 }
 
 /**
@@ -209,31 +213,22 @@ async function maybeSendWeekendHeatmap(client) {
   const now = Date.now();
   const wh = loadWeekendHeat();
 
-  // Respect interval
-  if (now - wh.lastUpdate < WEEKEND_HEATMAP_INTERVAL_MS) return;
+  const previousPoints = JSON.stringify(wh.points);
+  pruneWeekendHeat(wh);
+  const pointsChanged = JSON.stringify(wh.points) !== previousPoints;
+
+  if (pointsChanged) {
+    saveWeekendHeat(wh);
+  }
+
+  // Scheduling is controlled by the shared heatmap timer in index.js.
 
   // Prevent concurrent sends
   if (weekendHeatmapSending) return;
   weekendHeatmapSending = true;
 
   try {
-    // Prune old points
-    pruneWeekendHeat(wh);
 
-    // Skip if no points
-    if (!wh.points.length) {
-      console.log("[weekend-heatmap] No points to render");
-      return;
-    }
-    // Render image
-    renderWeekendHeatPng(
-      wh.points,
-      WEEKEND_HEATMAP_IMG_PATH,
-      CHERNARUS_MAP_PATH,
-    );
-    await new Promise((r) => setTimeout(r, 80));
-
-    // Fetch channel
     const ch = await client.channels
       .fetch(WEEKEND_HEATMAP_CHANNEL_ID)
       .catch(() => null);
@@ -242,26 +237,47 @@ async function maybeSendWeekendHeatmap(client) {
       return;
     }
 
-    // Build embed
-    const updatedTimestamp = Math.floor((now - 60_000) / 1000);
-    const file = new AttachmentBuilder(WEEKEND_HEATMAP_IMG_PATH);
-
-    // Calculate unique players
-    const uniquePlayers = new Set(wh.points.map((p) => p.name)).size;
-
+    const updatedTimestamp = Math.floor(now / 1000);
     const embed = new EmbedBuilder()
-      .setTitle("🗺️ • Weekend Heatmap")
-      .setDescription(
-        `• **Updated:** <t:${updatedTimestamp}:R>\n` +
-          `• **Players:** ${uniquePlayers}\n` +
-          `• **Position Samples:** ${wh.points.length}`,
-      )
-      .setImage(`attachment://${WEEKEND_HEATMAP_IMG_PATH.split("/").pop()}`)
+      .setTitle("📍 Players Location Heatmap 📍")
       .setColor(0x00ae86)
-      .setFooter({ text: "Bellok's Killfeed • Chernarus" })
+      .setFooter({ text: `Bellok's Killfeed • ${MAP_DISPLAY_NAME}` })
       .setTimestamp(now);
 
-    const payload = { content: "", embeds: [embed], files: [file] };
+    let payload;
+
+    if (wh.points.length) {
+      renderWeekendHeatPng(
+        wh.points,
+        WEEKEND_HEATMAP_IMG_PATH,
+        MAP_IMAGE_PATH,
+      );
+      await new Promise((r) => setTimeout(r, 80));
+
+      const file = new AttachmentBuilder(WEEKEND_HEATMAP_IMG_PATH);
+
+      embed
+        .setDescription(
+          `• **Updated:** <t:${updatedTimestamp}:R>\n` +
+            `• **Players:** ${wh.points.length}`,
+        )
+        .setImage(
+          `attachment://${WEEKEND_HEATMAP_IMG_PATH.split("/").pop()}`,
+        );
+
+      payload = { content: "", embeds: [embed], files: [file] };
+    } else {
+      embed.setDescription(
+        `No player locations recorded in the last ${WEEKEND_HEATMAP_WINDOW_MIN} minutes.`,
+      );
+
+      payload = {
+        content: "",
+        embeds: [embed],
+        files: [],
+        attachments: [],
+      };
+    }
 
     // Try to edit existing message, or send new one
     let sent = false;

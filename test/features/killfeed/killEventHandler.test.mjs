@@ -96,6 +96,8 @@ describe("killEventHandler", () => {
       {
         kill: killEvent,
         line: lines[0],
+        killerStats: null,
+        victimStats: null,
       },
       "Alice|Bob|AKM",
     );
@@ -125,10 +127,146 @@ describe("killEventHandler", () => {
       {
         kill: killEvent,
         line: lines[1],
+        killerStats: null,
+        victimStats: null,
       },
       "Charlie|Dave|M4",
     );
   });
+
+  test("updates stats and queues snapshots for the killfeed", () => {
+    alreadySentBucket.mockReturnValue(false);
+
+    const killEvent = {
+      type: "pvp",
+      killer: "Alice",
+      victim: "Bob",
+      weapon: "AKM",
+      t: "12:01:00",
+    };
+
+    const line =
+      '12:01:00 | Player "Alice" killed Player "Bob" with AKM';
+
+    const stats = {
+      Bob: {
+        kills: 0,
+        deaths: 0,
+        headshots: 0,
+        kd: 0,
+        killStreak: 0,
+        score: 0,
+        rank: "Private",
+        connectedSince: 43_200_000,
+        accumulatedAliveMs: 0,
+        accumulatedPlayedMs: 0,
+        isConnected: true,
+        lastTimeAlive: null,
+      },
+    };
+
+    const normalizedEventTimes = new Map([
+      [line, 43_260_000],
+    ]);
+
+    handleKillEvents(
+      new Map([["Alice|Bob|AKM", killEvent]]),
+      [line],
+      stats,
+      normalizedEventTimes,
+    );
+
+    expect(stats.Bob.lastTimeAlive).toBe("00H 01M 00S");
+
+    expect(queueKillfeedEvent).toHaveBeenCalledWith(
+      {
+        kill: killEvent,
+        line,
+        killerStats: expect.objectContaining({
+          kills: 1,
+        }),
+        victimStats: expect.objectContaining({
+          deaths: 1,
+          lastTimeAlive: "00H 01M 00S",
+        }),
+      },
+      "Alice|Bob|AKM",
+    );
+  });
+
+
+  test("processes connect, death, and respawn in chronological ADM order", () => {
+    alreadySentBucket.mockReturnValue(false);
+
+    const connectLine =
+      '14:45:39 | Player "Vinnizd" (id=test pos=<11344.6, 9897.9, 175.9>) is connected';
+    const killLine =
+      '14:50:54 | Player "Vinnizd" (DEAD) (id=test pos=<11341, 10046.8, 172.2>) killed by 6-M7 Frag Grenade';
+    const respawnLine =
+      '14:51:05 | Player "Vinnizd" (id=test pos=<10384.5, 10979.0, 189.8>) is connected';
+
+    const killEvent = {
+      type: "explosion",
+      victim: "Vinnizd",
+      device: "6-M7 Frag Grenade",
+      t: "14:50:54",
+      line: killLine,
+    };
+
+    const stats = {};
+    const normalizedEventTimes = new Map();
+
+    const processSessionLine = (line) => {
+      const times = new Map([
+        [connectLine, 53_139_000],
+        [killLine, 53_454_000],
+        [respawnLine, 53_465_000],
+      ]);
+
+      normalizedEventTimes.set(line, times.get(line));
+
+      if (line === connectLine || line === respawnLine) {
+        stats.Vinnizd ??= {
+          kills: 0,
+          deaths: 0,
+          headshots: 0,
+          kd: 0,
+          killStreak: 0,
+          score: 0,
+          rank: "Private",
+          connectedSince: null,
+          accumulatedAliveMs: 0,
+          accumulatedPlayedMs: 0,
+          isConnected: false,
+          lastTimeAlive: null,
+        };
+
+        stats.Vinnizd.isConnected = true;
+        stats.Vinnizd.connectedSince = times.get(line);
+      }
+    };
+
+    handleKillEvents(
+      new Map([["Vinnizd|explosion", killEvent]]),
+      [connectLine, killLine, respawnLine],
+      stats,
+      normalizedEventTimes,
+      processSessionLine,
+    );
+
+    expect(queueKillfeedEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        victimStats: expect.objectContaining({
+          lastTimeAlive: "00H 05M 15S",
+        }),
+      }),
+      "Vinnizd|explosion",
+    );
+
+    expect(stats.Vinnizd.connectedSince).toBe(53_465_000);
+    expect(stats.Vinnizd.isConnected).toBe(true);
+  });
+
 
   test("valid finite coordinates are returned", () => {
     alreadySentBucket.mockReturnValue(false);

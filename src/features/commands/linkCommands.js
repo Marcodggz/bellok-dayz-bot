@@ -1,6 +1,6 @@
 // src/features/commands/linkCommands.js — Slash commands for linking Discord users to DayZ gamertags
 
-const { SlashCommandBuilder } = require("discord.js");
+const { SlashCommandBuilder, MessageFlags } = require("discord.js");
 const {
   linkGamertag,
   unlinkGamertag,
@@ -39,19 +39,19 @@ const linkCommand = {
       if (existingGamertag) {
         await interaction.reply({
           content: `✅ Updated your linked gamertag from **${existingGamertag}** to **${gamertag}**`,
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       } else {
         await interaction.reply({
           content: `✅ Successfully linked your account to gamertag **${gamertag}**`,
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       }
     } catch (error) {
       console.error("[link command error]", error);
       await interaction.reply({
         content: "❌ An error occurred while linking your gamertag.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
   },
@@ -79,7 +79,7 @@ const unlinkCommand = {
       if (!existingGamertag) {
         await interaction.reply({
           content: "❌ You don't have a linked gamertag.",
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         return;
       }
@@ -89,13 +89,13 @@ const unlinkCommand = {
 
       await interaction.reply({
         content: `✅ Successfully unlinked your account from gamertag **${existingGamertag}**`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     } catch (error) {
       console.error("[unlink command error]", error);
       await interaction.reply({
         content: "❌ An error occurred while unlinking your gamertag.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
   },

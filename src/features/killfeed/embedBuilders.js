@@ -2,9 +2,10 @@
 // ADM pos=<X, Y, Z>: X/Y are map coordinates; Z is elevation.
 
 const { EmbedBuilder } = require("discord.js");
+const { IZURVIVE_MAP_SLUG } = require("../../config/config");
 
 function buildIzurviveLocationUrl(x, y, zoom = 8) {
-  return `https://www.izurvive.com/chernarusplus#location=${x};${y};${zoom}`;
+  return `https://www.izurvive.com/${IZURVIVE_MAP_SLUG}/#location=${x};${y};${zoom}`;
 }
 
 // Deterministic action verb selection based on killer + victim names
@@ -59,31 +60,11 @@ function embedPvp(
 
   lines.push(`**⚔️ Killfeed Notification ⚔️**`);
 
-  // Convert HH:MM:SS to 12-hour format with a.m./p.m.
-  let timeDisplay = "N/A";
-  if (t) {
-    const match = t.match(/^(\d{2}):(\d{2}):(\d{2})$/);
-    if (match) {
-      let hours = parseInt(match[1], 10);
-      const minutes = match[2];
-      const seconds = match[3];
-      const period = hours >= 12 ? "p.m." : "a.m.";
-      hours = hours % 12 || 12;
-      timeDisplay = `${hours}:${minutes}:${seconds} ${period}`;
-    } else {
-      timeDisplay = t;
-    }
-  } else if (eventTimestamp) {
-    const date = new Date(eventTimestamp);
-    let hours = date.getHours();
-    const minutes = String(date.getMinutes()).padStart(2, "0");
-    const seconds = String(date.getSeconds()).padStart(2, "0");
-    const period = hours >= 12 ? "p.m." : "a.m.";
-    hours = hours % 12 || 12;
-    timeDisplay = `${hours}:${minutes}:${seconds} ${period}`;
-  }
+  const timeDisplay = eventTimestamp
+    ? `<t:${Math.floor(eventTimestamp / 1000)}:T>`
+    : t || "Unknown time";
 
-  lines.push(`### PVP Kill - \`${timeDisplay}\``);
+  lines.push(`### PVP Kill - ${timeDisplay}`);
   lines.push("");
 
   const killerName = killer || "Unknown";
@@ -163,31 +144,11 @@ function embedExplosion(
 
   lines.push(`**💥 Killfeed Notification 💥**`);
 
-  // Convert HH:MM:SS to 12-hour format with a.m./p.m.
-  let timeDisplay = "N/A";
-  if (t) {
-    const match = t.match(/^(\d{2}):(\d{2}):(\d{2})$/);
-    if (match) {
-      let hours = parseInt(match[1], 10);
-      const minutes = match[2];
-      const seconds = match[3];
-      const period = hours >= 12 ? "p.m." : "a.m.";
-      hours = hours % 12 || 12;
-      timeDisplay = `${hours}:${minutes}:${seconds} ${period}`;
-    } else {
-      timeDisplay = t;
-    }
-  } else if (eventTimestamp) {
-    const date = new Date(eventTimestamp);
-    let hours = date.getHours();
-    const minutes = String(date.getMinutes()).padStart(2, "0");
-    const seconds = String(date.getSeconds()).padStart(2, "0");
-    const period = hours >= 12 ? "p.m." : "a.m.";
-    hours = hours % 12 || 12;
-    timeDisplay = `${hours}:${minutes}:${seconds} ${period}`;
-  }
+  const timeDisplay = eventTimestamp
+    ? `<t:${Math.floor(eventTimestamp / 1000)}:T>`
+    : t || "Unknown time";
 
-  lines.push(`### Explosion Death - \`${timeDisplay}\``);
+  lines.push(`### Explosion Death - ${timeDisplay}`);
   lines.push("");
 
   const victimName = victim || "Unknown";

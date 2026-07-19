@@ -11,6 +11,33 @@ function queueKillfeedEvent(event, key) {
   });
 }
 
+function resolveEventTimestamp(rawTime, queuedAt) {
+  if (!rawTime) return queuedAt;
+
+  const match = rawTime.match(/^(\d{2}):(\d{2}):(\d{2})$/);
+  if (!match) return queuedAt;
+
+  const [, hours, minutes, seconds] = match;
+  const eventDate = new Date(queuedAt);
+
+  eventDate.setHours(
+    Number(hours),
+    Number(minutes),
+    Number(seconds),
+    0,
+  );
+
+  const offsetMinutes = Number(process.env.ADM_TIME_OFFSET_MINUTES || 0);
+  eventDate.setMinutes(eventDate.getMinutes() + offsetMinutes);
+
+  // A future time usually means the ADM event belongs to the previous day.
+  if (eventDate.getTime() - queuedAt > 5 * 60 * 1000) {
+    eventDate.setDate(eventDate.getDate() - 1);
+  }
+
+  return eventDate.getTime();
+}
+
 async function flushKillfeedQueue(client, channelId, debug, rawToDiscord) {
   if (killfeedQueue.length === 0) {
     if (debug) console.log("[killfeed] Queue empty, nothing to flush");
@@ -28,33 +55,19 @@ async function flushKillfeedQueue(client, channelId, debug, rawToDiscord) {
 
     let sentCount = 0;
 
-    // Remove from queue only after successful send
     while (killfeedQueue.length > 0) {
       const queuedEvent = killfeedQueue[0];
       const { event, timestamp } = queuedEvent;
 
-      let eventTimestamp = timestamp;
-      if (event.kill.t) {
-        const timeMatch = event.kill.t.match(/^(\d{2}):(\d{2}):(\d{2})$/);
-        if (timeMatch) {
-          const now = new Date(timestamp);
-          const [, hours, minutes, seconds] = timeMatch;
-          const eventDate = new Date(now);
-          eventDate.setHours(parseInt(hours, 10));
-          eventDate.setMinutes(parseInt(minutes, 10));
-          eventDate.setSeconds(parseInt(seconds, 10));
+      const eventTimestamp = resolveEventTimestamp(event.kill.t, timestamp);
 
-          // Handle midnight rollover: if eventDate is more than 5 minutes in the future,
-          // the event likely happened before midnight (yesterday)
-          if (eventDate.getTime() - timestamp > 5 * 60 * 1000) {
-            eventDate.setDate(eventDate.getDate() - 1);
-          }
+      const payload = buildKillEmbed(
+        event.kill,
+        eventTimestamp,
+        event.killerStats ?? null,
+        event.victimStats ?? null,
+      );
 
-          eventTimestamp = eventDate.getTime();
-        }
-      }
-
-      const payload = buildKillEmbed(event.kill, eventTimestamp);
       if (!payload) {
         killfeedQueue.shift();
         continue;
@@ -62,28 +75,30 @@ async function flushKillfeedQueue(client, channelId, debug, rawToDiscord) {
 
       try {
         await ch.send(payload);
+
         if (rawToDiscord && event.line) {
-          const raw = event.line;
-          if (raw) await ch.send("```" + raw + "```");
+          await ch.send("```" + event.line + "```");
         }
 
         killfeedQueue.shift();
         sentCount++;
 
-        await new Promise((r) => setTimeout(r, 100));
-      } catch (e) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      } catch (error) {
         console.error(
           "[killfeed] send error, stopping flush. Remaining events will retry next time:",
-          e?.code || e?.message || e,
+          error?.code || error?.message || error,
         );
-        // Stop flushing, leave failed event and remaining events in queue
         break;
       }
     }
 
     console.log(`[killfeed] Successfully flushed ${sentCount} events`);
-  } catch (e) {
-    console.error("[killfeed] flush error:", e?.code || e?.message || e);
+  } catch (error) {
+    console.error(
+      "[killfeed] flush error:",
+      error?.code || error?.message || error,
+    );
   }
 }
 

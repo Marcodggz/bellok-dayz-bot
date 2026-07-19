@@ -1,10 +1,36 @@
+import { createRequire } from "node:module";
 import { describe, test, expect, beforeEach, vi } from "vitest";
+
+const require = createRequire(import.meta.url);
+
+const processorPath = require.resolve(
+  "../../../src/features/killfeed/killEventProcessor.js",
+);
+const trackerPath = require.resolve(
+  "../../../src/features/tracking/positionTracker.js",
+);
+const weekendHelpersPath = require.resolve(
+  "../../../src/utils/weekendHeatmapHelpers.js",
+);
 
 describe("killEventProcessor", () => {
   let processor;
 
   beforeEach(async () => {
     vi.resetModules();
+
+    delete require.cache[processorPath];
+    delete require.cache[trackerPath];
+    delete require.cache[weekendHelpersPath];
+
+    require.cache[weekendHelpersPath] = {
+      id: weekendHelpersPath,
+      filename: weekendHelpersPath,
+      loaded: true,
+      exports: {
+        addWeekendHeatPoint: vi.fn(),
+      },
+    };
 
     // Suppress only dotenv console output
     const originalConsoleLog = console.log;

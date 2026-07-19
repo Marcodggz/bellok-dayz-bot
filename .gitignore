@@ -12,8 +12,12 @@ heatmap.png
 
 # Optional local data
 data/mock-player-stats.json
+data/player-stats.json
 data/linked-gamertags.json
 output/
 
 # Local AI/dev notes
 AI_CONTEXT.md
+images/livonia.jpg
+
+.env.chernarus.backup

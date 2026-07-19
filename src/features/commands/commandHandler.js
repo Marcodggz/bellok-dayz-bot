@@ -1,5 +1,6 @@
 // src/features/commands/commandHandler.js — Handle slash command interactions
 
+const { MessageFlags } = require("discord.js");
 const { linkCommand, unlinkCommand } = require("./linkCommands");
 const { statsCommand } = require("./statsCommand");
 const { leaderboardCommand } = require("./leaderboardCommand");
@@ -37,7 +38,7 @@ async function handleCommandInteraction(interaction) {
     // Try to send an error message to the user
     const errorMessage = {
       content: "❌ An error occurred while executing this command.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     };
 
     if (interaction.replied || interaction.deferred) {

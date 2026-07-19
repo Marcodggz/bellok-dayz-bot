@@ -2,14 +2,14 @@
 
 const { EmbedBuilder } = require("discord.js");
 const { SERVER_NAME } = require("../../config/config");
-const { loadMockStats } = require("../../storage/mockStatsStore");
+const { loadPlayerStats } = require("../../storage/playerStatsStore");
 
 /**
  * Load player stats for leaderboard display
  * @returns {Object} - Player stats object
  */
 function loadPlayerStatsForLeaderboard() {
-  return loadMockStats();
+  return loadPlayerStats();
 }
 
 /**
@@ -83,7 +83,6 @@ async function replyLeaderboard(interaction, title, playerArray, formatValue) {
     const emptyEmbed = buildEmptyLeaderboardEmbed(title);
     await interaction.reply({
       embeds: [emptyEmbed],
-      ephemeral: false,
     });
     return;
   }
@@ -91,7 +90,6 @@ async function replyLeaderboard(interaction, title, playerArray, formatValue) {
   const embed = buildLeaderboardEmbed(title, playerArray, formatValue);
   await interaction.reply({
     embeds: [embed],
-    ephemeral: false,
   });
 }
 

@@ -29,7 +29,9 @@ const HEATMAP_HEIGHT = Number(process.env.HEATMAP_HEIGHT || 512);
 const MAP_SIZE = Number(process.env.MAP_SIZE || 15360);
 const HEATMAP_WINDOW_MIN = Number(process.env.HEATMAP_WINDOW_MIN || 720);
 const HEATMAP_RESET_ON_ROTATE = process.env.HEATMAP_RESET_ON_ROTATE === "1";
-const CHERNARUS_MAP_PATH = process.env.CHERNARUS_MAP_PATH || "";
+const MAP_IMAGE_PATH = process.env.MAP_IMAGE_PATH || "";
+const MAP_DISPLAY_NAME = process.env.MAP_DISPLAY_NAME || "Livonia";
+const IZURVIVE_MAP_SLUG = process.env.IZURVIVE_MAP_SLUG || "livonia";
 
 // ================== MAP CALIBRATION ==================
 const MAP_MIN_X = Number(process.env.MAP_MIN_X || 0);
@@ -100,7 +102,9 @@ module.exports = {
   MAP_SIZE,
   HEATMAP_WINDOW_MIN,
   HEATMAP_RESET_ON_ROTATE,
-  CHERNARUS_MAP_PATH,
+  MAP_IMAGE_PATH,
+  MAP_DISPLAY_NAME,
+  IZURVIVE_MAP_SLUG,
 
   // Map calibration
   MAP_MIN_X,

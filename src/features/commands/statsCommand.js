@@ -4,12 +4,13 @@ const {
   SlashCommandBuilder,
   EmbedBuilder,
   AttachmentBuilder,
+  MessageFlags,
 } = require("discord.js");
 const {
   getGamertagByDiscordUserId,
   getDiscordUserIdByGamertag,
 } = require("../../storage/linkedGamertagsStore");
-const { loadMockStats } = require("../../storage/mockStatsStore");
+const { loadPlayerStats } = require("../../storage/playerStatsStore");
 const { SERVER_NAME } = require("../../config/config");
 const { getRankBadgePath } = require("../../utils/rankBadges");
 
@@ -50,20 +51,20 @@ const statsCommand = {
           await interaction.reply({
             content:
               "❌ You don't have a linked gamertag. Please use `/link gamertag` first, or provide a player name with `/stats player: Gamertag`",
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
           return;
         }
       }
 
-      // Load mock player stats
-      const allStats = loadMockStats();
+      // Load real player stats
+      const allStats = loadPlayerStats();
       const playerStats = allStats[gamertag];
 
       if (!playerStats) {
         await interaction.reply({
           content: `❌ No stats found for player **${gamertag}**`,
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         return;
       }
@@ -82,13 +83,12 @@ const statsCommand = {
       await interaction.reply({
         embeds: [statsEmbed],
         files: files,
-        ephemeral: false,
       });
     } catch (error) {
       console.error("[stats command error]", error);
       await interaction.reply({
         content: "❌ An error occurred while retrieving stats.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
   },
