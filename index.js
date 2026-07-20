@@ -64,6 +64,7 @@ const {
   maybeSendWeekendHeatmap,
 } = require("./src/utils/weekendHeatmapHelpers");
 const { mapToPixelCoords } = require("./src/utils/coordinateMapper");
+const { createHeatmapCycle } = require("./src/utils/heatmapCycle");
 const {
   buildHeatClusters,
   drawHeatCluster,
@@ -292,8 +293,6 @@ function checkEnv() {
 
 // ================== LOOP PRINCIPAL ==================
 let heatmapSending = false;
-let lastHeatmapsSentAt = 0;
-let heatmapsCycleRunning = false;
 
 async function maybeSendHeatmap(client) {
   if (!HEATMAP_CHANNEL_ID) return;
@@ -405,6 +404,14 @@ async function runBot() {
   const normalizeEventTime = createEventTimeNormalizer();
   let readyOnce = false;
 
+  const maybeRunHeatmapCycle = createHeatmapCycle({
+    intervalMs: HEATMAP_INTERVAL_MS,
+    runCycle: async () => {
+      await maybeSendHeatmap(client);
+      await maybeSendWeekendHeatmap(client);
+    },
+  });
+
   // Active sessions cannot safely continue across bot restarts because ADM
   // timestamps are normalized relative to the current process.
   let resetStaleSessions = false;
@@ -422,22 +429,7 @@ async function runBot() {
 
   async function tick() {
     try {
-      const now = Date.now();
-
-      if (
-        !heatmapsCycleRunning &&
-        now - lastHeatmapsSentAt >= HEATMAP_INTERVAL_MS
-      ) {
-        heatmapsCycleRunning = true;
-        lastHeatmapsSentAt = now;
-
-        try {
-          await maybeSendHeatmap(client);
-          await maybeSendWeekendHeatmap(client);
-        } finally {
-          heatmapsCycleRunning = false;
-        }
-      }
+      await maybeRunHeatmapCycle();
 
       const currentAdm = await ensureLatestAdmSelected();
       if (!currentAdm) {
