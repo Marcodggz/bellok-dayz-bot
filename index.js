@@ -499,7 +499,7 @@ async function runBot() {
     }
   }
 
-  client.once("ready", async () => {
+  client.once("clientReady", async () => {
     if (readyOnce) return;
     readyOnce = true;
     console.log(`✅ Bot online as ${client.user.tag}`);

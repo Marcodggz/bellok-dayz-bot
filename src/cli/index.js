@@ -6,7 +6,7 @@ const { Client, GatewayIntentBits, EmbedBuilder } = require("discord.js");
 async function runDiscordTest(config, checkEnv) {
   checkEnv();
   const client = new Client({ intents: [GatewayIntentBits.Guilds] });
-  client.once("ready", async () => {
+  client.once("clientReady", async () => {
     try {
       const ch = await client.channels.fetch(config.CHANNEL_ID);
       await ch.send({
@@ -39,7 +39,7 @@ async function runDiscordHeatmapTest(config, checkEnv) {
     process.exit(1);
   }
   const client = new Client({ intents: [GatewayIntentBits.Guilds] });
-  client.once("ready", async () => {
+  client.once("clientReady", async () => {
     try {
       const ch = await client.channels.fetch(config.HEATMAP_CHANNEL_ID);
       await ch.send({
@@ -295,7 +295,7 @@ async function runDiscordWeekendHeatmapTest(config, checkEnv) {
     process.exit(1);
   }
   const client = new Client({ intents: [GatewayIntentBits.Guilds] });
-  client.once("ready", async () => {
+  client.once("clientReady", async () => {
     try {
       const ch = await client.channels.fetch(config.WEEKEND_HEATMAP_CHANNEL_ID);
       await ch.send({
