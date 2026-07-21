@@ -56,6 +56,34 @@ function getGamertagByDiscordUserId(discordUserId) {
 }
 
 /**
+ * Find the owner of a gamertag in an existing links object.
+ * Tries exact match first, then a unique case-insensitive match.
+ * @param {Object} links - Map of Discord user ID to gamertag
+ * @param {string} gamertag - Gamertag to search for
+ * @returns {string|null} Discord user ID or null
+ */
+function findGamertagOwner(links, gamertag) {
+  const trimmedGamertag = String(gamertag || "").trim();
+
+  if (!trimmedGamertag) {
+    return null;
+  }
+
+  for (const [userId, linkedTag] of Object.entries(links)) {
+    if (linkedTag === trimmedGamertag) {
+      return userId;
+    }
+  }
+
+  const lowercaseSearch = trimmedGamertag.toLowerCase();
+  const matches = Object.entries(links).filter(
+    ([, linkedTag]) => linkedTag.toLowerCase() === lowercaseSearch,
+  );
+
+  return matches.length === 1 ? matches[0][0] : null;
+}
+
+/**
  * Get Discord user ID by gamertag
  * Tries exact match first, then case-insensitive match
  * Returns null if no match or multiple case-insensitive matches found
@@ -64,28 +92,7 @@ function getGamertagByDiscordUserId(discordUserId) {
  */
 function getDiscordUserIdByGamertag(gamertag) {
   const links = loadLinkedGamertags();
-  const trimmedGamertag = gamertag.trim();
-
-  // Try exact match first
-  for (const [userId, linkedTag] of Object.entries(links)) {
-    if (linkedTag === trimmedGamertag) {
-      return userId;
-    }
-  }
-
-  // Fallback to case-insensitive match
-  const lowercaseSearch = trimmedGamertag.toLowerCase();
-  const matches = [];
-
-  for (const [userId, linkedTag] of Object.entries(links)) {
-    if (linkedTag.toLowerCase() === lowercaseSearch) {
-      matches.push(userId);
-    }
-  }
-
-  // Return result only if exactly one match found
-  // Multiple matches indicate a conflict, so return null
-  return matches.length === 1 ? matches[0] : null;
+  return findGamertagOwner(links, gamertag);
 }
 
 module.exports = {
@@ -94,5 +101,6 @@ module.exports = {
   linkGamertag,
   unlinkGamertag,
   getGamertagByDiscordUserId,
+  findGamertagOwner,
   getDiscordUserIdByGamertag,
 };

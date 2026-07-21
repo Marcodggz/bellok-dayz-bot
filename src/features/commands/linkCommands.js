@@ -5,7 +5,12 @@ const {
   linkGamertag,
   unlinkGamertag,
   getGamertagByDiscordUserId,
+  getDiscordUserIdByGamertag,
 } = require("../../storage/linkedGamertagsStore");
+const {
+  loadPlayerStats,
+  findPlayerStats,
+} = require("../../storage/playerStatsStore");
 
 /**
  * Define the /link command
@@ -26,17 +31,39 @@ const linkCommand = {
    * @param {import('discord.js').CommandInteraction} interaction
    */
   async execute(interaction) {
-    const gamertag = interaction.options.getString("gamertag");
+    const requestedGamertag = interaction.options
+      .getString("gamertag")
+      .trim();
     const userId = interaction.user.id;
 
     try {
-      // Check if user is already linked
       const existingGamertag = getGamertagByDiscordUserId(userId);
+      const existingOwner = getDiscordUserIdByGamertag(requestedGamertag);
 
-      // Link the gamertag
+      if (existingOwner && existingOwner !== userId) {
+        await interaction.reply({
+          content: `❌ Gamertag **${requestedGamertag}** is already linked to another Discord account.`,
+          flags: MessageFlags.Ephemeral,
+        });
+        return;
+      }
+
+      const playerResult = findPlayerStats(
+        loadPlayerStats(),
+        requestedGamertag,
+      );
+      const gamertag = playerResult
+        ? playerResult.gamertag
+        : requestedGamertag;
+
       linkGamertag(userId, gamertag);
 
-      if (existingGamertag) {
+      if (!playerResult) {
+        await interaction.reply({
+          content: `✅ Linked your account to gamertag **${gamertag}**. No statistics have been recorded for this player yet; they will appear after playing on the server.`,
+          flags: MessageFlags.Ephemeral,
+        });
+      } else if (existingGamertag) {
         await interaction.reply({
           content: `✅ Updated your linked gamertag from **${existingGamertag}** to **${gamertag}**`,
           flags: MessageFlags.Ephemeral,
