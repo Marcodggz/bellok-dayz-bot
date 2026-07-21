@@ -54,6 +54,55 @@ describe("embedBuilders", () => {
       expect(description).not.toContain("Test`Victim");
     });
 
+    test("shows weapon and ammo using the PvP killfeed structure", () => {
+      const killEvent = {
+        killer: "Aizenn-7",
+        victim: "mrboderlandsfn-_",
+        weapon: "M70 Tundra",
+        ammo: "Bullet_308Win",
+        distanceMeters: 72.17,
+        hitZone: "Torso",
+        damage: 146,
+        victimPosition: { x: 3276.3, y: 5142.0, z: 398.1 },
+        t: "17:07:55",
+      };
+
+      const result = embedPvp(killEvent, null, null, null);
+      const description = result.embeds[0].data.description;
+
+      expect(description).toContain("### PVP Kill - 17:07:55");
+      expect(description).toContain(
+        "**Weapon** M70 Tundra (Bullet_308Win)",
+      );
+      expect(description).toContain("**Distance** 72 meters");
+      expect(description).toContain("**Hit** Torso 146 damage");
+      expect(description).toContain(
+        "**Location** [3276.3;5142.0;398.1]",
+      );
+      expect(description).toContain("__**Killer:**__ `Aizenn-7`");
+      expect(description).toContain("__**Victim:**__ `mrboderlandsfn-_`");
+    });
+
+    test("shows melee weapons without empty ammo parentheses", () => {
+      const killEvent = {
+        killer: "TestKiller",
+        victim: "TestVictim",
+        weapon: "Combat Knife",
+        ammo: null,
+        distanceMeters: 1.2,
+        hitZone: "Torso",
+        damage: 35,
+        t: "17:07:55",
+      };
+
+      const result = embedPvp(killEvent, null, null, null);
+      const description = result.embeds[0].data.description;
+
+      expect(description).toContain("**Weapon** Combat Knife");
+      expect(description).not.toContain("Combat Knife ()");
+      expect(description).not.toContain("Combat Knife (N/A)");
+    });
+
     test("shows provided stats when available", () => {
       const killEvent = {
         killer: "TestKiller",

@@ -77,7 +77,8 @@ function embedPvp(
   lines.push(`\`${killerName}\` ${action} \`${victimName}\``);
 
   const weaponText = weapon || "N/A";
-  lines.push(`**Weapon** ${weaponText}`);
+  const ammoText = ammo ? ` (${ammo})` : "";
+  lines.push(`**Weapon** ${weaponText}${ammoText}`);
 
   const distanceText =
     distanceMeters !== null && distanceMeters !== undefined
