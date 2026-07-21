@@ -117,7 +117,7 @@ async function handleRankLeaderboard(interaction) {
   const allStats = loadPlayerStatsForLeaderboard();
 
   const playerArray = Object.entries(allStats)
-    .filter(([gamertag, stats]) => stats.kills > 0 || stats.deaths > 0)
+    .filter(([, stats]) => stats.kills > 0 || stats.deaths > 0)
     .map(([gamertag, stats]) => ({
       gamertag,
       score: stats.score ?? 0,
@@ -142,7 +142,7 @@ async function handleKillsLeaderboard(interaction) {
   const allStats = loadPlayerStatsForLeaderboard();
 
   const playerArray = Object.entries(allStats)
-    .filter(([gamertag, stats]) => stats.kills > 0 || stats.deaths > 0)
+    .filter(([, stats]) => stats.kills > 0 || stats.deaths > 0)
     .map(([gamertag, stats]) => ({
       gamertag,
       kills: stats.kills ?? 0,
@@ -166,7 +166,7 @@ async function handleDeathsLeaderboard(interaction) {
   const allStats = loadPlayerStatsForLeaderboard();
 
   const playerArray = Object.entries(allStats)
-    .filter(([gamertag, stats]) => stats.kills > 0 || stats.deaths > 0)
+    .filter(([, stats]) => stats.kills > 0 || stats.deaths > 0)
     .map(([gamertag, stats]) => ({
       gamertag,
       deaths: stats.deaths ?? 0,
@@ -190,7 +190,7 @@ async function handleKdLeaderboard(interaction) {
   const allStats = loadPlayerStatsForLeaderboard();
 
   const playerArray = Object.entries(allStats)
-    .filter(([gamertag, stats]) => stats.kills > 0 || stats.deaths > 0)
+    .filter(([, stats]) => stats.kills > 0 || stats.deaths > 0)
     .map(([gamertag, stats]) => ({
       gamertag,
       kd: stats.kd ?? 0,
@@ -214,7 +214,7 @@ async function handleHeadshotsLeaderboard(interaction) {
   const allStats = loadPlayerStatsForLeaderboard();
 
   const playerArray = Object.entries(allStats)
-    .filter(([gamertag, stats]) => stats.kills > 0 || stats.deaths > 0)
+    .filter(([, stats]) => stats.kills > 0 || stats.deaths > 0)
     .map(([gamertag, stats]) => ({
       gamertag,
       headshots: stats.headshots ?? 0,
@@ -238,7 +238,7 @@ async function handleKillStreakLeaderboard(interaction) {
   const allStats = loadPlayerStatsForLeaderboard();
 
   const playerArray = Object.entries(allStats)
-    .filter(([gamertag, stats]) => stats.kills > 0 || stats.deaths > 0)
+    .filter(([, stats]) => stats.kills > 0 || stats.deaths > 0)
     .map(([gamertag, stats]) => ({
       gamertag,
       killStreak: stats.killStreak ?? 0,
@@ -265,7 +265,7 @@ async function handleDeathStreakLeaderboard(interaction) {
   const allStats = loadPlayerStatsForLeaderboard();
 
   const playerArray = Object.entries(allStats)
-    .filter(([gamertag, stats]) => stats.kills > 0 || stats.deaths > 0)
+    .filter(([, stats]) => stats.kills > 0 || stats.deaths > 0)
     .map(([gamertag, stats]) => ({
       gamertag,
       deathStreak: stats.deathStreak ?? 0,
@@ -292,7 +292,7 @@ async function handleLongestKillLeaderboard(interaction) {
   const allStats = loadPlayerStatsForLeaderboard();
 
   const playerArray = Object.entries(allStats)
-    .filter(([gamertag, stats]) => stats.kills > 0 || stats.deaths > 0)
+    .filter(([, stats]) => stats.kills > 0 || stats.deaths > 0)
     .map(([gamertag, stats]) => ({
       gamertag,
       longestKill: stats.longestKill ?? 0,
@@ -325,7 +325,7 @@ async function handleTimeAliveLeaderboard(interaction) {
 
   const playerArray = Object.entries(allStats)
     .filter(
-      ([gamertag, stats]) =>
+      ([, stats]) =>
         stats.kills > 0 ||
         stats.deaths > 0 ||
         (stats.accumulatedAliveMs ?? 0) > 0,
@@ -357,7 +357,7 @@ async function handleTimePlayedLeaderboard(interaction) {
 
   const playerArray = Object.entries(allStats)
     .filter(
-      ([gamertag, stats]) =>
+      ([, stats]) =>
         stats.kills > 0 ||
         stats.deaths > 0 ||
         (stats.accumulatedAliveMs ?? 0) > 0 ||

@@ -23,7 +23,6 @@ const {
   tMadrid,
   clamp,
 } = require("./src/utils/helpers");
-const { loadJSON, saveJSON } = require("./src/storage/jsonStore");
 const { loadHeat, saveHeat } = require("./src/storage/heatStore");
 const {
   loadMockStats,
@@ -37,13 +36,11 @@ const { parseKill } = require("./src/parsers/killParser");
 const {
   formatKillfeedNotification,
 } = require("./src/features/killfeed/formatKillfeedNotification");
-const { buildKillEmbed } = require("./src/features/killfeed/embedBuilders");
 const {
   KILLFEED_FLUSH_INTERVAL_MS,
   flushKillfeedQueue,
 } = require("./src/features/killfeed/killfeedQueue");
 const {
-  createEmptyStats,
   updateStatsFromEvent,
   getPlayerStats,
   handlePlayerConnect,
@@ -98,37 +95,23 @@ const MODE = process.argv[2] || "run";
 
 // Destructure config for convenience
 const {
-  NIT_API,
   SERVICE_ID,
   NIT_TOKEN,
   ADM_DIR,
   CHANNEL_ID,
   HEATMAP_CHANNEL_ID,
-  START_AT_END,
   RAW_TO_DISCORD,
   DEBUG,
   DEBUG_TICKS,
   POLL_MS,
-  ROTATE_CHECK_MS,
   LIST_COOLDOWN_MS,
   HEATMAP_INTERVAL_MS,
   HEATMAP_WIDTH,
   HEATMAP_HEIGHT,
   MAP_SIZE,
   HEATMAP_WINDOW_MIN,
-  HEATMAP_RESET_ON_ROTATE,
   MAP_IMAGE_PATH,
   MAP_DISPLAY_NAME,
-  HEAT_RADIUS,
-  HEAT_GAMMA,
-  HEAT_MIN_ALPHA,
-  HEAT_HALFLIFE_MIN,
-  HEAT_NORM_PERCENTILE,
-  HEAT_RECENT_MIN,
-  HEAT_RECENT_DOT_RADIUS,
-  HEAT_RECENT_DOT_ALPHA,
-  STATE_FILE,
-  HEAT_STATE_FILE,
   HEAT_IMG_PATH,
 } = config;
 

@@ -8,7 +8,7 @@ const lastPosByName = new Map();
 
 function updatePositionsFromLine(line) {
   const re =
-    /Player\s+["'“”]([^"'“”]+)["'“”]\s*\([^)]*?pos=<\s*([0-9.]+)\s*,\s*([0-9.]+)\s*,\s*([0-9.\-]+)\s*>\)/gi;
+    /Player\s+["'“”]([^"'“”]+)["'“”]\s*\([^)]*?pos=<\s*([0-9.]+)\s*,\s*([0-9.]+)\s*,\s*([0-9.-]+)\s*>\)/gi;
   let m;
   while ((m = re.exec(line)) !== null) {
     const name = m[1];

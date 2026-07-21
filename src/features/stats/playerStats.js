@@ -212,23 +212,6 @@ function calculateRank(score) {
 }
 
 /**
- * Parse event time from HH:MM:SS format to milliseconds since midnight
- * @param {string} timeStr - Time string in HH:MM:SS format
- * @returns {number|null} - Milliseconds since midnight, or null if invalid
- */
-function parseEventTime(timeStr) {
-  if (!timeStr) return null;
-  const match = timeStr.match(/^(\d{2}):(\d{2}):(\d{2})$/);
-  if (!match) return null;
-
-  const hours = parseInt(match[1], 10);
-  const minutes = parseInt(match[2], 10);
-  const seconds = parseInt(match[3], 10);
-
-  return (hours * 3600 + minutes * 60 + seconds) * 1000;
-}
-
-/**
  * Format time alive from milliseconds to display format
  * @param {number} ms - Milliseconds alive
  * @returns {string} - Formatted time string (e.g., "01D 02H 33M 04S" or "03H 04M 00S")
