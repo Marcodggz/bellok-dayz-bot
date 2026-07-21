@@ -10,7 +10,10 @@ const {
   getGamertagByDiscordUserId,
   getDiscordUserIdByGamertag,
 } = require("../../storage/linkedGamertagsStore");
-const { loadPlayerStats } = require("../../storage/playerStatsStore");
+const {
+  loadPlayerStats,
+  findPlayerStats,
+} = require("../../storage/playerStatsStore");
 const { SERVER_NAME } = require("../../config/config");
 const { getRankBadgePath } = require("../../utils/rankBadges");
 
@@ -59,15 +62,18 @@ const statsCommand = {
 
       // Load real player stats
       const allStats = loadPlayerStats();
-      const playerStats = allStats[gamertag];
+      const playerResult = findPlayerStats(allStats, gamertag);
 
-      if (!playerStats) {
+      if (!playerResult) {
         await interaction.reply({
           content: `❌ No stats found for player **${gamertag}**`,
           flags: MessageFlags.Ephemeral,
         });
         return;
       }
+
+      gamertag = playerResult.gamertag;
+      const playerStats = playerResult.stats;
 
       // Check if this player is linked to a Discord user
       const linkedUserId = getDiscordUserIdByGamertag(gamertag);
