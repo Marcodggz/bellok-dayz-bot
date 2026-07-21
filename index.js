@@ -24,7 +24,6 @@ const {
   clamp,
 } = require("./src/utils/helpers");
 const { loadJSON, saveJSON } = require("./src/storage/jsonStore");
-const { loadState, saveState } = require("./src/storage/stateStore");
 const { loadHeat, saveHeat } = require("./src/storage/heatStore");
 const {
   loadMockStats,
