@@ -15,7 +15,7 @@ The bot was developed for the **Last Survivor Vanilla+** DayZ PlayStation server
 * Generates PvP and weekend activity heatmaps from world coordinates
 * Handles ADM file rotation and temporary Nitrado API cooldowns
 * Uses a modular architecture with separated parsing, processing, storage, API, and rendering layers
-* Includes 94 automated tests covering critical application behavior
+* Includes 121 automated tests covering critical application behavior
 
 ## Features
 
@@ -141,7 +141,7 @@ Discord killfeed queue
 
 ## Testing
 
-The project currently contains **94 automated tests** across 8 test files.
+The project currently contains **121 automated tests** across 13 test files.
 
 Run all tests:
 
@@ -189,7 +189,11 @@ npm install
 
 ### 3. Configure Environment Variables
 
-Create a `.env` file in the project root using the environment variables documented below.
+Copy the environment template and fill in your own values:
+
+```bash
+cp .env.example .env
+```
 
 Never commit the `.env` file or expose its values publicly.
 
@@ -241,7 +245,7 @@ HEATMAP_HEIGHT
 MAP_SIZE
 HEATMAP_WINDOW_MIN
 HEATMAP_RESET_ON_ROTATE
-CHERNARUS_MAP_PATH
+MAP_IMAGE_PATH
 ```
 
 ### Map Calibration
