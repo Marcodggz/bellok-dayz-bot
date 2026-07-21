@@ -42,155 +42,119 @@ function buildHeatClusters(points) {
  * @param {number} width - Canvas width
  * @param {number} height - Canvas height
  */
-function drawHeatCluster(overlay, pixelX, pixelY, visualCount, width, height) {
-  let coreRadius, outerRadius;
-  if (visualCount === 1) {
-    coreRadius = 5;
-    outerRadius = 16;
-  } else if (visualCount === 2) {
-    coreRadius = 7;
-    outerRadius = 18;
-  } else if (visualCount === 3) {
-    coreRadius = 8;
-    outerRadius = 21;
-  } else if (visualCount === 4) {
-    coreRadius = 10;
-    outerRadius = 24;
-  } else {
-    coreRadius = 12;
-    outerRadius = 28;
+function lerp(start, end, amount) {
+  return start + (end - start) * amount;
+}
+
+function smoothstep(amount) {
+  const t = Math.max(0, Math.min(1, amount));
+  return t * t * (3 - 2 * t);
+}
+
+function sampleHeatGradient(stops, distance) {
+  const normalizedDistance = Math.max(0, Math.min(1, distance));
+
+  for (let i = 0; i < stops.length - 1; i++) {
+    const current = stops[i];
+    const next = stops[i + 1];
+
+    if (normalizedDistance <= next.position) {
+      const range = next.position - current.position;
+      const rawAmount =
+        range === 0
+          ? 0
+          : (normalizedDistance - current.position) / range;
+      const amount = smoothstep(rawAmount);
+
+      return {
+        r: Math.round(lerp(current.r, next.r, amount)),
+        g: Math.round(lerp(current.g, next.g, amount)),
+        b: Math.round(lerp(current.b, next.b, amount)),
+        alpha: Math.round(lerp(current.alpha, next.alpha, amount)),
+      };
+    }
   }
 
-  const maxRadius = outerRadius;
+  return stops[stops.length - 1];
+}
+
+const HEAT_GRADIENTS = {
+  1: [
+    { position: 0, r: 72, g: 145, b: 255, alpha: 210 },
+    { position: 0.35, r: 45, g: 112, b: 255, alpha: 180 },
+    { position: 0.7, r: 28, g: 72, b: 225, alpha: 105 },
+    { position: 1, r: 18, g: 42, b: 150, alpha: 0 },
+  ],
+  2: [
+    { position: 0, r: 74, g: 222, b: 210, alpha: 215 },
+    { position: 0.35, r: 48, g: 187, b: 221, alpha: 185 },
+    { position: 0.7, r: 39, g: 118, b: 240, alpha: 110 },
+    { position: 1, r: 22, g: 55, b: 170, alpha: 0 },
+  ],
+  3: [
+    { position: 0, r: 245, g: 196, b: 66, alpha: 225 },
+    { position: 0.3, r: 93, g: 214, b: 126, alpha: 200 },
+    { position: 0.67, r: 45, g: 144, b: 226, alpha: 120 },
+    { position: 1, r: 24, g: 58, b: 170, alpha: 0 },
+  ],
+  4: [
+    { position: 0, r: 249, g: 115, b: 22, alpha: 235 },
+    { position: 0.3, r: 239, g: 180, b: 35, alpha: 210 },
+    { position: 0.58, r: 67, g: 199, b: 108, alpha: 165 },
+    { position: 0.8, r: 43, g: 126, b: 230, alpha: 90 },
+    { position: 1, r: 25, g: 57, b: 165, alpha: 0 },
+  ],
+  5: [
+    { position: 0, r: 239, g: 68, b: 68, alpha: 245 },
+    { position: 0.24, r: 249, g: 115, b: 22, alpha: 225 },
+    { position: 0.48, r: 234, g: 179, b: 8, alpha: 195 },
+    { position: 0.68, r: 49, g: 195, b: 102, alpha: 145 },
+    { position: 0.84, r: 43, g: 119, b: 225, alpha: 80 },
+    { position: 1, r: 24, g: 54, b: 160, alpha: 0 },
+  ],
+};
+
+/**
+ * Draw a continuous radial heat gradient for one cluster.
+ */
+function drawHeatCluster(overlay, pixelX, pixelY, visualCount, width, height) {
+  const radii = {
+    1: 16,
+    2: 18,
+    3: 21,
+    4: 24,
+    5: 28,
+  };
+
+  const normalizedCount = Math.max(1, Math.min(5, visualCount));
+  const maxRadius = radii[normalizedCount];
+  const gradient = HEAT_GRADIENTS[normalizedCount];
 
   for (let dy = -maxRadius; dy <= maxRadius; dy++) {
     for (let dx = -maxRadius; dx <= maxRadius; dx++) {
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist > maxRadius) continue;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      if (distance > maxRadius) continue;
 
       const x = pixelX + dx;
       const y = pixelY + dy;
+
       if (x < 0 || x >= width || y < 0 || y >= height) continue;
 
-      const normDist = dist / maxRadius;
-      const falloff = Math.pow(1 - normDist, 1.6);
-      const coreRatio = coreRadius / maxRadius;
-      let r, g, b, alpha;
+      const normalizedDistance = distance / maxRadius;
+      const { r, g, b, alpha } = sampleHeatGradient(
+        gradient,
+        normalizedDistance,
+      );
 
-      if (visualCount === 1) {
-        if (normDist > 0.5) {
-          r = 59;
-          g = 130;
-          b = 246;
-          alpha = Math.round(100 + falloff * 30);
-        } else if (normDist > coreRatio) {
-          r = 59;
-          g = 130;
-          b = 246;
-          alpha = Math.round(120 + falloff * 40);
-        } else {
-          r = 34;
-          g = 197;
-          b = 94;
-          alpha = Math.round(145 + falloff * 30);
-        }
-      } else if (visualCount === 2) {
-        if (normDist > 0.55) {
-          r = 59;
-          g = 130;
-          b = 246;
-          alpha = Math.round(85 + falloff * 30);
-        } else if (normDist > coreRatio * 1.2) {
-          const t = (normDist - coreRatio * 1.2) / (0.55 - coreRatio * 1.2);
-          r = Math.round(59 + (34 - 59) * (1 - t));
-          g = Math.round(130 + (197 - 130) * (1 - t));
-          b = Math.round(246 + (94 - 246) * (1 - t));
-          alpha = Math.round(120 + falloff * 40);
-        } else {
-          r = 74;
-          g = 222;
-          b = 128;
-          alpha = Math.round(150 + falloff * 30);
-        }
-      } else if (visualCount === 3) {
-        if (normDist > 0.6) {
-          r = 59;
-          g = 130;
-          b = 246;
-          alpha = Math.round(90 + falloff * 30);
-        } else if (normDist > coreRatio * 1.5) {
-          r = 34;
-          g = 197;
-          b = 94;
-          alpha = Math.round(135 + falloff * 40);
-        } else if (normDist > coreRatio) {
-          r = 234;
-          g = 179;
-          b = 8;
-          alpha = Math.round(165 + falloff * 35);
-        } else {
-          r = 251;
-          g = 146;
-          b = 60;
-          alpha = Math.round(190 + falloff * 30);
-        }
-      } else if (visualCount === 4) {
-        if (normDist > 0.62) {
-          r = 59;
-          g = 130;
-          b = 246;
-          alpha = Math.round(95 + falloff * 30);
-        } else if (normDist > coreRatio * 1.6) {
-          r = 34;
-          g = 197;
-          b = 94;
-          alpha = Math.round(145 + falloff * 40);
-        } else if (normDist > coreRatio * 1.1) {
-          r = 234;
-          g = 179;
-          b = 8;
-          alpha = Math.round(175 + falloff * 30);
-        } else {
-          r = 249;
-          g = 115;
-          b = 22;
-          alpha = Math.round(200 + falloff * 25);
-        }
-      } else {
-        if (normDist > 0.65) {
-          r = 59;
-          g = 130;
-          b = 246;
-          alpha = Math.round(100 + falloff * 30);
-        } else if (normDist > coreRatio * 1.7) {
-          r = 34;
-          g = 197;
-          b = 94;
-          alpha = Math.round(155 + falloff * 40);
-        } else if (normDist > coreRatio * 1.2) {
-          r = 234;
-          g = 179;
-          b = 8;
-          alpha = Math.round(180 + falloff * 30);
-        } else if (normDist > coreRatio * 0.6) {
-          r = 249;
-          g = 115;
-          b = 22;
-          alpha = Math.round(205 + falloff * 25);
-        } else {
-          r = 239;
-          g = 68;
-          b = 68;
-          alpha = Math.round(215 + falloff * 15);
-        }
-      }
+      if (alpha <= 0) continue;
 
-      const o = (y * width + x) * 4;
-      if (overlay.data[o + 3] < alpha) {
-        overlay.data[o + 0] = r;
-        overlay.data[o + 1] = g;
-        overlay.data[o + 2] = b;
-        overlay.data[o + 3] = alpha;
+      const offset = (y * width + x) * 4;
+
+      if (overlay.data[offset + 3] < alpha) {
+        overlay.data[offset + 0] = r;
+        overlay.data[offset + 1] = g;
+        overlay.data[offset + 2] = b;
+        overlay.data[offset + 3] = alpha;
       }
     }
   }
