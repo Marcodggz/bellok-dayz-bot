@@ -8,6 +8,10 @@ function buildIzurviveLocationUrl(x, y, zoom = 8) {
   return `https://www.izurvive.com/${IZURVIVE_MAP_SLUG}/#location=${x};${y};${zoom}`;
 }
 
+function sanitizePlayerName(name) {
+  return String(name || "Unknown").replace(/`/g, "'");
+}
+
 // Deterministic action verb selection based on killer + victim names
 function getRandomPvpAction(killer, victim) {
   const actions = ["embarrassed", "eliminated", "shit on"];
@@ -67,8 +71,8 @@ function embedPvp(
   lines.push(`### PVP Kill - ${timeDisplay}`);
   lines.push("");
 
-  const killerName = killer || "Unknown";
-  const victimName = victim || "Unknown";
+  const killerName = sanitizePlayerName(killer);
+  const victimName = sanitizePlayerName(victim);
   const action = getRandomPvpAction(killerName, victimName);
   lines.push(`\`${killerName}\` ${action} \`${victimName}\``);
 
@@ -151,7 +155,7 @@ function embedExplosion(
   lines.push(`### Explosion Death - ${timeDisplay}`);
   lines.push("");
 
-  const victimName = victim || "Unknown";
+  const victimName = sanitizePlayerName(victim);
   const deviceName = device || "explosive";
   lines.push(`\`${victimName}\` died from "${deviceName}" explosion`);
 
@@ -207,6 +211,7 @@ function buildKillEmbed(
 
 module.exports = {
   buildIzurviveLocationUrl,
+  sanitizePlayerName,
   getRandomPvpAction,
   embedPvp,
   embedExplosion,

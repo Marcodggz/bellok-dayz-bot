@@ -36,6 +36,24 @@ describe("embedBuilders", () => {
       expect(description).toContain("**Time Alive:** 0m");
     });
 
+    test("sanitizes backticks in killer and victim names", () => {
+      const killEvent = {
+        killer: "Test`Killer",
+        victim: "Test`Victim",
+        weapon: "M4A1",
+        distanceMeters: 50,
+        t: "14:23:45",
+      };
+
+      const result = embedPvp(killEvent, null, null, null);
+      const description = result.embeds[0].data.description;
+
+      expect(description).toContain("`Test'Killer`");
+      expect(description).toContain("`Test'Victim`");
+      expect(description).not.toContain("Test`Killer");
+      expect(description).not.toContain("Test`Victim");
+    });
+
     test("shows provided stats when available", () => {
       const killEvent = {
         killer: "TestKiller",
@@ -210,6 +228,20 @@ describe("embedBuilders", () => {
         "**Kills:** 0 | **Deaths:** 0 | **KD:** 0.00",
       );
       expect(description).toContain("**Time Alive:** 0m");
+    });
+
+    test("sanitizes backticks in victim names", () => {
+      const killEvent = {
+        victim: "Test`Victim",
+        device: "Landmine",
+        t: "14:23:45",
+      };
+
+      const result = embedExplosion(killEvent, null, null);
+      const description = result.embeds[0].data.description;
+
+      expect(description).toContain("`Test'Victim`");
+      expect(description).not.toContain("Test`Victim");
     });
 
     test("shows provided victim stats when available", () => {
