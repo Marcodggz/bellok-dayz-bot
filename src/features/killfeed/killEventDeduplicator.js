@@ -25,18 +25,14 @@ function typeRank(tp) {
 // Public: Generate bucket key for victim + 20s time window
 function victimBucketKey(victim, t) {
   const s = timeToSec(t);
-  const b =
-    s == null
-      ? Math.floor(Date.now() / 1000 / BUCKET_S)
-      : Math.floor(s / BUCKET_S);
+  const b = s == null ? Math.floor(Date.now() / 1000 / BUCKET_S) : Math.floor(s / BUCKET_S);
   return `${victim}|${b}`;
 }
 
 // Public: Check if bucket already sent, mark it, cleanup expired entries
 function alreadySentBucket(key) {
   const now = Date.now();
-  for (const [kk, ts] of sentBuckets)
-    if (now - ts > SENT_TTL_MS) sentBuckets.delete(kk);
+  for (const [kk, ts] of sentBuckets) if (now - ts > SENT_TTL_MS) sentBuckets.delete(kk);
   if (sentBuckets.has(key)) return true;
   sentBuckets.set(key, now);
   return false;

@@ -3,15 +3,9 @@ import { describe, test, expect, beforeEach, vi } from "vitest";
 
 const require = createRequire(import.meta.url);
 
-const processorPath = require.resolve(
-  "../../../src/features/killfeed/killEventProcessor.js",
-);
-const trackerPath = require.resolve(
-  "../../../src/features/tracking/positionTracker.js",
-);
-const weekendHelpersPath = require.resolve(
-  "../../../src/utils/weekendHeatmapHelpers.js",
-);
+const processorPath = require.resolve("../../../src/features/killfeed/killEventProcessor.js");
+const trackerPath = require.resolve("../../../src/features/tracking/positionTracker.js");
+const weekendHelpersPath = require.resolve("../../../src/utils/weekendHeatmapHelpers.js");
 
 describe("killEventProcessor", () => {
   let processor;
@@ -42,8 +36,7 @@ describe("killEventProcessor", () => {
     });
 
     try {
-      processor =
-        await import("../../../src/features/killfeed/killEventProcessor.js");
+      processor = await import("../../../src/features/killfeed/killEventProcessor.js");
     } finally {
       spy.mockRestore();
     }

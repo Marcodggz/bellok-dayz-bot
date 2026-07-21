@@ -21,9 +21,7 @@ async function registerCommands(discordToken, clientId) {
   const rest = new REST({ version: "10" }).setToken(discordToken);
 
   try {
-    console.log(
-      `[commands] Registering ${commands.length} slash command(s)...`,
-    );
+    console.log(`[commands] Registering ${commands.length} slash command(s)...`);
 
     // Register commands globally (may take up to 1 hour to propagate)
     // For instant registration during development, use guild-specific registration
@@ -31,9 +29,7 @@ async function registerCommands(discordToken, clientId) {
       body: commands,
     });
 
-    console.log(
-      `[commands] Successfully registered ${data.length} slash command(s)`,
-    );
+    console.log(`[commands] Successfully registered ${data.length} slash command(s)`);
     return data;
   } catch (error) {
     console.error("[commands] Error registering slash commands:", error);
@@ -58,19 +54,14 @@ async function registerGuildCommands(discordToken, clientId, guildId) {
   const rest = new REST({ version: "10" }).setToken(discordToken);
 
   try {
-    console.log(
-      `[commands] Registering ${commands.length} guild-specific slash command(s)...`,
-    );
+    console.log(`[commands] Registering ${commands.length} guild-specific slash command(s)...`);
 
-    const data = await rest.put(
-      Routes.applicationGuildCommands(clientId, guildId),
-      {
-        body: commands,
-      },
-    );
+    const data = await rest.put(Routes.applicationGuildCommands(clientId, guildId), {
+      body: commands,
+    });
 
     console.log(
-      `[commands] Successfully registered ${data.length} guild-specific slash command(s)`,
+      `[commands] Successfully registered ${data.length} guild-specific slash command(s)`
     );
     return data;
   } catch (error) {

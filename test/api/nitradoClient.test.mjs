@@ -39,10 +39,7 @@ describe("nitradoClient", () => {
     consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation((...args) => {
       const message = args.join(" ");
       // Suppress expected test messages
-      if (
-        message.includes("[download] error:") ||
-        message.includes("[list] cooldown")
-      ) {
+      if (message.includes("[download] error:") || message.includes("[list] cooldown")) {
         return;
       }
       // Forward all other warnings
@@ -116,9 +113,7 @@ describe("nitradoClient", () => {
     const result = await nitradoClient.listAdmNames("/logs", true);
 
     expect(result).toHaveLength(2);
-    expect(result.every((r) => r.name.toLowerCase().endsWith(".adm"))).toBe(
-      true,
-    );
+    expect(result.every((r) => r.name.toLowerCase().endsWith(".adm"))).toBe(true);
   });
 
   it("nitDownload() returns a Buffer on success", async () => {

@@ -17,9 +17,7 @@ async function runDiscordTest(config, checkEnv) {
             .setTimestamp(new Date()),
         ],
       });
-      console.log(
-        "[discord-test] Message sent successfully to killfeed channel",
-      );
+      console.log("[discord-test] Message sent successfully to killfeed channel");
     } catch (e) {
       console.error("[discord-test] ERROR:", e?.code || e?.message || e);
     } finally {
@@ -50,14 +48,9 @@ async function runDiscordHeatmapTest(config, checkEnv) {
             .setTimestamp(new Date()),
         ],
       });
-      console.log(
-        "[discord-heatmap-test] Message sent successfully to heatmap channel",
-      );
+      console.log("[discord-heatmap-test] Message sent successfully to heatmap channel");
     } catch (e) {
-      console.error(
-        "[discord-heatmap-test] ERROR:",
-        e?.code || e?.message || e,
-      );
+      console.error("[discord-heatmap-test] ERROR:", e?.code || e?.message || e);
     } finally {
       process.exit(0);
     }
@@ -75,15 +68,13 @@ async function runDiagnose(
   tsFromName,
   tMadrid,
   nitDownload,
-  parseKill,
+  parseKill
 ) {
   checkEnv();
   console.log("\n[diagnose] ADM directory:", config.ADM_DIR);
   const rows = await listAdmNames(config.ADM_DIR, true);
   if (!rows.length) {
-    console.log(
-      "[diagnose] ❌ No ADM files listed (rate-limit or incorrect path)",
-    );
+    console.log("[diagnose] ❌ No ADM files listed (rate-limit or incorrect path)");
     process.exit(1);
   }
   console.log("[diagnose] Top 5 files:");
@@ -111,9 +102,7 @@ async function runDiagnose(
       else if (e.type === "explosion") exp++;
     }
   }
-  console.log(
-    `\n[diagnose] Detected in tail → PvP: ${pvp}  Explosions: ${exp}`,
-  );
+  console.log(`\n[diagnose] Detected in tail → PvP: ${pvp}  Explosions: ${exp}`);
   process.exit(0);
 }
 
@@ -125,7 +114,7 @@ async function runMockParse(
   handlePlayerDisconnect,
   updateStatsFromEvent,
   getPlayerStats,
-  formatKillfeedNotification,
+  formatKillfeedNotification
 ) {
   const mockLogPath = process.argv[3] || "./mock/sample-adm.txt";
   console.log(`[mock-parse] Reading ${mockLogPath}...\n`);
@@ -145,7 +134,7 @@ async function runMockParse(
 
   const stats = loadMockStats();
   console.log(
-    `[mock-parse] Loaded stats for ${Object.keys(stats).length} players from persistent storage.\n`,
+    `[mock-parse] Loaded stats for ${Object.keys(stats).length} players from persistent storage.\n`
   );
 
   // Midnight rollover tracking: detect when HH:MM:SS wraps from 23:59:59 → 00:00:00
@@ -172,7 +161,7 @@ async function runMockParse(
     if (previousRawTimeMs !== null && rawTimeMs < previousRawTimeMs) {
       dayOffsetMs += 86400000; // Add 24 hours in milliseconds
       console.log(
-        `[mock-parse] Midnight rollover detected at ${timeStr}, dayOffset now: ${dayOffsetMs / 3600000}h`,
+        `[mock-parse] Midnight rollover detected at ${timeStr}, dayOffset now: ${dayOffsetMs / 3600000}h`
       );
     }
 
@@ -185,9 +174,7 @@ async function runMockParse(
     const timeStr = timeMatch ? timeMatch[1] : null;
     const normalizedTimeMs = getNormalizedEventTimeMs(timeStr);
 
-    const connectMatch = line.match(
-      /Player\s+["'""](.+?)["'""].*?\(id=\d+\)\s+is connected/i,
-    );
+    const connectMatch = line.match(/Player\s+["'""](.+?)["'""].*?\(id=\d+\)\s+is connected/i);
     if (connectMatch) {
       const playerName = connectMatch[1].trim();
       handlePlayerConnect(stats, playerName, normalizedTimeMs);
@@ -196,7 +183,7 @@ async function runMockParse(
     }
 
     const disconnectMatch = line.match(
-      /Player\s+["'""](.+?)["'""].*?\(id=\d+\)\s+has been disconnected/i,
+      /Player\s+["'""](.+?)["'""].*?\(id=\d+\)\s+has been disconnected/i
     );
     if (disconnectMatch) {
       const playerName = disconnectMatch[1].trim();
@@ -217,7 +204,7 @@ async function runMockParse(
         console.log(`  Victim: ${event.victim}`);
         console.log(`  Weapon: ${event.weapon || "N/A"}`);
         console.log(
-          `  Distance: ${event.distanceMeters ? event.distanceMeters + " meters" : "N/A"}`,
+          `  Distance: ${event.distanceMeters ? event.distanceMeters + " meters" : "N/A"}`
         );
         console.log(`  Ammo: ${event.ammo || "N/A"}`);
         console.log(`  Hit Zone: ${event.hitZone || "N/A"}`);
@@ -225,7 +212,7 @@ async function runMockParse(
 
         if (event.killerPosition) {
           console.log(
-            `  Killer Location: ${event.killerPosition.x.toFixed(1)};${event.killerPosition.y.toFixed(1)};${event.killerPosition.z.toFixed(1)}`,
+            `  Killer Location: ${event.killerPosition.x.toFixed(1)};${event.killerPosition.y.toFixed(1)};${event.killerPosition.z.toFixed(1)}`
           );
         } else {
           console.log(`  Killer Location: N/A`);
@@ -233,7 +220,7 @@ async function runMockParse(
 
         if (event.victimPosition) {
           console.log(
-            `  Victim Location: ${event.victimPosition.x.toFixed(1)};${event.victimPosition.y.toFixed(1)};${event.victimPosition.z.toFixed(1)}`,
+            `  Victim Location: ${event.victimPosition.x.toFixed(1)};${event.victimPosition.y.toFixed(1)};${event.victimPosition.z.toFixed(1)}`
           );
         } else {
           console.log(`  Victim Location: N/A`);
@@ -247,7 +234,7 @@ async function runMockParse(
 
         if (event.victimPosition) {
           console.log(
-            `  Location: ${event.victimPosition.x.toFixed(1)};${event.victimPosition.y.toFixed(1)};${event.victimPosition.z.toFixed(1)}`,
+            `  Location: ${event.victimPosition.x.toFixed(1)};${event.victimPosition.y.toFixed(1)};${event.victimPosition.z.toFixed(1)}`
           );
         } else {
           console.log(`  Location: N/A`);
@@ -257,32 +244,25 @@ async function runMockParse(
         explosionCount++;
       }
 
-      const killerStats = event.killer
-        ? getPlayerStats(stats, event.killer)
-        : null;
-      const victimStats = event.victim
-        ? getPlayerStats(stats, event.victim)
-        : null;
+      const killerStats = event.killer ? getPlayerStats(stats, event.killer) : null;
+      const victimStats = event.victim ? getPlayerStats(stats, event.victim) : null;
 
       console.log("\n📋 FORMATTED KILLFEED NOTIFICATION:");
       console.log(formatKillfeedNotification(event, killerStats, victimStats));
 
       console.log("");
     } else {
-      console.log(
-        "❌ No kill event:",
-        line.slice(0, 80) + (line.length > 80 ? "..." : ""),
-      );
+      console.log("❌ No kill event:", line.slice(0, 80) + (line.length > 80 ? "..." : ""));
     }
   }
 
   console.log(
-    `\n[mock-parse] Summary: ${pvpCount} PvP kills, ${explosionCount} explosions detected.`,
+    `\n[mock-parse] Summary: ${pvpCount} PvP kills, ${explosionCount} explosions detected.`
   );
 
   saveMockStats(stats);
   console.log(
-    `[mock-parse] Saved stats for ${Object.keys(stats).length} players to persistent storage.`,
+    `[mock-parse] Saved stats for ${Object.keys(stats).length} players to persistent storage.`
   );
 
   process.exit(0);
@@ -307,13 +287,10 @@ async function runDiscordWeekendHeatmapTest(config, checkEnv) {
         ],
       });
       console.log(
-        "[discord-weekend-heatmap-test] Message sent successfully to weekend heatmap channel",
+        "[discord-weekend-heatmap-test] Message sent successfully to weekend heatmap channel"
       );
     } catch (e) {
-      console.error(
-        "[discord-weekend-heatmap-test] ERROR:",
-        e?.code || e?.message || e,
-      );
+      console.error("[discord-weekend-heatmap-test] ERROR:", e?.code || e?.message || e);
     } finally {
       process.exit(0);
     }

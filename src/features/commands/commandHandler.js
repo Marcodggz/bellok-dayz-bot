@@ -30,10 +30,7 @@ async function handleCommandInteraction(interaction) {
   try {
     await command.execute(interaction);
   } catch (error) {
-    console.error(
-      `[commands] Error executing ${interaction.commandName}:`,
-      error,
-    );
+    console.error(`[commands] Error executing ${interaction.commandName}:`, error);
 
     // Try to send an error message to the user
     const errorMessage = {

@@ -7,10 +7,7 @@ const {
   getGamertagByDiscordUserId,
   getDiscordUserIdByGamertag,
 } = require("../../storage/linkedGamertagsStore");
-const {
-  loadPlayerStats,
-  findPlayerStats,
-} = require("../../storage/playerStatsStore");
+const { loadPlayerStats, findPlayerStats } = require("../../storage/playerStatsStore");
 
 /**
  * Define the /link command
@@ -20,10 +17,7 @@ const linkCommand = {
     .setName("link")
     .setDescription("Link your Discord account to your DayZ gamertag")
     .addStringOption((option) =>
-      option
-        .setName("gamertag")
-        .setDescription("Your DayZ player name")
-        .setRequired(true),
+      option.setName("gamertag").setDescription("Your DayZ player name").setRequired(true)
     ),
 
   /**
@@ -31,9 +25,7 @@ const linkCommand = {
    * @param {import('discord.js').CommandInteraction} interaction
    */
   async execute(interaction) {
-    const requestedGamertag = interaction.options
-      .getString("gamertag")
-      .trim();
+    const requestedGamertag = interaction.options.getString("gamertag").trim();
     const userId = interaction.user.id;
 
     try {
@@ -48,13 +40,8 @@ const linkCommand = {
         return;
       }
 
-      const playerResult = findPlayerStats(
-        loadPlayerStats(),
-        requestedGamertag,
-      );
-      const gamertag = playerResult
-        ? playerResult.gamertag
-        : requestedGamertag;
+      const playerResult = findPlayerStats(loadPlayerStats(), requestedGamertag);
+      const gamertag = playerResult ? playerResult.gamertag : requestedGamertag;
 
       linkGamertag(userId, gamertag);
 

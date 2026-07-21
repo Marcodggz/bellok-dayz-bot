@@ -1,6 +1,6 @@
 // src/storage/fileStateStore.js — File state tracking for tail operations
 
-const { saveState } = require('./stateStore');
+const { saveState } = require("./stateStore");
 
 /**
  * Get the state for a specific file from the global state object

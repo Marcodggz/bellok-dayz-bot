@@ -1,8 +1,5 @@
 import { describe, test, expect } from "vitest";
-import {
-  embedPvp,
-  embedExplosion,
-} from "../../../src/features/killfeed/embedBuilders.js";
+import { embedPvp, embedExplosion } from "../../../src/features/killfeed/embedBuilders.js";
 
 describe("embedBuilders", () => {
   describe("embedPvp", () => {
@@ -22,17 +19,13 @@ describe("embedBuilders", () => {
       // Killer stats should show zeros and Unranked
       expect(description).toContain("__**Killer:**__ `TestKiller`");
       expect(description).toContain("**Rank:** Unranked | **Score:** 0");
-      expect(description).toContain(
-        "**Kills:** 0 | **Deaths:** 0 | **KD:** 0.00",
-      );
+      expect(description).toContain("**Kills:** 0 | **Deaths:** 0 | **KD:** 0.00");
       expect(description).toContain("**Kill Streak:** 0");
 
       // Victim stats should show zeros and Unranked
       expect(description).toContain("__**Victim:**__ `TestVictim`");
       expect(description).toContain("**Rank:** Unranked | **Score:** 0");
-      expect(description).toContain(
-        "**Kills:** 0 | **Deaths:** 0 | **KD:** 0.00",
-      );
+      expect(description).toContain("**Kills:** 0 | **Deaths:** 0 | **KD:** 0.00");
       expect(description).toContain("**Time Alive:** 0m");
     });
 
@@ -71,14 +64,10 @@ describe("embedBuilders", () => {
       const description = result.embeds[0].data.description;
 
       expect(description).toContain("### PVP Kill - 17:07:55");
-      expect(description).toContain(
-        "**Weapon** M70 Tundra (Bullet_308Win)",
-      );
+      expect(description).toContain("**Weapon** M70 Tundra (Bullet_308Win)");
       expect(description).toContain("**Distance** 72 meters");
       expect(description).toContain("**Hit** Torso 146 damage");
-      expect(description).toContain(
-        "**Location** [3276.3;5142.0;398.1]",
-      );
+      expect(description).toContain("**Location** [3276.3;5142.0;398.1]");
       expect(description).toContain("__**Killer:**__ `Aizenn-7`");
       expect(description).toContain("__**Victim:**__ `mrboderlandsfn-_`");
     });
@@ -136,16 +125,12 @@ describe("embedBuilders", () => {
 
       // Killer stats
       expect(description).toContain("**Rank:** Corporal | **Score:** 150.5");
-      expect(description).toContain(
-        "**Kills:** 10 | **Deaths:** 2 | **KD:** 5.00",
-      );
+      expect(description).toContain("**Kills:** 10 | **Deaths:** 2 | **KD:** 5.00");
       expect(description).toContain("**Kill Streak:** 3");
 
       // Victim stats
       expect(description).toContain("**Rank:** Private | **Score:** 75.2");
-      expect(description).toContain(
-        "**Kills:** 5 | **Deaths:** 8 | **KD:** 0.63",
-      );
+      expect(description).toContain("**Kills:** 5 | **Deaths:** 8 | **KD:** 0.63");
       expect(description).toContain("**Time Alive:** 15m 30s");
     });
 
@@ -164,9 +149,7 @@ describe("embedBuilders", () => {
 
       // Should show coordinates as X;Y;Z format and link with X,Y
       expect(description).toContain("13044.9;7786.9;250.5");
-      expect(description).toContain(
-        "https://www.izurvive.com/livonia/#location=13044.9;7786.9",
-      );
+      expect(description).toContain("https://www.izurvive.com/livonia/#location=13044.9;7786.9");
     });
 
     test("handles partially populated killer stats without showing undefined or NaN", () => {
@@ -189,9 +172,7 @@ describe("embedBuilders", () => {
       // Should use fallback values for missing fields
       expect(description).toContain("__**Killer:**__ `TestKiller`");
       expect(description).toContain("**Rank:** Unranked | **Score:** 0.0");
-      expect(description).toContain(
-        "**Kills:** 5 | **Deaths:** 0 | **KD:** 0.00",
-      );
+      expect(description).toContain("**Kills:** 5 | **Deaths:** 0 | **KD:** 0.00");
       expect(description).toContain("**Kill Streak:** 0");
 
       // Should not contain undefined or NaN
@@ -221,9 +202,7 @@ describe("embedBuilders", () => {
       // Should use fallback values for missing fields
       expect(description).toContain("__**Victim:**__ `TestVictim`");
       expect(description).toContain("**Rank:** Private | **Score:** 0.0");
-      expect(description).toContain(
-        "**Kills:** 3 | **Deaths:** 7 | **KD:** 0.00",
-      );
+      expect(description).toContain("**Kills:** 3 | **Deaths:** 7 | **KD:** 0.00");
       expect(description).toContain("**Time Alive:** 0m");
 
       // Should not contain undefined or NaN
@@ -273,9 +252,7 @@ describe("embedBuilders", () => {
       // Victim stats should show zeros and Unranked
       expect(description).toContain("__**Victim:**__ `TestVictim`");
       expect(description).toContain("**Rank:** Unranked | **Score:** 0");
-      expect(description).toContain(
-        "**Kills:** 0 | **Deaths:** 0 | **KD:** 0.00",
-      );
+      expect(description).toContain("**Kills:** 0 | **Deaths:** 0 | **KD:** 0.00");
       expect(description).toContain("**Time Alive:** 0m");
     });
 
@@ -314,9 +291,7 @@ describe("embedBuilders", () => {
       const description = result.embeds[0].data.description;
 
       expect(description).toContain("**Rank:** Private | **Score:** 75.2");
-      expect(description).toContain(
-        "**Kills:** 5 | **Deaths:** 8 | **KD:** 0.63",
-      );
+      expect(description).toContain("**Kills:** 5 | **Deaths:** 8 | **KD:** 0.63");
       expect(description).toContain("**Time Alive:** 15m 30s");
     });
 
@@ -334,9 +309,7 @@ describe("embedBuilders", () => {
 
       // Should show coordinates as X;Y;Z format and link with X,Y
       expect(description).toContain("13044.9;7786.9;250.5");
-      expect(description).toContain(
-        "https://www.izurvive.com/livonia/#location=13044.9;7786.9",
-      );
+      expect(description).toContain("https://www.izurvive.com/livonia/#location=13044.9;7786.9");
     });
 
     test("handles partially populated victim stats without showing undefined or NaN", () => {
@@ -359,9 +332,7 @@ describe("embedBuilders", () => {
       // Should use fallback values for missing fields
       expect(description).toContain("__**Victim:**__ `TestVictim`");
       expect(description).toContain("**Rank:** Unranked | **Score:** 50.5");
-      expect(description).toContain(
-        "**Kills:** 2 | **Deaths:** 0 | **KD:** 0.00",
-      );
+      expect(description).toContain("**Kills:** 2 | **Deaths:** 0 | **KD:** 0.00");
       expect(description).toContain("**Time Alive:** 0m");
 
       // Should not contain undefined or NaN

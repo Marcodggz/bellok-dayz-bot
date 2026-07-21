@@ -3,10 +3,7 @@
 const path = require("path");
 const { loadJSON, saveJSON } = require("./jsonStore");
 
-const PLAYER_STATS_FILE = path.join(
-  __dirname,
-  "../../data/player-stats.json",
-);
+const PLAYER_STATS_FILE = path.join(__dirname, "../../data/player-stats.json");
 
 function loadPlayerStats() {
   return loadJSON(PLAYER_STATS_FILE, {});
@@ -39,7 +36,7 @@ function findPlayerStats(allStats, gamertag) {
 
   const lowercaseSearch = trimmedGamertag.toLowerCase();
   const matches = Object.entries(allStats).filter(
-    ([storedGamertag]) => storedGamertag.toLowerCase() === lowercaseSearch,
+    ([storedGamertag]) => storedGamertag.toLowerCase() === lowercaseSearch
   );
 
   if (matches.length !== 1) {

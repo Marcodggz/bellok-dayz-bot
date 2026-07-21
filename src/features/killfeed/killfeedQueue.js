@@ -20,12 +20,7 @@ function resolveEventTimestamp(rawTime, queuedAt) {
   const [, hours, minutes, seconds] = match;
   const eventDate = new Date(queuedAt);
 
-  eventDate.setHours(
-    Number(hours),
-    Number(minutes),
-    Number(seconds),
-    0,
-  );
+  eventDate.setHours(Number(hours), Number(minutes), Number(seconds), 0);
 
   const offsetMinutes = Number(process.env.ADM_TIME_OFFSET_MINUTES || 0);
   eventDate.setMinutes(eventDate.getMinutes() + offsetMinutes);
@@ -65,7 +60,7 @@ async function flushKillfeedQueue(client, channelId, debug, rawToDiscord) {
         event.kill,
         eventTimestamp,
         event.killerStats ?? null,
-        event.victimStats ?? null,
+        event.victimStats ?? null
       );
 
       if (!payload) {
@@ -87,7 +82,7 @@ async function flushKillfeedQueue(client, channelId, debug, rawToDiscord) {
       } catch (error) {
         console.error(
           "[killfeed] send error, stopping flush. Remaining events will retry next time:",
-          error?.code || error?.message || error,
+          error?.code || error?.message || error
         );
         break;
       }
@@ -95,10 +90,7 @@ async function flushKillfeedQueue(client, channelId, debug, rawToDiscord) {
 
     console.log(`[killfeed] Successfully flushed ${sentCount} events`);
   } catch (error) {
-    console.error(
-      "[killfeed] flush error:",
-      error?.code || error?.message || error,
-    );
+    console.error("[killfeed] flush error:", error?.code || error?.message || error);
   }
 }
 

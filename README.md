@@ -8,14 +8,14 @@ The bot was developed for the **Last Survivor Vanilla+** DayZ PlayStation server
 
 ## Project Highlights
 
-* Processes live Nitrado ADM logs and publishes structured Discord notifications
-* Parses multiple PvP and explosion-death log formats
-* Prevents duplicate events using time-based victim buckets
-* Tracks persistent player statistics, streaks, longest kills, and time alive
-* Generates PvP and weekend activity heatmaps from world coordinates
-* Handles ADM file rotation and temporary Nitrado API cooldowns
-* Uses a modular architecture with separated parsing, processing, storage, API, and rendering layers
-* Includes 121 automated tests covering critical application behavior
+- Processes live Nitrado ADM logs and publishes structured Discord notifications
+- Parses multiple PvP and explosion-death log formats
+- Prevents duplicate events using time-based victim buckets
+- Tracks persistent player statistics, streaks, longest kills, and time alive
+- Generates PvP and weekend activity heatmaps from world coordinates
+- Handles ADM file rotation and temporary Nitrado API cooldowns
+- Uses a modular architecture with separated parsing, processing, storage, API, and rendering layers
+- Includes 121 automated tests covering critical application behavior
 
 ## Features
 
@@ -25,27 +25,27 @@ PvP kills and explosion deaths are detected from Nitrado ADM logs and converted 
 
 Kill events can include:
 
-* Killer and victim
-* Weapon
-* Distance
-* Hit zone
-* Ammunition
-* Damage
-* Player coordinates
+- Killer and victim
+- Weapon
+- Distance
+- Hit zone
+- Ammunition
+- Damage
+- Player coordinates
 
 ### Player Statistics
 
 The bot maintains persistent statistics for each player, including:
 
-* Kills and deaths
-* K/D ratio
-* Headshots
-* Score and rank
-* Current kill streak
-* Current death streak
-* Best kill streak
-* Longest kill and weapon
-* Accumulated time alive
+- Kills and deaths
+- K/D ratio
+- Headshots
+- Score and rank
+- Current kill streak
+- Current death streak
+- Best kill streak
+- Longest kill and weapon
+- Accumulated time alive
 
 ### Discord Commands
 
@@ -53,15 +53,15 @@ Slash commands allow players to view personal statistics and server leaderboards
 
 Available leaderboard categories include:
 
-* Score
-* Kills
-* Deaths
-* K/D ratio
-* Headshots
-* Kill streak
-* Death streak
-* Longest kill
-* Time alive
+- Score
+- Kills
+- Deaths
+- K/D ratio
+- Headshots
+- Kill streak
+- Death streak
+- Longest kill
+- Time alive
 
 ### Heatmaps
 
@@ -69,12 +69,12 @@ The project generates map overlays from DayZ world coordinates using `pngjs`.
 
 It supports:
 
-* PvP death-location heatmaps
-* Time-window filtering
-* Intensity normalization
-* Recent-event markers
-* Weekend player-activity heatmaps
-* Soft bridges between consecutive player positions
+- PvP death-location heatmaps
+- Time-window filtering
+- Intensity normalization
+- Recent-event markers
+- Weekend player-activity heatmaps
+- Soft bridges between consecutive player positions
 
 ### ADM Log Polling
 
@@ -82,12 +82,12 @@ The bot continuously checks Nitrado for the latest ADM file and reads only newly
 
 The polling system handles:
 
-* File rotation
-* Stored byte offsets
-* Partial lines between downloads
-* Empty remote file lists
-* API cooldowns and rate limits
-* Local mock logs for development
+- File rotation
+- Stored byte offsets
+- Partial lines between downloads
+- Empty remote file lists
+- API cooldowns and rate limits
+- Local mock logs for development
 
 ## Architecture
 
@@ -131,13 +131,13 @@ Discord killfeed queue
 
 ## Tech Stack
 
-* **Node.js**
-* **discord.js v14**
-* **Axios**
-* **pngjs**
-* **Vitest**
-* **CommonJS**
-* **JSON persistence**
+- **Node.js**
+- **discord.js v14**
+- **Axios**
+- **pngjs**
+- **Vitest**
+- **CommonJS**
+- **JSON persistence**
 
 ## Testing
 
@@ -159,14 +159,14 @@ npm run test:watch
 
 Main tested areas include:
 
-* **Kill Parser** — ADM log parsing for PvP and explosion events
-* **Event Deduplication** — Prevention of duplicate kill notifications
-* **Event Processor** — Event grouping and PvP prioritization
-* **Event Handler** — Killfeed queueing and heatmap-coordinate extraction
-* **Position Tracking** — Player-position tracking for heatmaps
-* **ADM Polling** — Log rotation detection and incremental reading
-* **Player Statistics** — Kills, deaths, streaks, longest kills, and alive time
-* **Nitrado Client** — API communication, errors, rate limits, and cooldowns
+- **Kill Parser** — ADM log parsing for PvP and explosion events
+- **Event Deduplication** — Prevention of duplicate kill notifications
+- **Event Processor** — Event grouping and PvP prioritization
+- **Event Handler** — Killfeed queueing and heatmap-coordinate extraction
+- **Position Tracking** — Player-position tracking for heatmaps
+- **ADM Polling** — Log rotation detection and incremental reading
+- **Player Statistics** — Kills, deaths, streaks, longest kills, and alive time
+- **Nitrado Client** — API communication, errors, rate limits, and cooldowns
 
 Tests combine pure unit tests with focused dependency stubs for CommonJS modules.
 
@@ -310,36 +310,36 @@ The original application logic was gradually extracted from a large entry file i
 
 The resulting structure separates:
 
-* API communication
-* File polling
-* Log parsing
-* Event processing
-* Discord output
-* Statistics
-* Position tracking
-* Heatmap rendering
-* Persistence
+- API communication
+- File polling
+- Log parsing
+- Event processing
+- Discord output
+- Statistics
+- Position tracking
+- Heatmap rendering
+- Persistence
 
 ### Local JSON Persistence
 
 JSON storage keeps the project simple to run while supporting persistent:
 
-* Player statistics
-* Polling state
-* File offsets
-* Linked Discord accounts
-* PvP heatmap data
-* Weekend heatmap data
+- Player statistics
+- Polling state
+- File offsets
+- Linked Discord accounts
+- PvP heatmap data
+- Weekend heatmap data
 
 ### Controlled API Behavior
 
 The Nitrado client detects:
 
-* Rate-limit responses
-* Temporary API failures
-* HTML error responses
-* Invalid download responses
-* Active cooldown periods
+- Rate-limit responses
+- Temporary API failures
+- HTML error responses
+- Invalid download responses
+- Active cooldown periods
 
 When necessary, it applies a cooldown to avoid unnecessary repeated requests.
 
@@ -349,16 +349,16 @@ Bellok’s Killfeed demonstrates more than Discord command development.
 
 It combines:
 
-* Third-party API integration
-* Semi-structured log parsing
-* Stateful event processing
-* Deduplication and prioritization logic
-* Persistent data management
-* Image generation
-* Coordinate mapping
-* Rate-limit and error handling
-* Modular refactoring
-* Automated regression testing
+- Third-party API integration
+- Semi-structured log parsing
+- Stateful event processing
+- Deduplication and prioritization logic
+- Persistent data management
+- Image generation
+- Coordinate mapping
+- Rate-limit and error handling
+- Modular refactoring
+- Automated regression testing
 
 The project reflects the process of turning an idea for a real gaming community into a structured and maintainable Node.js application.
 
@@ -370,12 +370,12 @@ The project is designed specifically for DayZ PlayStation servers hosted through
 
 ## Possible Next Steps
 
-* Evaluate a gradual migration to TypeScript
-* Add automated linting and formatting
-* Add continuous integration to run tests on pull requests
-* Evaluate whether JSON persistence remains appropriate as stored data grows
-* Expand integration coverage for Discord and CLI workflows
-* Add further player, clan, and time-based Discord commands
+- Evaluate a gradual migration to TypeScript
+- Add automated linting and formatting
+- Add continuous integration to run tests on pull requests
+- Evaluate whether JSON persistence remains appropriate as stored data grows
+- Expand integration coverage for Discord and CLI workflows
+- Add further player, clan, and time-based Discord commands
 
 ## Behind the Name
 

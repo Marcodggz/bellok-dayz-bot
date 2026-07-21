@@ -42,14 +42,12 @@ function processPlayerSessionLine(
   stats,
   normalizeEventTime,
   handlePlayerConnect,
-  handlePlayerDisconnect,
+  handlePlayerDisconnect
 ) {
   const timeStr = extractAdmTime(line);
   const normalizedTimeMs = normalizeEventTime(timeStr);
 
-  const connectMatch = line.match(
-    /Player\s+["'“”](.+?)["'“”].*?\(id=[^)]+\)\s+is connected/i,
-  );
+  const connectMatch = line.match(/Player\s+["'“”](.+?)["'“”].*?\(id=[^)]+\)\s+is connected/i);
 
   if (connectMatch) {
     const playerName = connectMatch[1].trim();
@@ -63,7 +61,7 @@ function processPlayerSessionLine(
   }
 
   const disconnectMatch = line.match(
-    /Player\s+["'“”](.+?)["'“”].*?\(id=[^)]+\)\s+has been disconnected/i,
+    /Player\s+["'“”](.+?)["'“”].*?\(id=[^)]+\)\s+has been disconnected/i
   );
 
   if (disconnectMatch) {

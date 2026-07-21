@@ -7,8 +7,7 @@ describe("killEventDeduplicator", () => {
     // Reset module cache to get fresh sentBuckets Map
     vi.resetModules();
     // Re-import after reset to get fresh module state
-    deduplicator =
-      await import("../../../src/features/killfeed/killEventDeduplicator.js");
+    deduplicator = await import("../../../src/features/killfeed/killEventDeduplicator.js");
   });
 
   afterEach(() => {

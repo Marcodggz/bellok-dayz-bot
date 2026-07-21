@@ -60,10 +60,7 @@ function sampleHeatGradient(stops, distance) {
 
     if (normalizedDistance <= next.position) {
       const range = next.position - current.position;
-      const rawAmount =
-        range === 0
-          ? 0
-          : (normalizedDistance - current.position) / range;
+      const rawAmount = range === 0 ? 0 : (normalizedDistance - current.position) / range;
       const amount = smoothstep(rawAmount);
 
       return {
@@ -141,10 +138,7 @@ function drawHeatCluster(overlay, pixelX, pixelY, visualCount, width, height) {
       if (x < 0 || x >= width || y < 0 || y >= height) continue;
 
       const normalizedDistance = distance / maxRadius;
-      const { r, g, b, alpha } = sampleHeatGradient(
-        gradient,
-        normalizedDistance,
-      );
+      const { r, g, b, alpha } = sampleHeatGradient(gradient, normalizedDistance);
 
       if (alpha <= 0) continue;
 
@@ -230,10 +224,7 @@ function drawSoftBridge(png, x1, y1, x2, y2, radius, r, g, b, maxAlpha, W, H) {
       if (segmentLengthSq === 0) {
         distance = Math.sqrt((x - x1) ** 2 + (y - y1) ** 2);
       } else {
-        const t = Math.max(
-          0,
-          Math.min(1, ((x - x1) * dx + (y - y1) * dy) / segmentLengthSq),
-        );
+        const t = Math.max(0, Math.min(1, ((x - x1) * dx + (y - y1) * dy) / segmentLengthSq));
         const projX = x1 + t * dx;
         const projY = y1 + t * dy;
         distance = Math.sqrt((x - projX) ** 2 + (y - projY) ** 2);

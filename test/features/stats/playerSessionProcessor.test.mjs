@@ -7,15 +7,11 @@ const {
   parseRawTimeMs,
   createEventTimeNormalizer,
   processPlayerSessionLine,
-} = require(
-  "../../../src/features/stats/playerSessionProcessor.js",
-);
+} = require("../../../src/features/stats/playerSessionProcessor.js");
 
 describe("playerSessionProcessor", () => {
   test("parses a valid ADM time", () => {
-    expect(parseRawTimeMs("14:30:45")).toBe(
-      (14 * 3600 + 30 * 60 + 45) * 1000,
-    );
+    expect(parseRawTimeMs("14:30:45")).toBe((14 * 3600 + 30 * 60 + 45) * 1000);
   });
 
   test("normalizes times across midnight", () => {
@@ -38,13 +34,13 @@ describe("playerSessionProcessor", () => {
       stats,
       normalize,
       handlePlayerConnect,
-      handlePlayerDisconnect,
+      handlePlayerDisconnect
     );
 
     expect(handlePlayerConnect).toHaveBeenCalledWith(
       stats,
       "NewPlayer",
-      (14 * 3600 + 38 * 60 + 20) * 1000,
+      (14 * 3600 + 38 * 60 + 20) * 1000
     );
     expect(handlePlayerDisconnect).not.toHaveBeenCalled();
     expect(result.type).toBe("connect");
@@ -61,16 +57,15 @@ describe("playerSessionProcessor", () => {
       stats,
       normalize,
       handlePlayerConnect,
-      handlePlayerDisconnect,
+      handlePlayerDisconnect
     );
 
     expect(handlePlayerConnect).toHaveBeenCalledWith(
       stats,
       "Vinnizd",
-      (13 * 3600 + 1 * 60 + 36) * 1000,
+      (13 * 3600 + 1 * 60 + 36) * 1000
     );
   });
-
 
   test("processes a player disconnection line", () => {
     const stats = {};
@@ -83,13 +78,13 @@ describe("playerSessionProcessor", () => {
       stats,
       normalize,
       handlePlayerConnect,
-      handlePlayerDisconnect,
+      handlePlayerDisconnect
     );
 
     expect(handlePlayerDisconnect).toHaveBeenCalledWith(
       stats,
       "Disconnected",
-      (14 * 3600 + 43 * 60 + 12) * 1000,
+      (14 * 3600 + 43 * 60 + 12) * 1000
     );
     expect(handlePlayerConnect).not.toHaveBeenCalled();
     expect(result.type).toBe("disconnect");

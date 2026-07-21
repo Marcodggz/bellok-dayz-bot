@@ -14,9 +14,7 @@ describe("findGamertagOwner", () => {
   });
 
   test("returns the owner for a unique case-insensitive match", () => {
-    expect(findGamertagOwner(links, "  bellok  ")).toBe(
-      "discord-user-1",
-    );
+    expect(findGamertagOwner(links, "  bellok  ")).toBe("discord-user-1");
   });
 
   test("returns null when the gamertag is not linked", () => {

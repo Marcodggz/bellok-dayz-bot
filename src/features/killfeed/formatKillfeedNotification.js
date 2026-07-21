@@ -7,11 +7,7 @@
  * @param {Object|null} victimStats - Optional victim stats object
  * @returns {string} - Formatted multiline notification text
  */
-function formatKillfeedNotification(
-  event,
-  killerStats = null,
-  victimStats = null,
-) {
+function formatKillfeedNotification(event, killerStats = null, victimStats = null) {
   if (!event) return null;
 
   if (event.type === "pvp") {
@@ -81,11 +77,9 @@ function formatPvPNotification(event, killerStats = null, victimStats = null) {
   // Killer stats - bold labels
   lines.push(`**Killer:** \`${killerName}\``);
   if (killerStats) {
+    lines.push(`**Rank:** ${killerStats.rank} | **Score:** ${killerStats.score.toFixed(1)}`);
     lines.push(
-      `**Rank:** ${killerStats.rank} | **Score:** ${killerStats.score.toFixed(1)}`,
-    );
-    lines.push(
-      `**Kills:** ${killerStats.kills} | **Deaths:** ${killerStats.deaths} | **KD:** ${killerStats.kd.toFixed(2)}`,
+      `**Kills:** ${killerStats.kills} | **Deaths:** ${killerStats.deaths} | **KD:** ${killerStats.kd.toFixed(2)}`
     );
     lines.push(`**Kill Streak:** ${killerStats.killStreak}`);
   } else {
@@ -97,11 +91,9 @@ function formatPvPNotification(event, killerStats = null, victimStats = null) {
   // Victim stats - bold labels
   lines.push(`**Victim:** \`${victimName}\``);
   if (victimStats) {
+    lines.push(`**Rank:** ${victimStats.rank} | **Score:** ${victimStats.score.toFixed(1)}`);
     lines.push(
-      `**Rank:** ${victimStats.rank} | **Score:** ${victimStats.score.toFixed(1)}`,
-    );
-    lines.push(
-      `**Kills:** ${victimStats.kills} | **Deaths:** ${victimStats.deaths} | **KD:** ${victimStats.kd.toFixed(2)}`,
+      `**Kills:** ${victimStats.kills} | **Deaths:** ${victimStats.deaths} | **KD:** ${victimStats.kd.toFixed(2)}`
     );
   } else {
     lines.push(`**Rank:** N/A | **Score:** N/A`);
@@ -109,10 +101,7 @@ function formatPvPNotification(event, killerStats = null, victimStats = null) {
   }
 
   // Time Alive - show lastTimeAlive if available
-  const timeAlive =
-    victimStats && victimStats.lastTimeAlive
-      ? victimStats.lastTimeAlive
-      : "N/A";
+  const timeAlive = victimStats && victimStats.lastTimeAlive ? victimStats.lastTimeAlive : "N/A";
   lines.push(`**Time Alive** ${timeAlive}`);
 
   return lines.join("\n");
@@ -165,10 +154,7 @@ function formatExplosionNotification(event, victimStats = null) {
   }
 
   // Time Alive - show lastTimeAlive if available
-  const timeAlive =
-    victimStats && victimStats.lastTimeAlive
-      ? victimStats.lastTimeAlive
-      : "N/A";
+  const timeAlive = victimStats && victimStats.lastTimeAlive ? victimStats.lastTimeAlive : "N/A";
   lines.push(`**Time Alive** ${timeAlive}`);
 
   return lines.join("\n");

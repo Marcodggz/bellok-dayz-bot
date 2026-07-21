@@ -45,7 +45,7 @@ function mapToPixelCoords(x, y, W, H, debug = false) {
   // Diagnostic logging when debug flag is set
   if (debug) {
     console.log(
-      `[coord-map] Raw: (${x.toFixed(1)}, ${y.toFixed(1)}) → Normalized: (${nx.toFixed(3)}, ${ny.toFixed(3)}) → Scaled: (${sx.toFixed(3)}, ${sy.toFixed(3)}) → UV: (${u.toFixed(3)}, ${v.toFixed(3)}) → Pixel: (${px}, ${py})`,
+      `[coord-map] Raw: (${x.toFixed(1)}, ${y.toFixed(1)}) → Normalized: (${nx.toFixed(3)}, ${ny.toFixed(3)}) → Scaled: (${sx.toFixed(3)}, ${sy.toFixed(3)}) → UV: (${u.toFixed(3)}, ${v.toFixed(3)}) → Pixel: (${px}, ${py})`
     );
   }
 

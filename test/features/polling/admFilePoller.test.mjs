@@ -3,12 +3,10 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 const require = createRequire(import.meta.url);
 
-const pollerPath =
-  require.resolve("../../../src/features/polling/admFilePoller.js");
+const pollerPath = require.resolve("../../../src/features/polling/admFilePoller.js");
 const nitradoClientPath = require.resolve("../../../src/api/nitradoClient.js");
 const stateStorePath = require.resolve("../../../src/storage/stateStore.js");
-const fileStateStorePath =
-  require.resolve("../../../src/storage/fileStateStore.js");
+const fileStateStorePath = require.resolve("../../../src/storage/fileStateStore.js");
 const heatStorePath = require.resolve("../../../src/storage/heatStore.js");
 const configPath = require.resolve("../../../src/config/config.js");
 
@@ -55,9 +53,7 @@ beforeEach(() => {
   const mockState = {};
   loadState = vi.fn(() => mockState);
 
-  getFileState = vi.fn(
-    (st, filePath) => st[filePath] || { size: 0, carry: "" },
-  );
+  getFileState = vi.fn((st, filePath) => st[filePath] || { size: 0, carry: "" });
   setFileState = vi.fn((st, filePath, obj) => {
     st[filePath] = obj;
   });
@@ -124,7 +120,7 @@ describe("admFilePoller", () => {
       expect(setFileState).toHaveBeenCalledWith(
         expect.any(Object),
         "/logs/adm/adm_2026-07-15_12-00-00.adm",
-        { size: 0, carry: "" },
+        { size: 0, carry: "" }
       );
     });
 
@@ -174,7 +170,7 @@ describe("admFilePoller", () => {
       expect(setFileState).toHaveBeenCalledWith(
         expect.any(Object),
         "/logs/adm/adm_2026-07-15_13-00-00.adm",
-        { size: 0, carry: "" },
+        { size: 0, carry: "" }
       );
     });
 
@@ -211,9 +207,7 @@ describe("admFilePoller", () => {
         "/logs/file.adm": { size: 12, carry: "" },
       };
       loadState.mockReturnValue(state);
-      getFileState.mockImplementation(
-        (st, fp) => st[fp] || { size: 0, carry: "" },
-      );
+      getFileState.mockImplementation((st, fp) => st[fp] || { size: 0, carry: "" });
       nitDownload.mockResolvedValue({
         buffer: Buffer.from("old content\nnew line 1\nnew line 2\n"),
       });
@@ -226,9 +220,7 @@ describe("admFilePoller", () => {
     test("updates the stored byte offset after reading", async () => {
       const state = {};
       loadState.mockReturnValue(state);
-      getFileState.mockImplementation(
-        (st, fp) => st[fp] || { size: 0, carry: "" },
-      );
+      getFileState.mockImplementation((st, fp) => st[fp] || { size: 0, carry: "" });
       nitDownload.mockResolvedValue({
         buffer: Buffer.from("line 1\nline 2\n"),
       });
@@ -238,7 +230,7 @@ describe("admFilePoller", () => {
       expect(setFileState).toHaveBeenCalledWith(
         state,
         "/logs/file.adm",
-        expect.objectContaining({ size: 14 }),
+        expect.objectContaining({ size: 14 })
       );
     });
 
@@ -247,9 +239,7 @@ describe("admFilePoller", () => {
         "/logs/file.adm": { size: 100, carry: "" },
       };
       loadState.mockReturnValue(state);
-      getFileState.mockImplementation(
-        (st, fp) => st[fp] || { size: 0, carry: "" },
-      );
+      getFileState.mockImplementation((st, fp) => st[fp] || { size: 0, carry: "" });
       nitDownload.mockResolvedValue({
         buffer: Buffer.from("new start\n"),
       });
@@ -260,7 +250,7 @@ describe("admFilePoller", () => {
       expect(setFileState).toHaveBeenCalledWith(
         state,
         "/logs/file.adm",
-        expect.objectContaining({ size: 10 }),
+        expect.objectContaining({ size: 10 })
       );
     });
 
@@ -269,9 +259,7 @@ describe("admFilePoller", () => {
         "/logs/file.adm": { size: 20, carry: "" },
       };
       loadState.mockReturnValue(state);
-      getFileState.mockImplementation(
-        (st, fp) => st[fp] || { size: 0, carry: "" },
-      );
+      getFileState.mockImplementation((st, fp) => st[fp] || { size: 0, carry: "" });
       nitDownload.mockResolvedValue({
         buffer: Buffer.from("12345678901234567890"),
       });
@@ -284,9 +272,7 @@ describe("admFilePoller", () => {
     test("splits downloaded content into non-empty lines correctly", async () => {
       const state = {};
       loadState.mockReturnValue(state);
-      getFileState.mockImplementation(
-        (st, fp) => st[fp] || { size: 0, carry: "" },
-      );
+      getFileState.mockImplementation((st, fp) => st[fp] || { size: 0, carry: "" });
       nitDownload.mockResolvedValue({
         buffer: Buffer.from("line 1\n\nline 2\nline 3\n"),
       });

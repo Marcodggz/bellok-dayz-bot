@@ -6,12 +6,7 @@
 // - Coordinate calibration: min/max/offset/scale/flip for accurate map overlay
 
 const fs = require("fs");
-const {
-  Client,
-  GatewayIntentBits,
-  EmbedBuilder,
-  AttachmentBuilder,
-} = require("discord.js");
+const { Client, GatewayIntentBits, EmbedBuilder, AttachmentBuilder } = require("discord.js");
 const { PNG } = require("pngjs");
 
 // Import config and helpers
@@ -24,14 +19,8 @@ const {
   clamp,
 } = require("./src/utils/helpers");
 const { loadHeat, saveHeat } = require("./src/storage/heatStore");
-const {
-  loadMockStats,
-  saveMockStats,
-} = require("./src/storage/mockStatsStore");
-const {
-  loadPlayerStats,
-  savePlayerStats,
-} = require("./src/storage/playerStatsStore");
+const { loadMockStats, saveMockStats } = require("./src/storage/mockStatsStore");
+const { loadPlayerStats, savePlayerStats } = require("./src/storage/playerStatsStore");
 const { parseKill } = require("./src/parsers/killParser");
 const {
   formatKillfeedNotification,
@@ -50,15 +39,9 @@ const {
   createEventTimeNormalizer,
   processPlayerSessionLine,
 } = require("./src/features/stats/playerSessionProcessor");
-const {
-  handleCommandInteraction,
-} = require("./src/features/commands/commandHandler");
-const {
-  registerCommands,
-} = require("./src/features/commands/registerCommands");
-const {
-  maybeSendWeekendHeatmap,
-} = require("./src/utils/weekendHeatmapHelpers");
+const { handleCommandInteraction } = require("./src/features/commands/commandHandler");
+const { registerCommands } = require("./src/features/commands/registerCommands");
+const { maybeSendWeekendHeatmap } = require("./src/utils/weekendHeatmapHelpers");
 const { mapToPixelCoords } = require("./src/utils/coordinateMapper");
 const { createHeatmapCycle } = require("./src/utils/heatmapCycle");
 const {
@@ -80,16 +63,9 @@ const {
   tsFromName,
   startListCooldown,
 } = require("./src/api/nitradoClient");
-const {
-  ensureLatestAdmSelected,
-  readNewLines,
-} = require("./src/features/polling/admFilePoller");
-const {
-  processKillEvents,
-} = require("./src/features/killfeed/killEventProcessor");
-const {
-  handleKillEvents,
-} = require("./src/features/killfeed/killEventHandler");
+const { ensureLatestAdmSelected, readNewLines } = require("./src/features/polling/admFilePoller");
+const { processKillEvents } = require("./src/features/killfeed/killEventProcessor");
+const { handleKillEvents } = require("./src/features/killfeed/killEventHandler");
 
 const MODE = process.argv[2] || "run";
 
@@ -143,10 +119,7 @@ function renderHeatPng(points, outPath, baseMapPath = "") {
       H = basePng.height;
     }
   } catch (e) {
-    console.warn(
-      "[heatmap] no se pudo leer MAP_IMAGE_PATH, uso lienzo transparente:",
-      e.message,
-    );
+    console.warn("[heatmap] no se pudo leer MAP_IMAGE_PATH, uso lienzo transparente:", e.message);
   }
 
   // 2) Build clusters from the already-pruned world coordinates
@@ -185,48 +158,9 @@ function renderHeatPng(points, outPath, baseMapPath = "") {
 
     // Multi-layer bridge: outer blue → middle green → inner orange
     // Using distance-to-line-segment for true elongated heat corridors
-    drawSoftBridge(
-      overlay,
-      p1.px,
-      p1.py,
-      p2.px,
-      p2.py,
-      28,
-      59,
-      130,
-      246,
-      95,
-      W,
-      H,
-    ); // Blue outer
-    drawSoftBridge(
-      overlay,
-      p1.px,
-      p1.py,
-      p2.px,
-      p2.py,
-      18,
-      34,
-      197,
-      94,
-      90,
-      W,
-      H,
-    ); // Green middle
-    drawSoftBridge(
-      overlay,
-      p1.px,
-      p1.py,
-      p2.px,
-      p2.py,
-      9,
-      234,
-      179,
-      8,
-      70,
-      W,
-      H,
-    ); // Orange inner
+    drawSoftBridge(overlay, p1.px, p1.py, p2.px, p2.py, 28, 59, 130, 246, 95, W, H); // Blue outer
+    drawSoftBridge(overlay, p1.px, p1.py, p2.px, p2.py, 18, 34, 197, 94, 90, W, H); // Green middle
+    drawSoftBridge(overlay, p1.px, p1.py, p2.px, p2.py, 9, 234, 179, 8, 70, W, H); // Orange inner
   }
 
   // 6) Draw all clusters as normal radial dots (on top of bridges)
@@ -257,18 +191,16 @@ function checkEnv() {
     "ADM_DIR=",
     !!ADM_DIR,
     "HEATMAP_CHANNEL_ID=",
-    !!HEATMAP_CHANNEL_ID,
+    !!HEATMAP_CHANNEL_ID
   );
   if (!NIT_TOKEN || !SERVICE_ID || !CHANNEL_ID || !config.DISCORD_TOKEN) {
     console.error(
-      "Missing .env variables: NITRADO_TOKEN, NITRADO_SERVICE_ID, DISCORD_CHANNEL_ID, DISCORD_TOKEN",
+      "Missing .env variables: NITRADO_TOKEN, NITRADO_SERVICE_ID, DISCORD_CHANNEL_ID, DISCORD_TOKEN"
     );
     process.exit(1);
   }
   if (!ADM_DIR && MODE === "run") {
-    console.error(
-      "Missing NITRADO_ADM_DIR (should point to /noftp/.../dayzps/config)",
-    );
+    console.error("Missing NITRADO_ADM_DIR (should point to /noftp/.../dayzps/config)");
     process.exit(1);
   }
 }
@@ -293,9 +225,7 @@ async function maybeSendHeatmap(client) {
   heatmapSending = true;
 
   try {
-    const ch = await client.channels
-      .fetch(HEATMAP_CHANNEL_ID)
-      .catch(() => null);
+    const ch = await client.channels.fetch(HEATMAP_CHANNEL_ID).catch(() => null);
 
     if (!ch || typeof ch.send !== "function") {
       console.warn("[heatmap] Invalid channel or missing permissions");
@@ -319,16 +249,13 @@ async function maybeSendHeatmap(client) {
 
       embed
         .setDescription(
-          `• **Updated:** <t:${updatedTimestamp}:R>\n` +
-            `• **Entries:** ${h.points.length}`,
+          `• **Updated:** <t:${updatedTimestamp}:R>\n` + `• **Entries:** ${h.points.length}`
         )
         .setImage(`attachment://${HEAT_IMG_PATH.split("/").pop()}`);
 
       payload = { content: "", embeds: [embed], files: [file] };
     } else {
-      embed.setDescription(
-        `No PvP activity in the last ${HEATMAP_WINDOW_MIN} minutes.`,
-      );
+      embed.setDescription(`No PvP activity in the last ${HEATMAP_WINDOW_MIN} minutes.`);
 
       payload = {
         content: "",
@@ -342,9 +269,7 @@ async function maybeSendHeatmap(client) {
     let sent = false;
     if (h.messageId) {
       try {
-        const existingMsg = await ch.messages
-          .fetch(h.messageId)
-          .catch(() => null);
+        const existingMsg = await ch.messages.fetch(h.messageId).catch(() => null);
         if (existingMsg) {
           await existingMsg.edit(payload);
           sent = true;
@@ -354,10 +279,7 @@ async function maybeSendHeatmap(client) {
           h.messageId = null;
         }
       } catch (e) {
-        console.warn(
-          "[heatmap] failed to edit message, sending new one:",
-          e?.code || e?.message,
-        );
+        console.warn("[heatmap] failed to edit message, sending new one:", e?.code || e?.message);
         h.messageId = null;
       }
     }
@@ -421,9 +343,7 @@ async function runBot() {
 
       const lines = await readNewLines(currentAdm);
       if (DEBUG_TICKS)
-        console.log(
-          `[tick] ${new Date().toLocaleTimeString()}  +${lines.length} new lines`,
-        );
+        console.log(`[tick] ${new Date().toLocaleTimeString()}  +${lines.length} new lines`);
       if (!lines.length) {
         return;
       }
@@ -437,7 +357,7 @@ async function runBot() {
           stats,
           normalizeEventTime,
           handlePlayerConnect,
-          handlePlayerDisconnect,
+          handlePlayerDisconnect
         );
 
         normalizedEventTimes.set(line, sessionEvent.normalizedTimeMs);
@@ -448,7 +368,7 @@ async function runBot() {
         lines,
         stats,
         normalizedEventTimes,
-        processSessionLine,
+        processSessionLine
       );
 
       savePlayerStats(stats);
@@ -464,11 +384,7 @@ async function runBot() {
           console.warn("[tick] Nitrado busy; entering cooldown");
         }
       } else {
-        console.warn(
-          "[tick] error:",
-          status || "",
-          (txt || e.message).slice(0, 200),
-        );
+        console.warn("[tick] error:", status || "", (txt || e.message).slice(0, 200));
       }
     }
   }
@@ -483,15 +399,10 @@ async function runBot() {
       try {
         await registerCommands(config.DISCORD_TOKEN, config.CLIENT_ID);
       } catch (error) {
-        console.warn(
-          "[commands] Failed to register slash commands:",
-          error.message,
-        );
+        console.warn("[commands] Failed to register slash commands:", error.message);
       }
     } else {
-      console.warn(
-        "[commands] DISCORD_CLIENT_ID not set, skipping command registration",
-      );
+      console.warn("[commands] DISCORD_CLIENT_ID not set, skipping command registration");
     }
 
     await ensureLatestAdmSelected();
@@ -500,10 +411,10 @@ async function runBot() {
     // Start killfeed flush interval (every 10 minutes)
     setInterval(
       () => flushKillfeedQueue(client, CHANNEL_ID, DEBUG, RAW_TO_DISCORD),
-      KILLFEED_FLUSH_INTERVAL_MS,
+      KILLFEED_FLUSH_INTERVAL_MS
     );
     console.log(
-      `[killfeed] Flush interval started (every ${KILLFEED_FLUSH_INTERVAL_MS / 60000} minutes)`,
+      `[killfeed] Flush interval started (every ${KILLFEED_FLUSH_INTERVAL_MS / 60000} minutes)`
     );
   });
 
@@ -524,15 +435,7 @@ if (MODE === "discord-test") {
 } else if (MODE === "discord-weekend-heatmap-test") {
   runDiscordWeekendHeatmapTest(config, checkEnv);
 } else if (MODE === "diagnose") {
-  runDiagnose(
-    config,
-    checkEnv,
-    listAdmNames,
-    tsFromName,
-    tMadrid,
-    nitDownload,
-    parseKill,
-  );
+  runDiagnose(config, checkEnv, listAdmNames, tsFromName, tMadrid, nitDownload, parseKill);
 } else if (MODE === "mock-parse") {
   runMockParse(
     parseKill,
@@ -542,7 +445,7 @@ if (MODE === "discord-test") {
     handlePlayerDisconnect,
     updateStatsFromEvent,
     getPlayerStats,
-    formatKillfeedNotification,
+    formatKillfeedNotification
   );
 } else {
   runBot();

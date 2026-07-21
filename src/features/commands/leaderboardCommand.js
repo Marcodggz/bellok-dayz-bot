@@ -15,54 +15,42 @@ const leaderboardCommand = {
     .setName("leaderboard")
     .setDescription("View server leaderboards")
     .addSubcommand((subcommand) =>
-      subcommand
-        .setName("rank")
-        .setDescription("View top 15 players ranked by score"),
+      subcommand.setName("rank").setDescription("View top 15 players ranked by score")
     )
     .addSubcommand((subcommand) =>
-      subcommand
-        .setName("kills")
-        .setDescription("View top 15 players ranked by PVP kills"),
+      subcommand.setName("kills").setDescription("View top 15 players ranked by PVP kills")
     )
     .addSubcommand((subcommand) =>
-      subcommand
-        .setName("deaths")
-        .setDescription("View top 15 players ranked by PVP deaths"),
+      subcommand.setName("deaths").setDescription("View top 15 players ranked by PVP deaths")
     )
     .addSubcommand((subcommand) =>
-      subcommand
-        .setName("kd")
-        .setDescription("View top 15 players ranked by KD ratio"),
+      subcommand.setName("kd").setDescription("View top 15 players ranked by KD ratio")
     )
     .addSubcommand((subcommand) =>
-      subcommand
-        .setName("headshots")
-        .setDescription("View top 15 players ranked by headshots"),
+      subcommand.setName("headshots").setDescription("View top 15 players ranked by headshots")
     )
     .addSubcommand((subcommand) =>
       subcommand
         .setName("killstreak")
-        .setDescription("View top 15 players ranked by best kill streak"),
+        .setDescription("View top 15 players ranked by best kill streak")
     )
     .addSubcommand((subcommand) =>
-      subcommand
-        .setName("deathstreak")
-        .setDescription("View top 15 players ranked by death streak"),
+      subcommand.setName("deathstreak").setDescription("View top 15 players ranked by death streak")
     )
     .addSubcommand((subcommand) =>
       subcommand
         .setName("longestkill")
-        .setDescription("View top 15 players ranked by longest kill distance"),
+        .setDescription("View top 15 players ranked by longest kill distance")
     )
     .addSubcommand((subcommand) =>
       subcommand
         .setName("timealive")
-        .setDescription("View top 15 players ranked by total time alive"),
+        .setDescription("View top 15 players ranked by total time alive")
     )
     .addSubcommand((subcommand) =>
       subcommand
         .setName("timeplayed")
-        .setDescription("View top 15 players ranked by total time played"),
+        .setDescription("View top 15 players ranked by total time played")
     ),
 
   /**
@@ -130,7 +118,7 @@ async function handleRankLeaderboard(interaction) {
     interaction,
     "Current Top 15 Ranks 🏅",
     top15,
-    (player) => `Rank: ${player.rank}\nScore: ${player.score.toFixed(1)}`,
+    (player) => `Rank: ${player.rank}\nScore: ${player.score.toFixed(1)}`
   );
 }
 
@@ -154,7 +142,7 @@ async function handleKillsLeaderboard(interaction) {
     interaction,
     "Current Top 15 Kills 🔫",
     top15,
-    (player) => `Kills: ${player.kills}`,
+    (player) => `Kills: ${player.kills}`
   );
 }
 
@@ -178,7 +166,7 @@ async function handleDeathsLeaderboard(interaction) {
     interaction,
     "Current Top 15 Deaths ☠️",
     top15,
-    (player) => `Deaths: ${player.deaths}`,
+    (player) => `Deaths: ${player.deaths}`
   );
 }
 
@@ -202,7 +190,7 @@ async function handleKdLeaderboard(interaction) {
     interaction,
     "Current Top 15 KD ⚔️",
     top15,
-    (player) => `KD: ${player.kd.toFixed(2)}`,
+    (player) => `KD: ${player.kd.toFixed(2)}`
   );
 }
 
@@ -226,7 +214,7 @@ async function handleHeadshotsLeaderboard(interaction) {
     interaction,
     "Current Top 15 Headshots 🎯",
     top15,
-    (player) => `Headshots: ${player.headshots}`,
+    (player) => `Headshots: ${player.headshots}`
   );
 }
 
@@ -244,16 +232,13 @@ async function handleKillStreakLeaderboard(interaction) {
       killStreak: stats.killStreak ?? 0,
     }));
 
-  const top15 = getTopPlayers(
-    playerArray,
-    (a, b) => b.killStreak - a.killStreak,
-  );
+  const top15 = getTopPlayers(playerArray, (a, b) => b.killStreak - a.killStreak);
 
   await replyLeaderboard(
     interaction,
     "Current Top 15 Kill Streaks 🔥",
     top15,
-    (player) => `Kill Streak: ${player.killStreak}`,
+    (player) => `Kill Streak: ${player.killStreak}`
   );
 }
 
@@ -271,16 +256,13 @@ async function handleDeathStreakLeaderboard(interaction) {
       deathStreak: stats.deathStreak ?? 0,
     }));
 
-  const top15 = getTopPlayers(
-    playerArray,
-    (a, b) => b.deathStreak - a.deathStreak,
-  );
+  const top15 = getTopPlayers(playerArray, (a, b) => b.deathStreak - a.deathStreak);
 
   await replyLeaderboard(
     interaction,
     "Current Top 15 Death Streaks 💀",
     top15,
-    (player) => `Death Streak: ${player.deathStreak}`,
+    (player) => `Death Streak: ${player.deathStreak}`
   );
 }
 
@@ -299,21 +281,13 @@ async function handleLongestKillLeaderboard(interaction) {
       longestKillWeapon: stats.longestKillWeapon ?? null,
     }));
 
-  const top15 = getTopPlayers(
-    playerArray,
-    (a, b) => b.longestKill - a.longestKill,
-  );
+  const top15 = getTopPlayers(playerArray, (a, b) => b.longestKill - a.longestKill);
 
-  await replyLeaderboard(
-    interaction,
-    "Current Top 15 Longest Kills 🔭",
-    top15,
-    (player) => {
-      const weapon = player.longestKillWeapon || "Unknown";
-      const distance = player.longestKill ?? 0;
-      return `${weapon} (${distance.toFixed(2)}m)`;
-    },
-  );
+  await replyLeaderboard(interaction, "Current Top 15 Longest Kills 🔭", top15, (player) => {
+    const weapon = player.longestKillWeapon || "Unknown";
+    const distance = player.longestKill ?? 0;
+    return `${weapon} (${distance.toFixed(2)}m)`;
+  });
 }
 
 /**
@@ -325,26 +299,17 @@ async function handleTimeAliveLeaderboard(interaction) {
 
   const playerArray = Object.entries(allStats)
     .filter(
-      ([, stats]) =>
-        stats.kills > 0 ||
-        stats.deaths > 0 ||
-        (stats.accumulatedAliveMs ?? 0) > 0,
+      ([, stats]) => stats.kills > 0 || stats.deaths > 0 || (stats.accumulatedAliveMs ?? 0) > 0
     )
     .map(([gamertag, stats]) => ({
       gamertag,
       accumulatedAliveMs: stats.accumulatedAliveMs ?? 0,
     }));
 
-  const top15 = getTopPlayers(
-    playerArray,
-    (a, b) => b.accumulatedAliveMs - a.accumulatedAliveMs,
-  );
+  const top15 = getTopPlayers(playerArray, (a, b) => b.accumulatedAliveMs - a.accumulatedAliveMs);
 
-  await replyLeaderboard(
-    interaction,
-    "Current Top 15 Lives ⏳",
-    top15,
-    (player) => formatTimeAliveForLeaderboard(player.accumulatedAliveMs),
+  await replyLeaderboard(interaction, "Current Top 15 Lives ⏳", top15, (player) =>
+    formatTimeAliveForLeaderboard(player.accumulatedAliveMs)
   );
 }
 
@@ -361,23 +326,17 @@ async function handleTimePlayedLeaderboard(interaction) {
         stats.kills > 0 ||
         stats.deaths > 0 ||
         (stats.accumulatedAliveMs ?? 0) > 0 ||
-        (stats.accumulatedPlayedMs ?? 0) > 0,
+        (stats.accumulatedPlayedMs ?? 0) > 0
     )
     .map(([gamertag, stats]) => ({
       gamertag,
       accumulatedPlayedMs: stats.accumulatedPlayedMs ?? 0,
     }));
 
-  const top15 = getTopPlayers(
-    playerArray,
-    (a, b) => b.accumulatedPlayedMs - a.accumulatedPlayedMs,
-  );
+  const top15 = getTopPlayers(playerArray, (a, b) => b.accumulatedPlayedMs - a.accumulatedPlayedMs);
 
-  await replyLeaderboard(
-    interaction,
-    "Current Top 15 Play Time ⌚",
-    top15,
-    (player) => formatTimeAliveForLeaderboard(player.accumulatedPlayedMs),
+  await replyLeaderboard(interaction, "Current Top 15 Play Time ⌚", top15, (player) =>
+    formatTimeAliveForLeaderboard(player.accumulatedPlayedMs)
   );
 }
 

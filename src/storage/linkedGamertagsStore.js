@@ -3,10 +3,7 @@
 const { loadJSON, saveJSON } = require("./jsonStore");
 const path = require("path");
 
-const LINKED_GAMERTAGS_FILE = path.join(
-  __dirname,
-  "../../data/linked-gamertags.json",
-);
+const LINKED_GAMERTAGS_FILE = path.join(__dirname, "../../data/linked-gamertags.json");
 
 /**
  * Load linked gamertags from file
@@ -77,7 +74,7 @@ function findGamertagOwner(links, gamertag) {
 
   const lowercaseSearch = trimmedGamertag.toLowerCase();
   const matches = Object.entries(links).filter(
-    ([, linkedTag]) => linkedTag.toLowerCase() === lowercaseSearch,
+    ([, linkedTag]) => linkedTag.toLowerCase() === lowercaseSearch
   );
 
   return matches.length === 1 ? matches[0][0] : null;

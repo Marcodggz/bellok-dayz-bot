@@ -195,8 +195,7 @@ describe("killParser", () => {
     });
 
     test("returns null for player connection lines", () => {
-      const line =
-        '14:38:20 | Player "NewPlayer" (id=88776655) is connected (ping: 45ms)';
+      const line = '14:38:20 | Player "NewPlayer" (id=88776655) is connected (ping: 45ms)';
 
       const result = parser.parseKill(line);
 
@@ -204,8 +203,7 @@ describe("killParser", () => {
     });
 
     test("returns null for player disconnection lines", () => {
-      const line =
-        '14:43:12 | Player "Disconnected" (id=99001122) has been disconnected';
+      const line = '14:43:12 | Player "Disconnected" (id=99001122) has been disconnected';
 
       const result = parser.parseKill(line);
 
@@ -253,16 +251,10 @@ describe("killParser", () => {
     });
 
     test("shouldIgnore identifies lines to skip", () => {
-      expect(
-        parser.shouldIgnore("##### PlayerList log: 12 players online"),
-      ).toBe(true);
+      expect(parser.shouldIgnore("##### PlayerList log: 12 players online")).toBe(true);
       expect(parser.shouldIgnore('Player "Name" is connected')).toBe(true);
-      expect(parser.shouldIgnore('Player "Name" has been disconnected')).toBe(
-        true,
-      );
-      expect(
-        parser.shouldIgnore("14:23:45 | Player killed Player with M4A1"),
-      ).toBe(false);
+      expect(parser.shouldIgnore('Player "Name" has been disconnected')).toBe(true);
+      expect(parser.shouldIgnore("14:23:45 | Player killed Player with M4A1")).toBe(false);
     });
 
     test("regression test: parses real sample ADM position correctly", () => {

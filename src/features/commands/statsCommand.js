@@ -10,10 +10,7 @@ const {
   getGamertagByDiscordUserId,
   getDiscordUserIdByGamertag,
 } = require("../../storage/linkedGamertagsStore");
-const {
-  loadPlayerStats,
-  findPlayerStats,
-} = require("../../storage/playerStatsStore");
+const { loadPlayerStats, findPlayerStats } = require("../../storage/playerStatsStore");
 const { SERVER_NAME } = require("../../config/config");
 const { getRankBadgePath } = require("../../utils/rankBadges");
 
@@ -27,10 +24,8 @@ const statsCommand = {
     .addStringOption((option) =>
       option
         .setName("player")
-        .setDescription(
-          "Player gamertag (optional, uses your linked gamertag if not provided)",
-        )
-        .setRequired(false),
+        .setDescription("Player gamertag (optional, uses your linked gamertag if not provided)")
+        .setRequired(false)
     ),
 
   /**
@@ -80,11 +75,7 @@ const statsCommand = {
       const discordDisplay = linkedUserId ? `<@${linkedUserId}>` : "Not Linked";
 
       // Build stats embed
-      const { embed: statsEmbed, files } = buildStatsEmbed(
-        gamertag,
-        playerStats,
-        discordDisplay,
-      );
+      const { embed: statsEmbed, files } = buildStatsEmbed(gamertag, playerStats, discordDisplay);
 
       await interaction.reply({
         embeds: [statsEmbed],
@@ -121,9 +112,7 @@ function buildStatsEmbed(gamertag, stats, discordDisplay) {
   const lastKill = stats.lastKill || "N/A";
   const lastDeath = stats.lastDeath || "N/A";
   const favouriteWeapon = stats.favouriteWeapon || "N/A";
-  const longestKill = stats.longestKill
-    ? `${stats.longestKill.toFixed(2)}m`
-    : "N/A";
+  const longestKill = stats.longestKill ? `${stats.longestKill.toFixed(2)}m` : "N/A";
   const timePlayed = stats.timePlayed || "N/A";
   const bestTimeAlive = stats.bestTimeAlive || "N/A";
   const timeAlive = stats.timeAlive || stats.lastTimeAlive || "N/A";
@@ -194,7 +183,7 @@ function buildStatsEmbed(gamertag, stats, discordDisplay) {
       name: "__Time Stats__",
       value: `Time Played: **${timePlayed}**\nBest Time Alive: **${bestTimeAlive}**\nTime Alive: **${timeAlive}**`,
       inline: false,
-    },
+    }
   );
 
   // Add footer with bot name (timestamp is handled by .setTimestamp())

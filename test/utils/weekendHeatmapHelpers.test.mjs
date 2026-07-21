@@ -3,12 +3,8 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 const require = createRequire(import.meta.url);
 
-const helpersPath = require.resolve(
-  "../../src/utils/weekendHeatmapHelpers.js",
-);
-const storePath = require.resolve(
-  "../../src/storage/weekendHeatStore.js",
-);
+const helpersPath = require.resolve("../../src/utils/weekendHeatmapHelpers.js");
+const storePath = require.resolve("../../src/storage/weekendHeatStore.js");
 
 let state;
 let saveWeekendHeat;
@@ -75,9 +71,7 @@ describe("addWeekendHeatPoint", () => {
     addWeekendHeatPoint("Vinnizd", 7000, 8000);
 
     expect(state.points).toHaveLength(2);
-    expect(
-      state.points.filter((point) => point.name === "Vinnizd"),
-    ).toEqual([
+    expect(state.points.filter((point) => point.name === "Vinnizd")).toEqual([
       expect.objectContaining({
         x: 7000,
         y: 8000,
@@ -85,15 +79,11 @@ describe("addWeekendHeatPoint", () => {
     ]);
   });
 
-
   test("keeps one latest position for each different player", () => {
     addWeekendHeatPoint("PlayerA", 1000, 2000);
     addWeekendHeatPoint("PlayerB", 3000, 4000);
 
     expect(state.points).toHaveLength(2);
-    expect(state.points.map((point) => point.name)).toEqual([
-      "PlayerA",
-      "PlayerB",
-    ]);
+    expect(state.points.map((point) => point.name)).toEqual(["PlayerA", "PlayerB"]);
   });
 });

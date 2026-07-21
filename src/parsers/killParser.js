@@ -10,11 +10,11 @@ const EXPLO = /explosion|grenade|mine|landmine|tripwire|ied/i;
 const PVP_PATTERNS = [
   new RegExp(
     `Player ${q}(.+?)${q}[^|\\r\\n]*?killed Player ${q}(.+?)${q}[^|\\r\\n]*?(?:\\s+with\\s+([^\\s|\\r\\n(]+))?`,
-    "i",
+    "i"
   ),
   new RegExp(
     `Player ${q}(.+?)${q}[^|\\r\\n]*?(?:\\(DEAD\\)\\s*)?(?:was\\s+)?killed by Player ${q}(.+?)${q}[^|\\r\\n]*?(?:\\s+with\\s+([^\\s|\\r\\n(]+))?`,
-    "i",
+    "i"
   ),
 ];
 
@@ -156,11 +156,11 @@ function parseKill(line) {
       // Extract positions - look for the killer's position first, then victim's (use raw names for pattern matching)
       const killerPosPattern = new RegExp(
         `Player ${q}${escapeRegExp(killerRaw)}${q}[^<]*pos=<([^>]+)>`,
-        "i",
+        "i"
       );
       const victimPosPattern = new RegExp(
         `Player ${q}${escapeRegExp(victimRaw)}${q}[^<]*pos=<([^>]+)>`,
-        "i",
+        "i"
       );
 
       const killerPosMatch = line.match(killerPosPattern);
@@ -185,9 +185,7 @@ function parseKill(line) {
 
   // Try explosion pattern
   {
-    const m = line.match(
-      new RegExp(`Player ${q}(.+?)${q}.*?killed by ([^|\\r\\n]+)`, "i"),
-    );
+    const m = line.match(new RegExp(`Player ${q}(.+?)${q}.*?killed by ([^|\\r\\n]+)`, "i"));
     if (m) {
       const victimRaw = m[1];
       const victim = cleanPlayerName(victimRaw);
@@ -199,7 +197,7 @@ function parseKill(line) {
         // Extract victim position for explosion deaths (use raw name for pattern matching)
         const victimPosPattern = new RegExp(
           `Player ${q}${escapeRegExp(victimRaw)}${q}[^<]*pos=<([^>]+)>`,
-          "i",
+          "i"
         );
         const victimPosMatch = line.match(victimPosPattern);
 

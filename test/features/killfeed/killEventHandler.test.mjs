@@ -3,14 +3,10 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 
 const require = createRequire(import.meta.url);
 
-const handlerPath =
-  require.resolve("../../../src/features/killfeed/killEventHandler.js");
-const deduplicatorPath =
-  require.resolve("../../../src/features/killfeed/killEventDeduplicator.js");
-const queuePath =
-  require.resolve("../../../src/features/killfeed/killfeedQueue.js");
-const positionTrackerPath =
-  require.resolve("../../../src/features/tracking/positionTracker.js");
+const handlerPath = require.resolve("../../../src/features/killfeed/killEventHandler.js");
+const deduplicatorPath = require.resolve("../../../src/features/killfeed/killEventDeduplicator.js");
+const queuePath = require.resolve("../../../src/features/killfeed/killfeedQueue.js");
+const positionTrackerPath = require.resolve("../../../src/features/tracking/positionTracker.js");
 
 let handleKillEvents;
 let alreadySentBucket;
@@ -63,10 +59,7 @@ describe("killEventHandler", () => {
     alreadySentBucket.mockReturnValue(true);
 
     const groups = new Map([
-      [
-        "Alice|Bob|weapon",
-        { killer: "Alice", victim: "Bob", weapon: "weapon", t: "12:00:00" },
-      ],
+      ["Alice|Bob|weapon", { killer: "Alice", victim: "Bob", weapon: "weapon", t: "12:00:00" }],
     ]);
     const lines = ["12:00:00 | Alice killed Bob with weapon"];
 
@@ -99,7 +92,7 @@ describe("killEventHandler", () => {
         killerStats: null,
         victimStats: null,
       },
-      "Alice|Bob|AKM",
+      "Alice|Bob|AKM"
     );
     expect(result).toEqual([]);
   });
@@ -130,7 +123,7 @@ describe("killEventHandler", () => {
         killerStats: null,
         victimStats: null,
       },
-      "Charlie|Dave|M4",
+      "Charlie|Dave|M4"
     );
   });
 
@@ -145,8 +138,7 @@ describe("killEventHandler", () => {
       t: "12:01:00",
     };
 
-    const line =
-      '12:01:00 | Player "Alice" killed Player "Bob" with AKM';
+    const line = '12:01:00 | Player "Alice" killed Player "Bob" with AKM';
 
     const stats = {
       Bob: {
@@ -165,16 +157,9 @@ describe("killEventHandler", () => {
       },
     };
 
-    const normalizedEventTimes = new Map([
-      [line, 43_260_000],
-    ]);
+    const normalizedEventTimes = new Map([[line, 43_260_000]]);
 
-    handleKillEvents(
-      new Map([["Alice|Bob|AKM", killEvent]]),
-      [line],
-      stats,
-      normalizedEventTimes,
-    );
+    handleKillEvents(new Map([["Alice|Bob|AKM", killEvent]]), [line], stats, normalizedEventTimes);
 
     expect(stats.Bob.lastTimeAlive).toBe("00H 01M 00S");
 
@@ -190,10 +175,9 @@ describe("killEventHandler", () => {
           lastTimeAlive: "00H 01M 00S",
         }),
       },
-      "Alice|Bob|AKM",
+      "Alice|Bob|AKM"
     );
   });
-
 
   test("processes connect, death, and respawn in chronological ADM order", () => {
     alreadySentBucket.mockReturnValue(false);
@@ -251,7 +235,7 @@ describe("killEventHandler", () => {
       [connectLine, killLine, respawnLine],
       stats,
       normalizedEventTimes,
-      processSessionLine,
+      processSessionLine
     );
 
     expect(queueKillfeedEvent).toHaveBeenCalledWith(
@@ -260,13 +244,12 @@ describe("killEventHandler", () => {
           lastTimeAlive: "00H 05M 15S",
         }),
       }),
-      "Vinnizd|explosion",
+      "Vinnizd|explosion"
     );
 
     expect(stats.Vinnizd.connectedSince).toBe(53_465_000);
     expect(stats.Vinnizd.isConnected).toBe(true);
   });
-
 
   test("valid finite coordinates are returned", () => {
     alreadySentBucket.mockReturnValue(false);
@@ -281,16 +264,11 @@ describe("killEventHandler", () => {
       line: "the kill event line",
     };
     const groups = new Map([["Eve|Frank|SVD", killEvent]]);
-    const lines = [
-      '12:00:03 | Player "Frank" killed by Eve with SVD from 200m',
-    ];
+    const lines = ['12:00:03 | Player "Frank" killed by Eve with SVD from 200m'];
 
     const result = handleKillEvents(groups, lines);
 
-    expect(posForVictimFromLine).toHaveBeenCalledWith(
-      "Frank",
-      "the kill event line",
-    );
+    expect(posForVictimFromLine).toHaveBeenCalledWith("Frank", "the kill event line");
     expect(result).toEqual([{ x: 1234.5, y: 6789.0 }]);
   });
 

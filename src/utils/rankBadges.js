@@ -24,13 +24,7 @@ function getRankBadgePath(rank) {
     return null;
   }
 
-  const badgePath = path.join(
-    __dirname,
-    "..",
-    "assets",
-    "ranks",
-    badgeFilename,
-  );
+  const badgePath = path.join(__dirname, "..", "assets", "ranks", badgeFilename);
 
   // Check if file exists before returning
   try {

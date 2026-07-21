@@ -45,20 +45,10 @@ function normalizeStats(stats) {
 }
 
 function embedPvp(
-  {
-    killer,
-    victim,
-    weapon,
-    distanceMeters,
-    ammo,
-    hitZone,
-    damage,
-    victimPosition,
-    t,
-  },
+  { killer, victim, weapon, distanceMeters, ammo, hitZone, damage, victimPosition, t },
   eventTimestamp = null,
   killerStats = null,
-  victimStats = null,
+  victimStats = null
 ) {
   const lines = [];
 
@@ -81,22 +71,14 @@ function embedPvp(
   lines.push(`**Weapon** ${weaponText}${ammoText}`);
 
   const distanceText =
-    distanceMeters !== null && distanceMeters !== undefined
-      ? distanceMeters.toFixed(0)
-      : "0";
+    distanceMeters !== null && distanceMeters !== undefined ? distanceMeters.toFixed(0) : "0";
   lines.push(`**Distance** ${distanceText} meters`);
 
   const hitZoneText = hitZone || "N/A";
-  const damageText =
-    damage !== null && damage !== undefined ? damage.toFixed(0) : "N/A";
+  const damageText = damage !== null && damage !== undefined ? damage.toFixed(0) : "N/A";
   lines.push(`**Hit** ${hitZoneText} ${damageText} damage`);
 
-  if (
-    victimPosition &&
-    victimPosition.x &&
-    victimPosition.y &&
-    victimPosition.z
-  ) {
+  if (victimPosition && victimPosition.x && victimPosition.y && victimPosition.z) {
     const { x, y, z } = victimPosition;
     const coordsText = `${x.toFixed(1)};${y.toFixed(1)};${z.toFixed(1)}`;
     const url = buildIzurviveLocationUrl(x, y);
@@ -110,10 +92,10 @@ function embedPvp(
   const normalizedKillerStats = normalizeStats(killerStats);
   lines.push(`__**Killer:**__ \`${killerName}\``);
   lines.push(
-    `**Rank:** ${normalizedKillerStats.rank} | **Score:** ${normalizedKillerStats.score.toFixed(1)}`,
+    `**Rank:** ${normalizedKillerStats.rank} | **Score:** ${normalizedKillerStats.score.toFixed(1)}`
   );
   lines.push(
-    `**Kills:** ${normalizedKillerStats.kills} | **Deaths:** ${normalizedKillerStats.deaths} | **KD:** ${normalizedKillerStats.kd.toFixed(2)}`,
+    `**Kills:** ${normalizedKillerStats.kills} | **Deaths:** ${normalizedKillerStats.deaths} | **KD:** ${normalizedKillerStats.kd.toFixed(2)}`
   );
   lines.push(`**Kill Streak:** ${normalizedKillerStats.killStreak}`);
 
@@ -122,10 +104,10 @@ function embedPvp(
   const normalizedVictimStats = normalizeStats(victimStats);
   lines.push(`__**Victim:**__ \`${victimName}\``);
   lines.push(
-    `**Rank:** ${normalizedVictimStats.rank} | **Score:** ${normalizedVictimStats.score.toFixed(1)}`,
+    `**Rank:** ${normalizedVictimStats.rank} | **Score:** ${normalizedVictimStats.score.toFixed(1)}`
   );
   lines.push(
-    `**Kills:** ${normalizedVictimStats.kills} | **Deaths:** ${normalizedVictimStats.deaths} | **KD:** ${normalizedVictimStats.kd.toFixed(2)}`,
+    `**Kills:** ${normalizedVictimStats.kills} | **Deaths:** ${normalizedVictimStats.deaths} | **KD:** ${normalizedVictimStats.kd.toFixed(2)}`
   );
   lines.push(`**Time Alive:** ${normalizedVictimStats.lastTimeAlive}`);
 
@@ -143,7 +125,7 @@ function embedPvp(
 function embedExplosion(
   { victim, device, victimPosition, t },
   eventTimestamp = null,
-  victimStats = null,
+  victimStats = null
 ) {
   const lines = [];
 
@@ -160,12 +142,7 @@ function embedExplosion(
   const deviceName = device || "explosive";
   lines.push(`\`${victimName}\` died from "${deviceName}" explosion`);
 
-  if (
-    victimPosition &&
-    victimPosition.x &&
-    victimPosition.y &&
-    victimPosition.z
-  ) {
+  if (victimPosition && victimPosition.x && victimPosition.y && victimPosition.z) {
     const { x, y, z } = victimPosition;
     const coordsText = `${x.toFixed(1)};${y.toFixed(1)};${z.toFixed(1)}`;
     const url = buildIzurviveLocationUrl(x, y);
@@ -179,10 +156,10 @@ function embedExplosion(
   const normalizedVictimStats = normalizeStats(victimStats);
   lines.push(`__**Victim:**__ \`${victimName}\``);
   lines.push(
-    `**Rank:** ${normalizedVictimStats.rank} | **Score:** ${normalizedVictimStats.score.toFixed(1)}`,
+    `**Rank:** ${normalizedVictimStats.rank} | **Score:** ${normalizedVictimStats.score.toFixed(1)}`
   );
   lines.push(
-    `**Kills:** ${normalizedVictimStats.kills} | **Deaths:** ${normalizedVictimStats.deaths} | **KD:** ${normalizedVictimStats.kd.toFixed(2)}`,
+    `**Kills:** ${normalizedVictimStats.kills} | **Deaths:** ${normalizedVictimStats.deaths} | **KD:** ${normalizedVictimStats.kd.toFixed(2)}`
   );
   lines.push(`**Time Alive:** ${normalizedVictimStats.lastTimeAlive}`);
 
@@ -197,16 +174,9 @@ function embedExplosion(
   };
 }
 
-function buildKillEmbed(
-  k,
-  eventTimestamp = null,
-  killerStats = null,
-  victimStats = null,
-) {
-  if (k.type === "pvp")
-    return embedPvp(k, eventTimestamp, killerStats, victimStats);
-  if (k.type === "explosion")
-    return embedExplosion(k, eventTimestamp, victimStats);
+function buildKillEmbed(k, eventTimestamp = null, killerStats = null, victimStats = null) {
+  if (k.type === "pvp") return embedPvp(k, eventTimestamp, killerStats, victimStats);
+  if (k.type === "explosion") return embedExplosion(k, eventTimestamp, victimStats);
   return null;
 }
 

@@ -22,7 +22,7 @@ function buildEmptyLeaderboardEmbed(title) {
     .setColor(0x00ae86)
     .setTitle(title)
     .setDescription(
-      `**${SERVER_NAME}**\n\nNo player stats available yet. Start playing to appear on the leaderboard!`,
+      `**${SERVER_NAME}**\n\nNo player stats available yet. Start playing to appear on the leaderboard!`
     )
     .setTimestamp()
     .setFooter({

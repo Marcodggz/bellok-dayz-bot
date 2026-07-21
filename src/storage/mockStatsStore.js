@@ -4,10 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const { loadJSON } = require("./jsonStore");
 
-const MOCK_STATS_FILE = path.join(
-  __dirname,
-  "../../data/mock-player-stats.json",
-);
+const MOCK_STATS_FILE = path.join(__dirname, "../../data/mock-player-stats.json");
 
 /**
  * Load mock player stats from JSON file

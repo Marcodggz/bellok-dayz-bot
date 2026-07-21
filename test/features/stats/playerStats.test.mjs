@@ -11,9 +11,7 @@ describe("playerStats", () => {
     // Suppress only expected warnings
     const originalWarn = console.warn;
     consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation((msg) => {
-      if (
-        !msg.includes("[mock-parse] WARNING: No connection info for victim")
-      ) {
+      if (!msg.includes("[mock-parse] WARNING: No connection info for victim")) {
         originalWarn(msg); // Forward other warnings using original console.warn
       }
     });

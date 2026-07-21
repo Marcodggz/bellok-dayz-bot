@@ -3,10 +3,7 @@
 const { alreadySentBucket } = require("./killEventDeduplicator");
 const { queueKillfeedEvent } = require("./killfeedQueue");
 const { posForVictimFromLine } = require("../tracking/positionTracker");
-const {
-  updateStatsFromEvent,
-  getPlayerStats,
-} = require("../stats/playerStats");
+const { updateStatsFromEvent, getPlayerStats } = require("../stats/playerStats");
 
 /**
  * Handle deduplicated kill events.
@@ -22,7 +19,7 @@ function handleKillEvents(
   lines,
   stats = null,
   normalizedEventTimes = new Map(),
-  processSessionLine = null,
+  processSessionLine = null
 ) {
   const heatmapPoints = [];
   const eventsByLine = new Map();
@@ -31,9 +28,7 @@ function handleKillEvents(
     if (alreadySentBucket(key)) continue;
 
     const matchedLine = lines.find(
-      (line) =>
-        line.includes(`"${kill.victim}"`) &&
-        (kill.t ? line.startsWith(kill.t) : true),
+      (line) => line.includes(`"${kill.victim}"`) && (kill.t ? line.startsWith(kill.t) : true)
     );
 
     if (matchedLine) {
@@ -52,21 +47,14 @@ function handleKillEvents(
     const { key, kill } = queued;
 
     if (stats) {
-      const normalizedEventTimeMs =
-        normalizedEventTimes.get(line) ?? null;
+      const normalizedEventTimeMs = normalizedEventTimes.get(line) ?? null;
 
       updateStatsFromEvent(stats, kill, normalizedEventTimeMs);
     }
 
-    const killerStats =
-      stats && kill.killer
-        ? { ...getPlayerStats(stats, kill.killer) }
-        : null;
+    const killerStats = stats && kill.killer ? { ...getPlayerStats(stats, kill.killer) } : null;
 
-    const victimStats =
-      stats && kill.victim
-        ? { ...getPlayerStats(stats, kill.victim) }
-        : null;
+    const victimStats = stats && kill.victim ? { ...getPlayerStats(stats, kill.victim) } : null;
 
     queueKillfeedEvent(
       {
@@ -75,13 +63,10 @@ function handleKillEvents(
         killerStats,
         victimStats,
       },
-      key,
+      key
     );
 
-    const pos = posForVictimFromLine(
-      kill.victim,
-      kill.line || line,
-    );
+    const pos = posForVictimFromLine(kill.victim, kill.line || line);
 
     if (pos && Number.isFinite(pos.x) && Number.isFinite(pos.y)) {
       heatmapPoints.push(pos);

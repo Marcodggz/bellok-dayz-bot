@@ -10,10 +10,7 @@ const {
   composeHeatmapOverlay,
   drawSoftBridge,
 } = require("./heatmapRenderer");
-const {
-  loadWeekendHeat,
-  saveWeekendHeat,
-} = require("../storage/weekendHeatStore");
+const { loadWeekendHeat, saveWeekendHeat } = require("../storage/weekendHeatStore");
 const {
   WEEKEND_HEATMAP_WINDOW_MIN,
   WEEKEND_HEATMAP_CHANNEL_ID,
@@ -104,10 +101,7 @@ function renderWeekendHeatPng(points, outPath, baseMapPath = "") {
       H = basePng.height;
     }
   } catch (e) {
-    console.warn(
-      "[weekend-heatmap] Could not read base map, using transparent canvas:",
-      e.message,
-    );
+    console.warn("[weekend-heatmap] Could not read base map, using transparent canvas:", e.message);
   }
 
   // Build clusters
@@ -141,48 +135,9 @@ function renderWeekendHeatPng(points, outPath, baseMapPath = "") {
     const p1 = mapToPixelCoords(c1.x, c1.y, W, H);
     const p2 = mapToPixelCoords(c2.x, c2.y, W, H);
 
-    drawSoftBridge(
-      overlay,
-      p1.px,
-      p1.py,
-      p2.px,
-      p2.py,
-      28,
-      59,
-      130,
-      246,
-      95,
-      W,
-      H,
-    );
-    drawSoftBridge(
-      overlay,
-      p1.px,
-      p1.py,
-      p2.px,
-      p2.py,
-      18,
-      34,
-      197,
-      94,
-      90,
-      W,
-      H,
-    );
-    drawSoftBridge(
-      overlay,
-      p1.px,
-      p1.py,
-      p2.px,
-      p2.py,
-      9,
-      234,
-      179,
-      8,
-      70,
-      W,
-      H,
-    );
+    drawSoftBridge(overlay, p1.px, p1.py, p2.px, p2.py, 28, 59, 130, 246, 95, W, H);
+    drawSoftBridge(overlay, p1.px, p1.py, p2.px, p2.py, 18, 34, 197, 94, 90, W, H);
+    drawSoftBridge(overlay, p1.px, p1.py, p2.px, p2.py, 9, 234, 179, 8, 70, W, H);
   }
 
   // Draw all clusters as radial dots
@@ -228,10 +183,7 @@ async function maybeSendWeekendHeatmap(client) {
   weekendHeatmapSending = true;
 
   try {
-
-    const ch = await client.channels
-      .fetch(WEEKEND_HEATMAP_CHANNEL_ID)
-      .catch(() => null);
+    const ch = await client.channels.fetch(WEEKEND_HEATMAP_CHANNEL_ID).catch(() => null);
     if (!ch || typeof ch.send !== "function") {
       console.warn("[weekend-heatmap] Invalid channel");
       return;
@@ -247,28 +199,21 @@ async function maybeSendWeekendHeatmap(client) {
     let payload;
 
     if (wh.points.length) {
-      renderWeekendHeatPng(
-        wh.points,
-        WEEKEND_HEATMAP_IMG_PATH,
-        MAP_IMAGE_PATH,
-      );
+      renderWeekendHeatPng(wh.points, WEEKEND_HEATMAP_IMG_PATH, MAP_IMAGE_PATH);
       await new Promise((r) => setTimeout(r, 80));
 
       const file = new AttachmentBuilder(WEEKEND_HEATMAP_IMG_PATH);
 
       embed
         .setDescription(
-          `• **Updated:** <t:${updatedTimestamp}:R>\n` +
-            `• **Players:** ${wh.points.length}`,
+          `• **Updated:** <t:${updatedTimestamp}:R>\n` + `• **Players:** ${wh.points.length}`
         )
-        .setImage(
-          `attachment://${WEEKEND_HEATMAP_IMG_PATH.split("/").pop()}`,
-        );
+        .setImage(`attachment://${WEEKEND_HEATMAP_IMG_PATH.split("/").pop()}`);
 
       payload = { content: "", embeds: [embed], files: [file] };
     } else {
       embed.setDescription(
-        `No player locations recorded in the last ${WEEKEND_HEATMAP_WINDOW_MIN} minutes.`,
+        `No player locations recorded in the last ${WEEKEND_HEATMAP_WINDOW_MIN} minutes.`
       );
 
       payload = {
@@ -283,26 +228,19 @@ async function maybeSendWeekendHeatmap(client) {
     let sent = false;
     if (wh.messageId) {
       try {
-        const existingMsg = await ch.messages
-          .fetch(wh.messageId)
-          .catch(() => null);
+        const existingMsg = await ch.messages.fetch(wh.messageId).catch(() => null);
         if (existingMsg) {
           await existingMsg.edit(payload);
           sent = true;
-          console.log(
-            "[weekend-heatmap] Edited existing message",
-            wh.messageId,
-          );
+          console.log("[weekend-heatmap] Edited existing message", wh.messageId);
         } else {
-          console.log(
-            "[weekend-heatmap] Previous message not found, sending new one",
-          );
+          console.log("[weekend-heatmap] Previous message not found, sending new one");
           wh.messageId = null;
         }
       } catch (e) {
         console.warn(
           "[weekend-heatmap] Failed to edit message, sending new one:",
-          e?.code || e?.message,
+          e?.code || e?.message
         );
         wh.messageId = null;
       }

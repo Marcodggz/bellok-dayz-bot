@@ -24,7 +24,7 @@ function updatePositionsFromLine(line) {
 function posForVictimFromLine(victim, line) {
   const rex = new RegExp(
     `Player\\s+["'“”]${escapeRegExp(victim)}["'“”][^\\n]*?pos=<\\s*([0-9.]+)\\s*,\\s*([0-9.]+)\\s*,\\s*([0-9.\\-]+)\\s*>`,
-    "i",
+    "i"
   );
   const m = line.match(rex);
   if (m) {

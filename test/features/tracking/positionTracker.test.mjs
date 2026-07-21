@@ -3,10 +3,8 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 
 const require = createRequire(import.meta.url);
 
-const trackerPath =
-  require.resolve("../../../src/features/tracking/positionTracker.js");
-const weekendHelpersPath =
-  require.resolve("../../../src/utils/weekendHeatmapHelpers.js");
+const trackerPath = require.resolve("../../../src/features/tracking/positionTracker.js");
+const weekendHelpersPath = require.resolve("../../../src/utils/weekendHeatmapHelpers.js");
 
 let updatePositionsFromLine;
 let posForVictimFromLine;
@@ -52,12 +50,8 @@ describe("positionTracker", () => {
 
     test("a later valid position replaces the previous one for the same player", () => {
       // ADM format: pos=<X, Y, Z> - using X and Y for horizontal coordinates
-      updatePositionsFromLine(
-        'Player "Charlie" (id=1 pos=<100.0, 200.0, 5.0>)',
-      );
-      updatePositionsFromLine(
-        'Player "Charlie" (id=1 pos=<300.0, 400.0, 7.0>)',
-      );
+      updatePositionsFromLine('Player "Charlie" (id=1 pos=<100.0, 200.0, 5.0>)');
+      updatePositionsFromLine('Player "Charlie" (id=1 pos=<300.0, 400.0, 7.0>)');
 
       const pos = posForVictimFromLine("Charlie", "");
       // Should use X (300.0) and Y (400.0)
@@ -130,8 +124,7 @@ describe("positionTracker", () => {
     test("regression test: correctly extracts coordinates from real ADM sample", () => {
       // Real sample from user's ADM log: pos=<13044.9, 7786.9, 5.6>
       // X=13044.9 (horizontal), Y=7786.9 (horizontal), Z=5.6 (elevation)
-      const line =
-        'Player "RealPlayer" (id=12345678 pos=<13044.9, 7786.9, 5.6>)';
+      const line = 'Player "RealPlayer" (id=12345678 pos=<13044.9, 7786.9, 5.6>)';
 
       updatePositionsFromLine(line);
 
@@ -139,11 +132,7 @@ describe("positionTracker", () => {
       expect(pos).toEqual({ x: 13044.9, y: 7786.9 });
 
       // Verify weekend heatmap gets correct horizontal coordinates
-      expect(addWeekendHeatPoint).toHaveBeenCalledWith(
-        "RealPlayer",
-        13044.9,
-        7786.9,
-      );
+      expect(addWeekendHeatPoint).toHaveBeenCalledWith("RealPlayer", 13044.9, 7786.9);
     });
   });
 });

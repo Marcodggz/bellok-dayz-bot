@@ -32,12 +32,7 @@ describe("coordinateMapper", () => {
   test("maps the verified Livonia kill coordinates to the expected pixel", () => {
     const { mapToPixelCoords } = require(mapperPath);
 
-    const result = mapToPixelCoords(
-      10703.8,
-      10937.7,
-      2048,
-      2048,
-    );
+    const result = mapToPixelCoords(10703.8, 10937.7, 2048, 2048);
 
     expect(result).toEqual({
       px: 1707,

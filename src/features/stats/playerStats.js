@@ -57,8 +57,7 @@ function updateStatsFromEvent(stats, event, normalizedEventTimeMs = null) {
         victimStats.lastTimeAlive = formatTimeAlive(totalAliveMs);
 
         // Accumulate total played time (does NOT reset on death)
-        victimStats.accumulatedPlayedMs =
-          (victimStats.accumulatedPlayedMs ?? 0) + sessionMs;
+        victimStats.accumulatedPlayedMs = (victimStats.accumulatedPlayedMs ?? 0) + sessionMs;
 
         // Reset accumulated time and restart from death time
         victimStats.accumulatedAliveMs = 0;
@@ -67,7 +66,7 @@ function updateStatsFromEvent(stats, event, normalizedEventTimeMs = null) {
         // No connection info - cannot calculate time alive
         victimStats.lastTimeAlive = "N/A";
         console.warn(
-          `[mock-parse] WARNING: No connection info for victim ${event.victim}. Time Alive set to N/A.`,
+          `[mock-parse] WARNING: No connection info for victim ${event.victim}. Time Alive set to N/A.`
         );
       }
 
@@ -95,8 +94,7 @@ function updateStatsFromEvent(stats, event, normalizedEventTimeMs = null) {
         victimStats.lastTimeAlive = formatTimeAlive(totalAliveMs);
 
         // Accumulate total played time (does NOT reset on death)
-        victimStats.accumulatedPlayedMs =
-          (victimStats.accumulatedPlayedMs ?? 0) + sessionMs;
+        victimStats.accumulatedPlayedMs = (victimStats.accumulatedPlayedMs ?? 0) + sessionMs;
 
         // Reset accumulated time and restart from death time
         victimStats.accumulatedAliveMs = 0;
@@ -105,7 +103,7 @@ function updateStatsFromEvent(stats, event, normalizedEventTimeMs = null) {
         // No connection info - cannot calculate time alive
         victimStats.lastTimeAlive = "N/A";
         console.warn(
-          `[mock-parse] WARNING: No connection info for victim ${event.victim}. Time Alive set to N/A.`,
+          `[mock-parse] WARNING: No connection info for victim ${event.victim}. Time Alive set to N/A.`
         );
       }
 
@@ -184,12 +182,7 @@ function calculateScore(playerStats) {
 
   // New score formula - less aggressive scale
   const score =
-    kills * 1.5 +
-    Math.sqrt(kills) * 10 +
-    headshots * 0.5 +
-    killStreak * 4 +
-    kd * 20 -
-    deaths * 0.5;
+    kills * 1.5 + Math.sqrt(kills) * 10 + headshots * 0.5 + killStreak * 4 + kd * 20 - deaths * 0.5;
 
   // Clamp score to minimum 0
   const finalScore = Math.max(0, score);
@@ -266,8 +259,7 @@ function handlePlayerDisconnect(stats, playerName, normalizedDisconnectTimeMs) {
     const sessionMs = normalizedDisconnectTimeMs - playerStats.connectedSince;
     playerStats.accumulatedAliveMs += sessionMs;
     // Accumulate total played time (does NOT reset on death)
-    playerStats.accumulatedPlayedMs =
-      (playerStats.accumulatedPlayedMs ?? 0) + sessionMs;
+    playerStats.accumulatedPlayedMs = (playerStats.accumulatedPlayedMs ?? 0) + sessionMs;
   }
 
   playerStats.isConnected = false;
