@@ -1,5 +1,8 @@
 # Bellok’s Killfeed
 
+[![Quality checks](https://github.com/Marcodggz/bellok-dayz-bot/actions/workflows/quality.yml/badge.svg?branch=main)](https://github.com/Marcodggz/bellok-dayz-bot/actions/workflows/quality.yml)
+![Tests](https://img.shields.io/badge/tests-135%20passing-brightgreen)
+
 A modular Discord bot that transforms raw DayZ PlayStation server logs into real-time kill notifications, player statistics, leaderboards, and visual heatmaps.
 
 Built with Node.js and integrated with the Nitrado and Discord APIs, the project handles continuous log polling, semi-structured data parsing, event deduplication, persistent player state, image generation, and automated testing.
@@ -15,7 +18,7 @@ The bot was developed for the **Last Survivor Vanilla+** DayZ PlayStation server
 - Generates PvP and weekend activity heatmaps from world coordinates
 - Handles ADM file rotation and temporary Nitrado API cooldowns
 - Uses a modular architecture with separated parsing, processing, storage, API, and rendering layers
-- Includes 121 automated tests covering critical application behavior
+- Includes 135 automated tests covering critical application behavior
 
 ## Features
 
