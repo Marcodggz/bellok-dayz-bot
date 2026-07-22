@@ -1,8 +1,7 @@
 // src/storage/mockStatsStore.js — Mock player stats persistence
 
-const fs = require("fs");
 const path = require("path");
-const { loadJSON } = require("./jsonStore");
+const { loadJSON, saveJSON } = require("./jsonStore");
 
 const MOCK_STATS_FILE = path.join(__dirname, "../../data/mock-player-stats.json");
 
@@ -19,7 +18,7 @@ function loadMockStats() {
  * @param {Object} stats - Player stats object to save
  */
 function saveMockStats(stats) {
-  fs.writeFileSync(MOCK_STATS_FILE, JSON.stringify(stats, null, 2));
+  saveJSON(MOCK_STATS_FILE, stats, 2);
 }
 
 module.exports = {
