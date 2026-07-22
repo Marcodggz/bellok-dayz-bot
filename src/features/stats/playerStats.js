@@ -8,6 +8,38 @@ function createEmptyStats() {
   return {};
 }
 
+function applyVictimDeath(stats, victimName, normalizedEventTimeMs) {
+  const victimStats = ensurePlayerStats(stats, victimName);
+
+  if (
+    victimStats.isConnected &&
+    victimStats.connectedSince !== null &&
+    normalizedEventTimeMs !== null
+  ) {
+    const sessionMs = normalizedEventTimeMs - victimStats.connectedSince;
+    const totalAliveMs = victimStats.accumulatedAliveMs + sessionMs;
+    victimStats.lastTimeAlive = formatTimeAlive(totalAliveMs);
+
+    victimStats.accumulatedPlayedMs = (victimStats.accumulatedPlayedMs ?? 0) + sessionMs;
+
+    victimStats.accumulatedAliveMs = 0;
+    victimStats.connectedSince = normalizedEventTimeMs;
+  } else {
+    victimStats.lastTimeAlive = "N/A";
+    console.warn(
+      `[mock-parse] WARNING: No connection info for victim ${victimName}. Time Alive set to N/A.`
+    );
+  }
+
+  victimStats.deaths++;
+  victimStats.killStreak = 0;
+  victimStats.kd = calculateKD(victimStats.kills, victimStats.deaths);
+  victimStats.score = calculateScore(victimStats);
+  victimStats.rank = calculateRank(victimStats.score);
+
+  return victimStats;
+}
+
 /**
  * Update stats based on a kill event
  * @param {Object} stats - Current stats object (will be mutated)
@@ -44,77 +76,10 @@ function updateStatsFromEvent(stats, event, normalizedEventTimeMs = null) {
 
     // Update victim stats
     if (event.victim) {
-      const victimStats = ensurePlayerStats(stats, event.victim);
-
-      // Calculate and store victim time alive
-      if (
-        victimStats.isConnected &&
-        victimStats.connectedSince !== null &&
-        normalizedEventTimeMs !== null
-      ) {
-        const sessionMs = normalizedEventTimeMs - victimStats.connectedSince;
-        const totalAliveMs = victimStats.accumulatedAliveMs + sessionMs;
-        victimStats.lastTimeAlive = formatTimeAlive(totalAliveMs);
-
-        // Accumulate total played time (does NOT reset on death)
-        victimStats.accumulatedPlayedMs = (victimStats.accumulatedPlayedMs ?? 0) + sessionMs;
-
-        // Reset accumulated time and restart from death time
-        victimStats.accumulatedAliveMs = 0;
-        victimStats.connectedSince = normalizedEventTimeMs; // Respawn starts now
-      } else {
-        // No connection info - cannot calculate time alive
-        victimStats.lastTimeAlive = "N/A";
-        console.warn(
-          `[mock-parse] WARNING: No connection info for victim ${event.victim}. Time Alive set to N/A.`
-        );
-      }
-
-      victimStats.deaths++;
-      victimStats.killStreak = 0; // Reset kill streak on death
-
-      // Recalculate KD and score
-      victimStats.kd = calculateKD(victimStats.kills, victimStats.deaths);
-      victimStats.score = calculateScore(victimStats);
-      victimStats.rank = calculateRank(victimStats.score);
+      applyVictimDeath(stats, event.victim, normalizedEventTimeMs);
     }
-  } else if (event.type === "explosion") {
-    // Update victim stats for explosion deaths
-    if (event.victim) {
-      const victimStats = ensurePlayerStats(stats, event.victim);
-
-      // Calculate and store victim time alive
-      if (
-        victimStats.isConnected &&
-        victimStats.connectedSince !== null &&
-        normalizedEventTimeMs !== null
-      ) {
-        const sessionMs = normalizedEventTimeMs - victimStats.connectedSince;
-        const totalAliveMs = victimStats.accumulatedAliveMs + sessionMs;
-        victimStats.lastTimeAlive = formatTimeAlive(totalAliveMs);
-
-        // Accumulate total played time (does NOT reset on death)
-        victimStats.accumulatedPlayedMs = (victimStats.accumulatedPlayedMs ?? 0) + sessionMs;
-
-        // Reset accumulated time and restart from death time
-        victimStats.accumulatedAliveMs = 0;
-        victimStats.connectedSince = normalizedEventTimeMs; // Respawn starts now
-      } else {
-        // No connection info - cannot calculate time alive
-        victimStats.lastTimeAlive = "N/A";
-        console.warn(
-          `[mock-parse] WARNING: No connection info for victim ${event.victim}. Time Alive set to N/A.`
-        );
-      }
-
-      victimStats.deaths++;
-      victimStats.killStreak = 0; // Reset kill streak on death
-
-      // Recalculate KD and score
-      victimStats.kd = calculateKD(victimStats.kills, victimStats.deaths);
-      victimStats.score = calculateScore(victimStats);
-      victimStats.rank = calculateRank(victimStats.score);
-    }
+  } else if (event.type === "explosion" && event.victim) {
+    applyVictimDeath(stats, event.victim, normalizedEventTimeMs);
   }
 }
 

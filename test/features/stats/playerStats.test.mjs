@@ -229,6 +229,76 @@ describe("playerStats", () => {
     });
   });
 
+  describe("shared victim death updates", () => {
+    test("applies identical victim updates for PvP and explosion deaths", () => {
+      const pvpStats = playerStats.createEmptyStats();
+      const explosionStats = playerStats.createEmptyStats();
+
+      playerStats.handlePlayerConnect(pvpStats, "Victim", 1000);
+      playerStats.handlePlayerConnect(explosionStats, "Victim", 1000);
+
+      for (const stats of [pvpStats, explosionStats]) {
+        stats.Victim.kills = 8;
+        stats.Victim.deaths = 2;
+        stats.Victim.headshots = 3;
+        stats.Victim.killStreak = 4;
+        stats.Victim.accumulatedAliveMs = 30000;
+        stats.Victim.accumulatedPlayedMs = 120000;
+      }
+
+      playerStats.updateStatsFromEvent(
+        pvpStats,
+        {
+          type: "pvp",
+          killer: "Killer",
+          victim: "Victim",
+          weapon: "M4A1",
+        },
+        61000
+      );
+
+      playerStats.updateStatsFromEvent(
+        explosionStats,
+        {
+          type: "explosion",
+          victim: "Victim",
+          device: "Landmine",
+        },
+        61000
+      );
+
+      const victimFields = [
+        "deaths",
+        "killStreak",
+        "kd",
+        "score",
+        "rank",
+        "lastTimeAlive",
+        "accumulatedAliveMs",
+        "accumulatedPlayedMs",
+        "connectedSince",
+        "isConnected",
+      ];
+
+      for (const field of victimFields) {
+        expect(explosionStats.Victim[field]).toEqual(pvpStats.Victim[field]);
+      }
+
+      expect(pvpStats.Victim).toMatchObject({
+        deaths: 3,
+        killStreak: 0,
+        kd: 2.67,
+        score: 93.7,
+        rank: "Private",
+        lastTimeAlive: "00H 01M 30S",
+        accumulatedAliveMs: 0,
+        accumulatedPlayedMs: 180000,
+        connectedSince: 61000,
+        isConnected: true,
+      });
+    });
+  });
+
   describe("handlePlayerConnect and handlePlayerDisconnect with mocked time", () => {
     test("handles player connect/disconnect time tracking with mocked time", () => {
       vi.useFakeTimers();
