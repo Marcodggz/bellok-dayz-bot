@@ -1,7 +1,51 @@
 import { describe, test, expect } from "vitest";
-import { embedPvp, embedExplosion } from "../../../src/features/killfeed/embedBuilders.js";
+import {
+  buildLocationLine,
+  buildVictimStatsLines,
+  embedPvp,
+  embedExplosion,
+} from "../../../src/features/killfeed/embedBuilders.js";
 
 describe("embedBuilders", () => {
+  describe("shared presentation helpers", () => {
+    test("builds the linked location line used by both embed types", () => {
+      expect(buildLocationLine({ x: 13044.9, y: 7786.9, z: 250.5 })).toBe(
+        "**Location** [13044.9;7786.9;250.5](https://www.izurvive.com/livonia/#location=13044.9;7786.9;8)"
+      );
+    });
+
+    test("returns the existing location fallback when coordinates are unavailable", () => {
+      expect(buildLocationLine(null)).toBe("**Location** N/A");
+    });
+
+    test("builds the victim statistics lines with the existing visual format", () => {
+      expect(
+        buildVictimStatsLines("TestVictim", {
+          rank: "Private",
+          score: 75.2,
+          kills: 5,
+          deaths: 8,
+          kd: 0.625,
+          lastTimeAlive: "15m 30s",
+        })
+      ).toEqual([
+        "__**Victim:**__ `TestVictim`",
+        "**Rank:** Private | **Score:** 75.2",
+        "**Kills:** 5 | **Deaths:** 8 | **KD:** 0.63",
+        "**Time Alive:** 15m 30s",
+      ]);
+    });
+
+    test("uses the existing victim statistics fallbacks", () => {
+      expect(buildVictimStatsLines("TestVictim", null)).toEqual([
+        "__**Victim:**__ `TestVictim`",
+        "**Rank:** Unranked | **Score:** 0.0",
+        "**Kills:** 0 | **Deaths:** 0 | **KD:** 0.00",
+        "**Time Alive:** 0m",
+      ]);
+    });
+  });
+
   describe("embedPvp", () => {
     test("shows zero values and Unranked when stats are missing", () => {
       const killEvent = {

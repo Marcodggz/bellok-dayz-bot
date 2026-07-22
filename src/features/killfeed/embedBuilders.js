@@ -12,6 +12,28 @@ function sanitizePlayerName(name) {
   return String(name || "Unknown").replace(/`/g, "'");
 }
 
+function buildLocationLine(position) {
+  if (position && position.x && position.y && position.z) {
+    const { x, y, z } = position;
+    const coordsText = `${x.toFixed(1)};${y.toFixed(1)};${z.toFixed(1)}`;
+    const url = buildIzurviveLocationUrl(x, y);
+    return `**Location** [${coordsText}](${url})`;
+  }
+
+  return "**Location** N/A";
+}
+
+function buildVictimStatsLines(victimName, stats) {
+  const normalizedStats = normalizeStats(stats);
+
+  return [
+    `__**Victim:**__ \`${victimName}\``,
+    `**Rank:** ${normalizedStats.rank} | **Score:** ${normalizedStats.score.toFixed(1)}`,
+    `**Kills:** ${normalizedStats.kills} | **Deaths:** ${normalizedStats.deaths} | **KD:** ${normalizedStats.kd.toFixed(2)}`,
+    `**Time Alive:** ${normalizedStats.lastTimeAlive}`,
+  ];
+}
+
 // Deterministic action verb selection based on killer + victim names
 function getRandomPvpAction(killer, victim) {
   const actions = ["embarrassed", "eliminated", "shit on"];
@@ -78,14 +100,7 @@ function embedPvp(
   const damageText = damage !== null && damage !== undefined ? damage.toFixed(0) : "N/A";
   lines.push(`**Hit** ${hitZoneText} ${damageText} damage`);
 
-  if (victimPosition && victimPosition.x && victimPosition.y && victimPosition.z) {
-    const { x, y, z } = victimPosition;
-    const coordsText = `${x.toFixed(1)};${y.toFixed(1)};${z.toFixed(1)}`;
-    const url = buildIzurviveLocationUrl(x, y);
-    lines.push(`**Location** [${coordsText}](${url})`);
-  } else {
-    lines.push(`**Location** N/A`);
-  }
+  lines.push(buildLocationLine(victimPosition));
 
   lines.push("");
 
@@ -101,15 +116,7 @@ function embedPvp(
 
   lines.push("");
 
-  const normalizedVictimStats = normalizeStats(victimStats);
-  lines.push(`__**Victim:**__ \`${victimName}\``);
-  lines.push(
-    `**Rank:** ${normalizedVictimStats.rank} | **Score:** ${normalizedVictimStats.score.toFixed(1)}`
-  );
-  lines.push(
-    `**Kills:** ${normalizedVictimStats.kills} | **Deaths:** ${normalizedVictimStats.deaths} | **KD:** ${normalizedVictimStats.kd.toFixed(2)}`
-  );
-  lines.push(`**Time Alive:** ${normalizedVictimStats.lastTimeAlive}`);
+  lines.push(...buildVictimStatsLines(victimName, victimStats));
 
   return {
     embeds: [
@@ -142,26 +149,11 @@ function embedExplosion(
   const deviceName = device || "explosive";
   lines.push(`\`${victimName}\` died from "${deviceName}" explosion`);
 
-  if (victimPosition && victimPosition.x && victimPosition.y && victimPosition.z) {
-    const { x, y, z } = victimPosition;
-    const coordsText = `${x.toFixed(1)};${y.toFixed(1)};${z.toFixed(1)}`;
-    const url = buildIzurviveLocationUrl(x, y);
-    lines.push(`**Location** [${coordsText}](${url})`);
-  } else {
-    lines.push(`**Location** N/A`);
-  }
+  lines.push(buildLocationLine(victimPosition));
 
   lines.push("");
 
-  const normalizedVictimStats = normalizeStats(victimStats);
-  lines.push(`__**Victim:**__ \`${victimName}\``);
-  lines.push(
-    `**Rank:** ${normalizedVictimStats.rank} | **Score:** ${normalizedVictimStats.score.toFixed(1)}`
-  );
-  lines.push(
-    `**Kills:** ${normalizedVictimStats.kills} | **Deaths:** ${normalizedVictimStats.deaths} | **KD:** ${normalizedVictimStats.kd.toFixed(2)}`
-  );
-  lines.push(`**Time Alive:** ${normalizedVictimStats.lastTimeAlive}`);
+  lines.push(...buildVictimStatsLines(victimName, victimStats));
 
   return {
     embeds: [
@@ -182,6 +174,8 @@ function buildKillEmbed(k, eventTimestamp = null, killerStats = null, victimStat
 
 module.exports = {
   buildIzurviveLocationUrl,
+  buildLocationLine,
+  buildVictimStatsLines,
   sanitizePlayerName,
   getRandomPvpAction,
   embedPvp,
