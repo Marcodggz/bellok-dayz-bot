@@ -9,7 +9,7 @@ const queuePath = require.resolve("../../../src/features/killfeed/killfeedQueue.
 const positionTrackerPath = require.resolve("../../../src/features/tracking/positionTracker.js");
 
 let handleKillEvents;
-let alreadySentBucket;
+let hasSentBucket;
 let queueKillfeedEvent;
 let posForVictimFromLine;
 
@@ -19,7 +19,7 @@ beforeEach(() => {
   delete require.cache[queuePath];
   delete require.cache[positionTrackerPath];
 
-  alreadySentBucket = vi.fn(() => false);
+  hasSentBucket = vi.fn(() => false);
   queueKillfeedEvent = vi.fn();
   posForVictimFromLine = vi.fn();
 
@@ -27,7 +27,7 @@ beforeEach(() => {
     id: deduplicatorPath,
     filename: deduplicatorPath,
     loaded: true,
-    exports: { alreadySentBucket },
+    exports: { hasSentBucket },
   };
 
   require.cache[queuePath] = {
@@ -55,8 +55,8 @@ describe("killEventHandler", () => {
     expect(queueKillfeedEvent).not.toHaveBeenCalled();
   });
 
-  test("alreadySentBucket() returning true skips the group", () => {
-    alreadySentBucket.mockReturnValue(true);
+  test("hasSentBucket() returning true skips the group", () => {
+    hasSentBucket.mockReturnValue(true);
 
     const groups = new Map([
       ["Alice|Bob|weapon", { killer: "Alice", victim: "Bob", weapon: "weapon", t: "12:00:00" }],
@@ -70,7 +70,7 @@ describe("killEventHandler", () => {
   });
 
   test("a new PvP group queues { kill, line } with its bucket key", () => {
-    alreadySentBucket.mockReturnValue(false);
+    hasSentBucket.mockReturnValue(false);
 
     const killEvent = {
       killer: "Alice",
@@ -97,8 +97,22 @@ describe("killEventHandler", () => {
     expect(result).toEqual([]);
   });
 
+  test("does not mark a bucket when no matching ADM line exists", () => {
+    const killEvent = {
+      type: "pvp",
+      killer: "Alice",
+      victim: "Bob",
+      weapon: "AKM",
+      t: "12:00:00",
+    };
+
+    handleKillEvents(new Map([["Bob|2160", killEvent]]), ["12:00:01 | unrelated line"]);
+
+    expect(queueKillfeedEvent).not.toHaveBeenCalled();
+  });
+
   test("it selects the matching raw line by event timestamp", () => {
-    alreadySentBucket.mockReturnValue(false);
+    hasSentBucket.mockReturnValue(false);
 
     const killEvent = {
       killer: "Charlie",
@@ -128,7 +142,7 @@ describe("killEventHandler", () => {
   });
 
   test("updates stats and queues snapshots for the killfeed", () => {
-    alreadySentBucket.mockReturnValue(false);
+    hasSentBucket.mockReturnValue(false);
 
     const killEvent = {
       type: "pvp",
@@ -180,7 +194,7 @@ describe("killEventHandler", () => {
   });
 
   test("processes connect, death, and respawn in chronological ADM order", () => {
-    alreadySentBucket.mockReturnValue(false);
+    hasSentBucket.mockReturnValue(false);
 
     const connectLine =
       '14:45:39 | Player "Vinnizd" (id=test pos=<11344.6, 9897.9, 175.9>) is connected';
@@ -252,7 +266,7 @@ describe("killEventHandler", () => {
   });
 
   test("valid finite coordinates are returned", () => {
-    alreadySentBucket.mockReturnValue(false);
+    hasSentBucket.mockReturnValue(false);
     posForVictimFromLine.mockReturnValue({ x: 1234.5, y: 6789.0 });
 
     const killEvent = {
@@ -273,7 +287,7 @@ describe("killEventHandler", () => {
   });
 
   test("missing, NaN, or infinite coordinates are ignored", () => {
-    alreadySentBucket.mockReturnValue(false);
+    hasSentBucket.mockReturnValue(false);
 
     const groups = new Map([
       ["G1|V1|W1", { killer: "G1", victim: "V1", weapon: "W1", t: "12:00:01" }],

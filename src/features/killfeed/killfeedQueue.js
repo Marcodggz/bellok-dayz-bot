@@ -1,4 +1,5 @@
 const { buildKillEmbed } = require("./embedBuilders");
+const { markSentBucket } = require("./killEventDeduplicator");
 
 const KILLFEED_FLUSH_INTERVAL_MS = 10 * 60 * 1000;
 const killfeedQueue = [];
@@ -71,12 +72,25 @@ async function flushKillfeedQueue(client, channelId, debug, rawToDiscord) {
       try {
         await ch.send(payload);
 
-        if (rawToDiscord && event.line) {
-          await ch.send("```" + event.line + "```");
-        }
-
         killfeedQueue.shift();
         sentCount++;
+
+        try {
+          markSentBucket(queuedEvent.key);
+        } catch (error) {
+          console.error("[killfeed] failed to persist sent bucket:", error?.message || error);
+        }
+
+        if (rawToDiscord && event.line) {
+          try {
+            await ch.send("```" + event.line + "```");
+          } catch (error) {
+            console.error(
+              "[killfeed] raw line send error:",
+              error?.code || error?.message || error
+            );
+          }
+        }
 
         await new Promise((resolve) => setTimeout(resolve, 100));
       } catch (error) {

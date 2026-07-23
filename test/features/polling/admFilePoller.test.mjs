@@ -269,6 +269,46 @@ describe("admFilePoller", () => {
       expect(lines).toEqual([]);
     });
 
+    test("reassembles an ADM line split across consecutive downloads", async () => {
+      const partialLine =
+        '14:23:45 | Player "Killer" (id=1 pos=<100, 100, 100>) killed Player "Vic';
+      const completedLine = partialLine + 'tim" (id=2 pos=<200, 200, 200>) with M4A1';
+
+      const state = {
+        "/logs/file.adm": {
+          size: 0,
+          carry: "",
+        },
+      };
+
+      loadState.mockReturnValue(state);
+      getFileState.mockImplementation((st, fp) => st[fp] || { size: 0, carry: "" });
+
+      nitDownload
+        .mockResolvedValueOnce({
+          buffer: Buffer.from(partialLine),
+        })
+        .mockResolvedValueOnce({
+          buffer: Buffer.from(`${completedLine}\n`),
+        });
+
+      const firstRead = await readNewLines("/logs/file.adm");
+
+      expect(firstRead).toEqual([]);
+      expect(state["/logs/file.adm"]).toEqual({
+        size: Buffer.byteLength(partialLine),
+        carry: partialLine,
+      });
+
+      const secondRead = await readNewLines("/logs/file.adm");
+
+      expect(secondRead).toEqual([completedLine]);
+      expect(state["/logs/file.adm"]).toEqual({
+        size: Buffer.byteLength(`${completedLine}\n`),
+        carry: "",
+      });
+    });
+
     test("splits downloaded content into non-empty lines correctly", async () => {
       const state = {};
       loadState.mockReturnValue(state);

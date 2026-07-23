@@ -1,6 +1,6 @@
 // Handle deduplicated kill events: update stats, queue Discord events, extract positions
 
-const { alreadySentBucket } = require("./killEventDeduplicator");
+const { hasSentBucket } = require("./killEventDeduplicator");
 const { queueKillfeedEvent } = require("./killfeedQueue");
 const { posForVictimFromLine } = require("../tracking/positionTracker");
 const { updateStatsFromEvent, getPlayerStats } = require("../stats/playerStats");
@@ -25,7 +25,7 @@ function handleKillEvents(
   const eventsByLine = new Map();
 
   for (const [key, kill] of groups) {
-    if (alreadySentBucket(key)) continue;
+    if (hasSentBucket(key)) continue;
 
     const matchedLine = lines.find(
       (line) => line.includes(`"${kill.victim}"`) && (kill.t ? line.startsWith(kill.t) : true)
