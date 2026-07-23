@@ -6,6 +6,8 @@ node_modules/
 state.json
 heatmap.json
 heatmap.png
+weekend-heatmap.json
+weekend-heatmap.png
 
 # Logs
 *.log

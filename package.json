@@ -7,10 +7,20 @@
     "test:watch": "vitest",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "start": "node index.js",
+    "register-commands": "node register-commands.js",
+    "check": "npm run lint && npm run format:check && npm test"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "dayz",
+    "discord-bot",
+    "nitrado",
+    "killfeed",
+    "heatmap",
+    "nodejs"
+  ],
+  "author": "Marco Domínguez Gil",
   "license": "ISC",
   "dependencies": {
     "axios": "^1.12.2",
@@ -18,7 +28,7 @@
     "dotenv": "^17.2.3",
     "pngjs": "^7.0.0"
   },
-  "description": "",
+  "description": "A modular Discord bot that transforms DayZ PlayStation ADM logs into killfeeds, player statistics, leaderboards, and heatmaps.",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "eslint": "^10.7.0",
@@ -26,5 +36,16 @@
     "globals": "^17.7.0",
     "prettier": "^3.9.6",
     "vitest": "^4.1.10"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Marcodggz/bellok-dayz-bot.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Marcodggz/bellok-dayz-bot/issues"
+  },
+  "homepage": "https://github.com/Marcodggz/bellok-dayz-bot#readme",
+  "engines": {
+    "node": ">=24"
   }
 }
