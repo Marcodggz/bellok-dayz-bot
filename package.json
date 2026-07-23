@@ -10,7 +10,8 @@
     "format:check": "prettier --check .",
     "start": "node index.js",
     "register-commands": "node register-commands.js",
-    "check": "npm run lint && npm run format:check && npm test"
+    "check": "npm run lint && npm run format:check && npm test",
+    "test:coverage": "vitest run --coverage"
   },
   "keywords": [
     "dayz",
@@ -31,6 +32,7 @@
   "description": "A modular Discord bot that transforms DayZ PlayStation ADM logs into killfeeds, player statistics, leaderboards, and heatmaps.",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@vitest/coverage-v8": "^4.1.10",
     "eslint": "^10.7.0",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^17.7.0",

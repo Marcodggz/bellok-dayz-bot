@@ -23,3 +23,6 @@ AI_CONTEXT.md
 images/livonia.jpg
 
 .env.chernarus.backup
+
+# Test coverage
+coverage/

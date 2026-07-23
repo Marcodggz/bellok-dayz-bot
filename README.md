@@ -94,6 +94,14 @@ Run the complete local quality pipeline:
 npm run check
 ```
 
+Generate a full coverage report for `src/`:
+
+```bash
+npm run test:coverage
+```
+
+The HTML report is generated locally in `coverage/` and is excluded from Git.
+
 GitHub Actions runs installation, ESLint, Prettier, and Vitest on every push and pull request.
 
 ## Problems Solved
