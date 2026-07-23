@@ -7,7 +7,7 @@
 
 A modular Discord bot that turns DayZ PlayStation ADM logs into structured kill notifications, persistent player statistics, leaderboards, and visual heatmaps.
 
-Built with Node.js, Discord.js, the Nitrado API, and PNG-based map rendering for a **Vanilla+** server.
+Built with Node.js, Discord.js, the Nitrado API, and PNG-based map rendering for a **DayZ Vanilla+** server.
 
 ## Project Highlights
 
