@@ -60,7 +60,7 @@ const HEAT_STATE_FILE = "./heatmap.json";
 const HEAT_IMG_PATH = "./heatmap.png";
 
 // ================== WEEKEND HEATMAP CONFIG ==================
-const WEEKEND_HEATMAP_CHANNEL_ID = process.env.WEEKEND_HEATMAP_CHANNEL_ID || "1425480569562730629";
+const WEEKEND_HEATMAP_CHANNEL_ID = process.env.WEEKEND_HEATMAP_CHANNEL_ID || "";
 const WEEKEND_HEATMAP_INTERVAL_MS =
   Number(process.env.WEEKEND_HEATMAP_INTERVAL_MS) || 15 * 60 * 1000;
 const WEEKEND_HEATMAP_WINDOW_MIN = Number(process.env.WEEKEND_HEATMAP_WINDOW_MIN || 60);
