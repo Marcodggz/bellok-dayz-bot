@@ -1,10 +1,16 @@
 const js = require("@eslint/js");
 const globals = require("globals");
+const tseslint = require("typescript-eslint");
 const prettierConfig = require("eslint-config-prettier");
+
+const typescriptRecommended = tseslint.configs.recommended.map((config) => ({
+  ...config,
+  files: ["**/*.ts"],
+}));
 
 module.exports = [
   {
-    ignores: ["node_modules/**", "coverage/**", "data/**", "images/**"],
+    ignores: ["node_modules/**", "dist/**", "coverage/**", "data/**", "images/**"],
   },
 
   js.configs.recommended,
@@ -17,6 +23,20 @@ module.exports = [
       globals: {
         ...globals.node,
       },
+    },
+  },
+
+  ...typescriptRecommended,
+
+  {
+    files: ["**/*.ts"],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+    },
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
     },
   },
 

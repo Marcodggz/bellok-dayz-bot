@@ -26,3 +26,6 @@ images/livonia.jpg
 
 # Test coverage
 coverage/
+
+# TypeScript build output
+dist/
