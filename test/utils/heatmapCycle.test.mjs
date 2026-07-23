@@ -1,8 +1,6 @@
-import { createRequire } from "node:module";
 import { describe, expect, test, vi } from "vitest";
 
-const require = createRequire(import.meta.url);
-const { createHeatmapCycle } = require("../../src/utils/heatmapCycle");
+import { createHeatmapCycle } from "../../src/utils/heatmapCycle.ts";
 
 describe("createHeatmapCycle", () => {
   test("runs immediately and then respects the interval", async () => {
