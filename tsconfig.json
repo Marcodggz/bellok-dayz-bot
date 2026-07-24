@@ -12,6 +12,6 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true
   },
-  "include": ["index.js", "register-commands.js", "src/**/*.js", "src/**/*.ts"],
+  "include": ["index.js", "register-commands.ts", "src/**/*.js", "src/**/*.ts"],
   "exclude": ["node_modules", "dist", "coverage", "test", "data", "images"]
 }
