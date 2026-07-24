@@ -1,9 +1,9 @@
 // Resolve project resources consistently from source and compiled code
 
-const fs = require("node:fs");
-const path = require("node:path");
+import fs from "node:fs";
+import path from "node:path";
 
-function findProjectRoot(startDirectory = __dirname) {
+export function findProjectRoot(startDirectory: string = __dirname): string {
   let currentDirectory = path.resolve(startDirectory);
 
   while (true) {
@@ -21,14 +21,8 @@ function findProjectRoot(startDirectory = __dirname) {
   }
 }
 
-const PROJECT_ROOT = findProjectRoot();
+export const PROJECT_ROOT = findProjectRoot();
 
-function resolveProjectPath(...segments) {
+export function resolveProjectPath(...segments: string[]): string {
   return path.join(PROJECT_ROOT, ...segments);
 }
-
-module.exports = {
-  PROJECT_ROOT,
-  findProjectRoot,
-  resolveProjectPath,
-};

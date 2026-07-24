@@ -1,11 +1,10 @@
 import path from "node:path";
-import { createRequire } from "node:module";
 import { describe, expect, test } from "vitest";
-
-const require = createRequire(import.meta.url);
-const projectPaths = require("../../src/config/projectPaths.js");
-
-const { PROJECT_ROOT, findProjectRoot, resolveProjectPath } = projectPaths;
+import {
+  PROJECT_ROOT,
+  findProjectRoot,
+  resolveProjectPath,
+} from "../../src/config/projectPaths.ts";
 
 describe("projectPaths", () => {
   test("finds the project root from a source directory", () => {
