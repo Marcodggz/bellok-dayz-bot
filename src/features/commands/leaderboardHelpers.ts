@@ -10,7 +10,7 @@ interface LeaderboardPlayer {
 }
 
 export function loadPlayerStatsForLeaderboard(): PersistedPlayerStatsCollection {
-  return loadPlayerStats() as PersistedPlayerStatsCollection;
+  return loadPlayerStats();
 }
 
 export function buildEmptyLeaderboardEmbed(title: string): EmbedBuilder {

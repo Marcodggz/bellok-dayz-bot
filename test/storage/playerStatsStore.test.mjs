@@ -1,7 +1,5 @@
 import { describe, expect, test } from "vitest";
-import playerStatsStore from "../../src/storage/playerStatsStore.js";
-
-const { findPlayerStats } = playerStatsStore;
+import { findPlayerStats } from "../../src/storage/playerStatsStore.ts";
 
 describe("findPlayerStats", () => {
   const allStats = {

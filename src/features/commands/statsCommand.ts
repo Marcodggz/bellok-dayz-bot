@@ -14,11 +14,7 @@ import {
 import { findPlayerStats, loadPlayerStats } from "../../storage/playerStatsStore";
 import { SERVER_NAME } from "../../config/config";
 import { getRankBadgePath } from "../../utils/rankBadges";
-import type {
-  PersistedPlayerStats,
-  PersistedPlayerStatsCollection,
-  PlayerStatsSearchResult,
-} from "../../types/domainPersistence";
+import type { PersistedPlayerStats } from "../../types/domainPersistence";
 
 interface StatsDisplayData extends PersistedPlayerStats {
   bestKillStreak?: number;
@@ -71,8 +67,8 @@ export const statsCommand = {
         gamertag = linkedGamertag;
       }
 
-      const allStats = loadPlayerStats() as PersistedPlayerStatsCollection;
-      const playerResult = findPlayerStats(allStats, gamertag) as PlayerStatsSearchResult | null;
+      const allStats = loadPlayerStats();
+      const playerResult = findPlayerStats(allStats, gamertag);
 
       if (!playerResult) {
         await interaction.reply({

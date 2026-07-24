@@ -8,10 +8,6 @@ import {
   unlinkGamertag,
 } from "../../storage/linkedGamertagsStore";
 import { findPlayerStats, loadPlayerStats } from "../../storage/playerStatsStore";
-import type {
-  PersistedPlayerStatsCollection,
-  PlayerStatsSearchResult,
-} from "../../types/domainPersistence";
 
 export const linkCommand = {
   data: new SlashCommandBuilder()
@@ -37,11 +33,8 @@ export const linkCommand = {
         return;
       }
 
-      const allStats = loadPlayerStats() as PersistedPlayerStatsCollection;
-      const playerResult = findPlayerStats(
-        allStats,
-        requestedGamertag
-      ) as PlayerStatsSearchResult | null;
+      const allStats = loadPlayerStats();
+      const playerResult = findPlayerStats(allStats, requestedGamertag);
 
       const gamertag = playerResult?.gamertag ?? requestedGamertag;
 
