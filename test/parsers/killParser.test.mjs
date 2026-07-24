@@ -5,7 +5,7 @@ describe("killParser", () => {
 
   beforeEach(async () => {
     vi.resetModules();
-    parser = await import("../../src/parsers/killParser.js");
+    parser = await import("../../src/parsers/killParser.ts");
   });
 
   describe("parseKill - PvP kills", () => {
