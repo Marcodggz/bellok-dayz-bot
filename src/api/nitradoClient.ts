@@ -1,7 +1,8 @@
-// src/api/nitradoClient.js — Nitrado API client
-const axios = require("axios");
-const config = require("../config/config");
-const { bufToText, looksLikeHtml, looksLikeRateLimit } = require("../utils/helpers");
+// src/api/nitradoClient.ts — Nitrado API client
+import axios from "axios";
+
+import * as config from "../config/config.js";
+import { bufToText, looksLikeHtml, looksLikeRateLimit } from "../utils/helpers.js";
 
 const { NIT_API, SERVICE_ID, NIT_TOKEN, ROTATE_CHECK_MS, LIST_COOLDOWN_MS } = config;
 
@@ -131,9 +132,4 @@ function startListCooldown(durationMs) {
   return startedNewCooldown;
 }
 
-module.exports = {
-  nitDownload,
-  listAdmNames,
-  tsFromName,
-  startListCooldown,
-};
+export { listAdmNames, nitDownload, startListCooldown, tsFromName };

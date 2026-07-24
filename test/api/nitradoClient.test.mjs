@@ -1,38 +1,30 @@
 // test/api/nitradoClient.test.mjs
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
-import { createRequire } from "module";
-
-const require = createRequire(import.meta.url);
-
 describe("nitradoClient", () => {
   let nitradoClient;
   let axiosMock;
   let consoleWarnSpy;
 
-  beforeEach(() => {
-    // Clear require cache
-    delete require.cache[require.resolve("../../src/api/nitradoClient.js")];
-    delete require.cache[require.resolve("../../src/config/config.js")];
-    delete require.cache[require.resolve("../../src/utils/helpers.js")];
+  beforeEach(async () => {
+    vi.resetModules();
 
-    // Mock config
-    require.cache[require.resolve("../../src/config/config.js")] = {
-      exports: {
-        NIT_API: "https://api.nitrado.net",
-        SERVICE_ID: "12345",
-        NIT_TOKEN: "test-token",
-        ROTATE_CHECK_MS: 60000,
-        LIST_COOLDOWN_MS: 120000,
-        DEBUG: false,
-      },
-    };
+    vi.doMock("../../src/config/config.js", () => ({
+      NIT_API: "https://api.nitrado.net",
+      SERVICE_ID: "12345",
+      NIT_TOKEN: "test-token",
+      ROTATE_CHECK_MS: 60000,
+      LIST_COOLDOWN_MS: 120000,
+      DEBUG: false,
+    }));
 
-    // Mock axios
     axiosMock = {
       create: vi.fn(() => axiosMock),
       get: vi.fn(),
     };
-    require.cache[require.resolve("axios")] = { exports: axiosMock };
+
+    vi.doMock("axios", () => ({
+      default: axiosMock,
+    }));
 
     // Spy on console.warn to suppress expected test messages
     const originalWarn = console.warn;
@@ -46,8 +38,7 @@ describe("nitradoClient", () => {
       originalWarn(...args);
     });
 
-    // Load module after mocks
-    nitradoClient = require("../../src/api/nitradoClient.js");
+    nitradoClient = await import("../../src/api/nitradoClient.ts");
   });
 
   afterEach(() => {
@@ -174,9 +165,9 @@ describe("nitradoClient", () => {
   it("cooldown prevents unnecessary list requests", async () => {
     vi.useFakeTimers();
 
-    // Need fresh module to reset lastRotateCheck
-    delete require.cache[require.resolve("../../src/api/nitradoClient.js")];
-    const freshClient = require("../../src/api/nitradoClient.js");
+    // Load a fresh module instance to reset its internal cache and timestamps.
+    vi.resetModules();
+    const freshClient = await import("../../src/api/nitradoClient.ts");
 
     vi.setSystemTime(2000000);
 
