@@ -13,13 +13,13 @@ const { PNG } = require("pngjs");
 
 // Import config and helpers
 const config = require("./src/config/config");
-const {
+import {
   bufToText,
   looksLikeHtml,
   looksLikeRateLimit,
   tMadrid,
   clamp,
-} = require("./src/utils/helpers");
+} from "./src/utils/helpers.js";
 import { loadHeat, saveHeat } from "./src/storage/heatStore.js";
 const { loadMockStats, saveMockStats } = require("./src/storage/mockStatsStore");
 const { loadPlayerStats, savePlayerStats } = require("./src/storage/playerStatsStore");

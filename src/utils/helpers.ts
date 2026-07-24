@@ -1,9 +1,9 @@
-// src/utils/helpers.js — Pure utility functions
+// src/utils/helpers.ts — Pure utility functions
 
 /**
  * Convert buffer/object/string to text safely
  */
-function bufToText(x) {
+export function bufToText(x) {
   try {
     if (!x) return "";
     if (Buffer.isBuffer(x)) return x.toString("utf8");
@@ -17,43 +17,34 @@ function bufToText(x) {
 /**
  * Check if text looks like HTML response
  */
-function looksLikeHtml(txt) {
+export function looksLikeHtml(txt) {
   return /^\s*<!DOCTYPE html>|^\s*<html/i.test(txt || "");
 }
 
 /**
  * Check if text mentions rate limit
  */
-function looksLikeRateLimit(txt) {
+export function looksLikeRateLimit(txt) {
   return /rate\s*limit/i.test(txt || "");
 }
 
 /**
  * Format timestamp to Madrid timezone
  */
-function tMadrid(ms) {
+export function tMadrid(ms) {
   return new Date(ms).toLocaleString("es-ES", { timeZone: "Europe/Madrid" });
 }
 
 /**
  * Clamp value between min and max
  */
-function clamp(v, a, b) {
+export function clamp(v, a, b) {
   return Math.max(a, Math.min(b, v));
 }
 
 /**
  * Escape special regex characters
  */
-function escapeRegExp(s) {
+export function escapeRegExp(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
-
-module.exports = {
-  bufToText,
-  looksLikeHtml,
-  looksLikeRateLimit,
-  tMadrid,
-  clamp,
-  escapeRegExp,
-};

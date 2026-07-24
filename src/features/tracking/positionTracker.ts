@@ -2,7 +2,7 @@
 // ADM pos=<X, Y, Z>: X/Y are map coordinates; Z is elevation.
 
 import type { Position2D } from "../../types/domainEvents";
-import { escapeRegExp } from "../../utils/helpers";
+import { escapeRegExp } from "../../utils/helpers.js";
 import { addWeekendHeatPoint } from "../../utils/weekendHeatmapHelpers.js";
 
 interface TrackedPosition extends Position2D {
