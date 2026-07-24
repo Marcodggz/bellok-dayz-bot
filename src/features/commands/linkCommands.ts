@@ -1,18 +1,19 @@
-// src/features/commands/linkCommands.js — Slash commands for linking Discord users to DayZ gamertags
+// Slash commands for linking Discord users to DayZ gamertags
 
-const { SlashCommandBuilder, MessageFlags } = require("discord.js");
-const {
+import { MessageFlags, SlashCommandBuilder, type ChatInputCommandInteraction } from "discord.js";
+import {
+  getDiscordUserIdByGamertag,
+  getGamertagByDiscordUserId,
   linkGamertag,
   unlinkGamertag,
-  getGamertagByDiscordUserId,
-  getDiscordUserIdByGamertag,
-} = require("../../storage/linkedGamertagsStore");
-const { loadPlayerStats, findPlayerStats } = require("../../storage/playerStatsStore");
+} from "../../storage/linkedGamertagsStore";
+import { findPlayerStats, loadPlayerStats } from "../../storage/playerStatsStore";
+import type {
+  PersistedPlayerStatsCollection,
+  PlayerStatsSearchResult,
+} from "../../types/domainPersistence";
 
-/**
- * Define the /link command
- */
-const linkCommand = {
+export const linkCommand = {
   data: new SlashCommandBuilder()
     .setName("link")
     .setDescription("Link your Discord account to your DayZ gamertag")
@@ -20,17 +21,13 @@ const linkCommand = {
       option.setName("gamertag").setDescription("Your DayZ player name").setRequired(true)
     ),
 
-  /**
-   * Execute the /link command
-   * @param {import('discord.js').CommandInteraction} interaction
-   */
-  async execute(interaction) {
-    const requestedGamertag = interaction.options.getString("gamertag").trim();
+  async execute(interaction: ChatInputCommandInteraction): Promise<void> {
+    const requestedGamertag = interaction.options.getString("gamertag", true).trim();
     const userId = interaction.user.id;
 
     try {
-      const existingGamertag = getGamertagByDiscordUserId(userId);
-      const existingOwner = getDiscordUserIdByGamertag(requestedGamertag);
+      const existingGamertag = getGamertagByDiscordUserId(userId) as string | null;
+      const existingOwner = getDiscordUserIdByGamertag(requestedGamertag) as string | null;
 
       if (existingOwner && existingOwner !== userId) {
         await interaction.reply({
@@ -40,8 +37,13 @@ const linkCommand = {
         return;
       }
 
-      const playerResult = findPlayerStats(loadPlayerStats(), requestedGamertag);
-      const gamertag = playerResult ? playerResult.gamertag : requestedGamertag;
+      const allStats = loadPlayerStats() as PersistedPlayerStatsCollection;
+      const playerResult = findPlayerStats(
+        allStats,
+        requestedGamertag
+      ) as PlayerStatsSearchResult | null;
+
+      const gamertag = playerResult?.gamertag ?? requestedGamertag;
 
       linkGamertag(userId, gamertag);
 
@@ -61,8 +63,9 @@ const linkCommand = {
           flags: MessageFlags.Ephemeral,
         });
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("[link command error]", error);
+
       await interaction.reply({
         content: "❌ An error occurred while linking your gamertag.",
         flags: MessageFlags.Ephemeral,
@@ -71,24 +74,16 @@ const linkCommand = {
   },
 };
 
-/**
- * Define the /unlink command
- */
-const unlinkCommand = {
+export const unlinkCommand = {
   data: new SlashCommandBuilder()
     .setName("unlink")
     .setDescription("Unlink your Discord account from your DayZ gamertag"),
 
-  /**
-   * Execute the /unlink command
-   * @param {import('discord.js').CommandInteraction} interaction
-   */
-  async execute(interaction) {
+  async execute(interaction: ChatInputCommandInteraction): Promise<void> {
     const userId = interaction.user.id;
 
     try {
-      // Check if user is linked
-      const existingGamertag = getGamertagByDiscordUserId(userId);
+      const existingGamertag = getGamertagByDiscordUserId(userId) as string | null;
 
       if (!existingGamertag) {
         await interaction.reply({
@@ -98,24 +93,19 @@ const unlinkCommand = {
         return;
       }
 
-      // Unlink the gamertag
       unlinkGamertag(userId);
 
       await interaction.reply({
         content: `✅ Successfully unlinked your account from gamertag **${existingGamertag}**`,
         flags: MessageFlags.Ephemeral,
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("[unlink command error]", error);
+
       await interaction.reply({
         content: "❌ An error occurred while unlinking your gamertag.",
         flags: MessageFlags.Ephemeral,
       });
     }
   },
-};
-
-module.exports = {
-  linkCommand,
-  unlinkCommand,
 };
