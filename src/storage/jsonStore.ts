@@ -1,11 +1,11 @@
-// src/storage/jsonStore.js — JSON file read/write utilities
+// src/storage/jsonStore.ts — JSON file read/write utilities
 
-const fs = require("fs");
+import fs from "node:fs";
 
 /**
  * Load and parse JSON file, return fallback on error
  */
-function loadJSON(file, fallback) {
+export function loadJSON(file, fallback) {
   try {
     return JSON.parse(fs.readFileSync(file, "utf8"));
   } catch {
@@ -16,7 +16,7 @@ function loadJSON(file, fallback) {
 /**
  * Save data to JSON file using an atomic temporary-file replacement
  */
-function saveJSON(file, data, spacing) {
+export function saveJSON(file, data, spacing = undefined) {
   const temporaryFile = `${file}.tmp`;
   const serializedData = JSON.stringify(data, null, spacing);
 
@@ -33,8 +33,3 @@ function saveJSON(file, data, spacing) {
     throw error;
   }
 }
-
-module.exports = {
-  loadJSON,
-  saveJSON,
-};

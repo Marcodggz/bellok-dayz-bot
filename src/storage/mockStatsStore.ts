@@ -1,7 +1,7 @@
 // Mock player stats persistence
 
 import { resolveProjectPath } from "../config/projectPaths";
-import { loadJSON, saveJSON } from "./jsonStore";
+import { loadJSON, saveJSON } from "./jsonStore.js";
 import type { PersistedPlayerStatsCollection } from "../types/domainPersistence";
 
 const MOCK_STATS_FILE = resolveProjectPath("data", "mock-player-stats.json");

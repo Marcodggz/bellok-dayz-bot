@@ -2,9 +2,7 @@ import { afterEach, describe, expect, test, vi } from "vitest";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import jsonStore from "../../src/storage/jsonStore.js";
-
-const { loadJSON, saveJSON } = jsonStore;
+import { loadJSON, saveJSON } from "../../src/storage/jsonStore.ts";
 
 const temporaryDirectories = [];
 

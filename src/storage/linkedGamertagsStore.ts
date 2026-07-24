@@ -1,7 +1,7 @@
 // Manages Discord user ID to DayZ gamertag links
 
 import { resolveProjectPath } from "../config/projectPaths";
-import { loadJSON, saveJSON } from "./jsonStore";
+import { loadJSON, saveJSON } from "./jsonStore.js";
 import type { LinkedGamertags } from "../types/domainPersistence";
 
 const LINKED_GAMERTAGS_FILE = resolveProjectPath("data", "linked-gamertags.json");
