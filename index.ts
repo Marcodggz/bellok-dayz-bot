@@ -5,6 +5,8 @@
 // - Weekend Heatmap: single editable message with player position density (Fri-Sun only)
 // - Coordinate calibration: min/max/offset/scale/flip for accurate map overlay
 
+import type { PersistedPlayerStatsCollection } from "./src/types/domainPersistence";
+
 const fs = require("fs");
 const { Client, GatewayIntentBits, EmbedBuilder, AttachmentBuilder } = require("discord.js");
 const { PNG } = require("pngjs");
@@ -304,7 +306,7 @@ async function maybeSendHeatmap(client) {
 async function runBot() {
   checkEnv();
   const client = new Client({ intents: [GatewayIntentBits.Guilds] });
-  const stats = loadPlayerStats();
+  const stats: PersistedPlayerStatsCollection = loadPlayerStats();
   const normalizeEventTime = createEventTimeNormalizer();
   let readyOnce = false;
 
