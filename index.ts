@@ -20,7 +20,7 @@ const {
   tMadrid,
   clamp,
 } = require("./src/utils/helpers");
-const { loadHeat, saveHeat } = require("./src/storage/heatStore");
+import { loadHeat, saveHeat } from "./src/storage/heatStore.js";
 const { loadMockStats, saveMockStats } = require("./src/storage/mockStatsStore");
 const { loadPlayerStats, savePlayerStats } = require("./src/storage/playerStatsStore");
 const { parseKill } = require("./src/parsers/killParser");
