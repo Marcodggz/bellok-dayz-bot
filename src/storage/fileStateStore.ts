@@ -1,6 +1,6 @@
-// src/storage/fileStateStore.js — File state tracking for tail operations
+// src/storage/fileStateStore.ts — File state tracking for tail operations
 
-const { saveState } = require("./stateStore");
+import { saveState } from "./stateStore.js";
 
 /**
  * Get the state for a specific file from the global state object
@@ -8,7 +8,7 @@ const { saveState } = require("./stateStore");
  * @param {string} filePath - The file path to get state for
  * @returns {Object} File state with size and carry buffer
  */
-function getFileState(st, filePath) {
+export function getFileState(st, filePath) {
   return st[filePath] || { size: 0, carry: "" };
 }
 
@@ -18,12 +18,7 @@ function getFileState(st, filePath) {
  * @param {string} filePath - The file path to set state for
  * @param {Object} obj - The file state object (size, carry)
  */
-function setFileState(st, filePath, obj) {
+export function setFileState(st, filePath, obj) {
   st[filePath] = obj;
   saveState(st);
 }
-
-module.exports = {
-  getFileState,
-  setFileState,
-};
