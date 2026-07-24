@@ -1,13 +1,9 @@
-import { createRequire } from "node:module";
 import { describe, expect, test, vi } from "vitest";
-
-const require = createRequire(import.meta.url);
-
-const {
-  parseRawTimeMs,
+import {
   createEventTimeNormalizer,
+  parseRawTimeMs,
   processPlayerSessionLine,
-} = require("../../../src/features/stats/playerSessionProcessor.js");
+} from "../../../src/features/stats/playerSessionProcessor.ts";
 
 describe("playerSessionProcessor", () => {
   test("parses a valid ADM time", () => {
