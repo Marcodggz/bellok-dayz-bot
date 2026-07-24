@@ -4,7 +4,6 @@ import { describe, test, expect, beforeEach, vi } from "vitest";
 const require = createRequire(import.meta.url);
 
 const processorPath = require.resolve("../../../src/features/killfeed/killEventProcessor.ts");
-const trackerPath = require.resolve("../../../src/features/tracking/positionTracker.js");
 const weekendHelpersPath = require.resolve("../../../src/utils/weekendHeatmapHelpers.js");
 
 describe("killEventProcessor", () => {
@@ -14,17 +13,13 @@ describe("killEventProcessor", () => {
     vi.resetModules();
 
     delete require.cache[processorPath];
-    delete require.cache[trackerPath];
     delete require.cache[weekendHelpersPath];
 
-    require.cache[weekendHelpersPath] = {
-      id: weekendHelpersPath,
-      filename: weekendHelpersPath,
-      loaded: true,
-      exports: {
-        addWeekendHeatPoint: vi.fn(),
-      },
-    };
+    const addWeekendHeatPoint = vi.fn();
+
+    vi.doMock("../../../src/utils/weekendHeatmapHelpers.js", () => ({
+      addWeekendHeatPoint,
+    }));
 
     // Suppress only dotenv console output
     const originalConsoleLog = console.log;

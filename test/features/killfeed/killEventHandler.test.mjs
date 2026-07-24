@@ -21,7 +21,7 @@ beforeEach(async () => {
     queueKillfeedEvent,
   }));
 
-  vi.doMock("../../../src/features/tracking/positionTracker.js", () => ({
+  vi.doMock("../../../src/features/tracking/positionTracker.ts", () => ({
     posForVictimFromLine,
   }));
 

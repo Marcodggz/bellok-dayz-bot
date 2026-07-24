@@ -1,29 +1,20 @@
-import { createRequire } from "node:module";
 import { beforeEach, describe, expect, test, vi } from "vitest";
-
-const require = createRequire(import.meta.url);
-
-const trackerPath = require.resolve("../../../src/features/tracking/positionTracker.js");
-const weekendHelpersPath = require.resolve("../../../src/utils/weekendHeatmapHelpers.js");
 
 let updatePositionsFromLine;
 let posForVictimFromLine;
 let addWeekendHeatPoint;
 
-beforeEach(() => {
-  delete require.cache[trackerPath];
-  delete require.cache[weekendHelpersPath];
+beforeEach(async () => {
+  vi.resetModules();
 
   addWeekendHeatPoint = vi.fn();
 
-  require.cache[weekendHelpersPath] = {
-    id: weekendHelpersPath,
-    filename: weekendHelpersPath,
-    loaded: true,
-    exports: { addWeekendHeatPoint },
-  };
+  vi.doMock("../../../src/utils/weekendHeatmapHelpers.js", () => ({
+    addWeekendHeatPoint,
+  }));
 
-  ({ updatePositionsFromLine, posForVictimFromLine } = require(trackerPath));
+  ({ updatePositionsFromLine, posForVictimFromLine } =
+    await import("../../../src/features/tracking/positionTracker.ts"));
 });
 
 describe("positionTracker", () => {

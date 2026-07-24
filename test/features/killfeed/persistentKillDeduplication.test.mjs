@@ -7,7 +7,7 @@ const deduplicatorPath = require.resolve("../../../src/features/killfeed/killEve
 const handlerPath = require.resolve("../../../src/features/killfeed/killEventHandler.ts");
 const stateStorePath = require.resolve("../../../src/storage/stateStore.js");
 const queuePath = require.resolve("../../../src/features/killfeed/killfeedQueue.js");
-const positionTrackerPath = require.resolve("../../../src/features/tracking/positionTracker.js");
+const positionTrackerPath = require.resolve("../../../src/features/tracking/positionTracker.ts");
 
 let persistedState;
 let queueKillfeedEvent;
@@ -65,7 +65,7 @@ async function reloadKillfeedModules() {
     queueKillfeedEvent,
   }));
 
-  vi.doMock("../../../src/features/tracking/positionTracker.js", () => ({
+  vi.doMock("../../../src/features/tracking/positionTracker.ts", () => ({
     posForVictimFromLine: vi.fn(() => null),
   }));
 
