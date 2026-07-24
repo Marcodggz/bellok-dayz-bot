@@ -1,10 +1,10 @@
 // admFilePoller.js — ADM file rotation detection and tail-reading
 
-const config = require("../../config/config");
-const { loadState } = require("../../storage/stateStore");
-const { getFileState, setFileState } = require("../../storage/fileStateStore");
-const { loadHeat, saveHeat } = require("../../storage/heatStore");
-const { nitDownload, listAdmNames } = require("../../api/nitradoClient");
+import * as config from "../../config/config.js";
+import { loadState } from "../../storage/stateStore.js";
+import { getFileState, setFileState } from "../../storage/fileStateStore.js";
+import { loadHeat, saveHeat } from "../../storage/heatStore.js";
+import { listAdmNames, nitDownload } from "../../api/nitradoClient.js";
 
 const { ADM_DIR, START_AT_END, DEBUG, HEATMAP_RESET_ON_ROTATE } = config;
 
@@ -78,7 +78,4 @@ async function readNewLines(filePath) {
   return chunk ? chunk.split(/\r?\n/).filter(Boolean) : [];
 }
 
-module.exports = {
-  ensureLatestAdmSelected,
-  readNewLines,
-};
+export { ensureLatestAdmSelected, readNewLines };

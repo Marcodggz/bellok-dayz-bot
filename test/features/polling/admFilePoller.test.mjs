@@ -1,14 +1,4 @@
-import { createRequire } from "node:module";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-
-const require = createRequire(import.meta.url);
-
-const pollerPath = require.resolve("../../../src/features/polling/admFilePoller.ts");
-const nitradoClientPath = require.resolve("../../../src/api/nitradoClient.js");
-const stateStorePath = require.resolve("../../../src/storage/stateStore.js");
-const fileStateStorePath = require.resolve("../../../src/storage/fileStateStore.js");
-const heatStorePath = require.resolve("../../../src/storage/heatStore.js");
-const configPath = require.resolve("../../../src/config/config.js");
 
 let ensureLatestAdmSelected;
 let readNewLines;
@@ -21,15 +11,9 @@ let loadHeat;
 let saveHeat;
 let consoleSpy;
 
-beforeEach(() => {
-  delete require.cache[pollerPath];
-  delete require.cache[nitradoClientPath];
-  delete require.cache[stateStorePath];
-  delete require.cache[fileStateStorePath];
-  delete require.cache[heatStorePath];
-  delete require.cache[configPath];
+beforeEach(async () => {
+  vi.resetModules();
 
-  // Suppress rotate console output
   const originalConsoleLog = console.log;
   consoleSpy = vi.spyOn(console, "log").mockImplementation((...args) => {
     const msg = args.join(" ");
@@ -38,18 +22,9 @@ beforeEach(() => {
     }
   });
 
-  // Mock Nitrado client
   nitDownload = vi.fn();
   listAdmNames = vi.fn();
 
-  require.cache[nitradoClientPath] = {
-    id: nitradoClientPath,
-    filename: nitradoClientPath,
-    loaded: true,
-    exports: { nitDownload, listAdmNames },
-  };
-
-  // Mock state stores
   const mockState = {};
   loadState = vi.fn(() => mockState);
 
@@ -62,41 +37,35 @@ beforeEach(() => {
   loadHeat = vi.fn(() => mockHeat);
   saveHeat = vi.fn();
 
-  require.cache[stateStorePath] = {
-    id: stateStorePath,
-    filename: stateStorePath,
-    loaded: true,
-    exports: { loadState },
-  };
+  vi.doMock("../../../src/api/nitradoClient.js", () => ({
+    nitDownload,
+    listAdmNames,
+  }));
 
-  require.cache[fileStateStorePath] = {
-    id: fileStateStorePath,
-    filename: fileStateStorePath,
-    loaded: true,
-    exports: { getFileState, setFileState },
-  };
+  vi.doMock("../../../src/storage/stateStore.js", () => ({
+    loadState,
+  }));
 
-  require.cache[heatStorePath] = {
-    id: heatStorePath,
-    filename: heatStorePath,
-    loaded: true,
-    exports: { loadHeat, saveHeat },
-  };
+  vi.doMock("../../../src/storage/fileStateStore.js", () => ({
+    getFileState,
+    setFileState,
+  }));
 
-  // Mock config
-  require.cache[configPath] = {
-    id: configPath,
-    filename: configPath,
-    loaded: true,
-    exports: {
-      ADM_DIR: "/logs/adm",
-      START_AT_END: false,
-      DEBUG: false,
-      HEATMAP_RESET_ON_ROTATE: false,
-    },
-  };
+  vi.doMock("../../../src/storage/heatStore.js", () => ({
+    loadHeat,
+    saveHeat,
+  }));
 
-  ({ ensureLatestAdmSelected, readNewLines } = require(pollerPath));
+  vi.doMock("../../../src/config/config.js", () => ({
+    ADM_DIR: "/logs/adm",
+    START_AT_END: false,
+    DEBUG: false,
+    HEATMAP_RESET_ON_ROTATE: false,
+  }));
+
+  const poller = await import("../../../src/features/polling/admFilePoller.ts");
+
+  ({ ensureLatestAdmSelected, readNewLines } = poller);
 });
 
 afterEach(() => {
