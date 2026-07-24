@@ -22,8 +22,8 @@ export const linkCommand = {
     const userId = interaction.user.id;
 
     try {
-      const existingGamertag = getGamertagByDiscordUserId(userId) as string | null;
-      const existingOwner = getDiscordUserIdByGamertag(requestedGamertag) as string | null;
+      const existingGamertag = getGamertagByDiscordUserId(userId);
+      const existingOwner = getDiscordUserIdByGamertag(requestedGamertag);
 
       if (existingOwner && existingOwner !== userId) {
         await interaction.reply({
@@ -76,7 +76,7 @@ export const unlinkCommand = {
     const userId = interaction.user.id;
 
     try {
-      const existingGamertag = getGamertagByDiscordUserId(userId) as string | null;
+      const existingGamertag = getGamertagByDiscordUserId(userId);
 
       if (!existingGamertag) {
         await interaction.reply({

@@ -1,7 +1,5 @@
 import { describe, expect, test } from "vitest";
-import linkedGamertagsStore from "../../src/storage/linkedGamertagsStore.js";
-
-const { findGamertagOwner } = linkedGamertagsStore;
+import { findGamertagOwner } from "../../src/storage/linkedGamertagsStore.ts";
 
 describe("findGamertagOwner", () => {
   const links = {

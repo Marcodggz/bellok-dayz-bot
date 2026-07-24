@@ -53,7 +53,7 @@ export const statsCommand = {
       if (playerOption) {
         gamertag = playerOption.trim();
       } else {
-        const linkedGamertag = getGamertagByDiscordUserId(userId) as string | null;
+        const linkedGamertag = getGamertagByDiscordUserId(userId);
 
         if (!linkedGamertag) {
           await interaction.reply({
@@ -81,7 +81,7 @@ export const statsCommand = {
       gamertag = playerResult.gamertag;
       const playerStats = playerResult.stats as StatsDisplayData;
 
-      const linkedUserId = getDiscordUserIdByGamertag(gamertag) as string | null;
+      const linkedUserId = getDiscordUserIdByGamertag(gamertag);
       const discordDisplay = linkedUserId ? `<@${linkedUserId}>` : "Not Linked";
 
       const { embed, files } = buildStatsEmbed(gamertag, playerStats, discordDisplay);
