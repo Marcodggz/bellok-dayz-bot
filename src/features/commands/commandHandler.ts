@@ -1,24 +1,34 @@
-// src/features/commands/commandHandler.js — Handle slash command interactions
+// Handle slash command interactions
 
-const { MessageFlags } = require("discord.js");
-const { linkCommand, unlinkCommand } = require("./linkCommands");
-const { statsCommand } = require("./statsCommand");
-const { leaderboardCommand } = require("./leaderboardCommand");
+import {
+  MessageFlags,
+  type ChatInputCommandInteraction,
+  type Interaction,
+  type InteractionReplyOptions,
+} from "discord.js";
 
-// Map command names to their handlers
-const commands = new Map([
+import { linkCommand, unlinkCommand } from "./linkCommands";
+import { statsCommand } from "./statsCommand";
+import { leaderboardCommand } from "./leaderboardCommand";
+
+interface SlashCommand {
+  data: {
+    name: string;
+  };
+  execute(interaction: ChatInputCommandInteraction): Promise<unknown>;
+}
+
+const commands = new Map<string, SlashCommand>([
   [linkCommand.data.name, linkCommand],
   [unlinkCommand.data.name, unlinkCommand],
   [statsCommand.data.name, statsCommand],
   [leaderboardCommand.data.name, leaderboardCommand],
 ]);
 
-/**
- * Handle a slash command interaction
- * @param {import('discord.js').Interaction} interaction
- */
-async function handleCommandInteraction(interaction) {
-  if (!interaction.isChatInputCommand()) return;
+export async function handleCommandInteraction(interaction: Interaction): Promise<void> {
+  if (!interaction.isChatInputCommand()) {
+    return;
+  }
 
   const command = commands.get(interaction.commandName);
 
@@ -29,11 +39,10 @@ async function handleCommandInteraction(interaction) {
 
   try {
     await command.execute(interaction);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error(`[commands] Error executing ${interaction.commandName}:`, error);
 
-    // Try to send an error message to the user
-    const errorMessage = {
+    const errorMessage: InteractionReplyOptions = {
       content: "❌ An error occurred while executing this command.",
       flags: MessageFlags.Ephemeral,
     };
@@ -45,7 +54,3 @@ async function handleCommandInteraction(interaction) {
     }
   }
 }
-
-module.exports = {
-  handleCommandInteraction,
-};
