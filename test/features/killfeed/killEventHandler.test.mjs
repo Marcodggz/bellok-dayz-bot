@@ -13,11 +13,11 @@ beforeEach(async () => {
   queueKillfeedEvent = vi.fn();
   posForVictimFromLine = vi.fn();
 
-  vi.doMock("../../../src/features/killfeed/killEventDeduplicator.js", () => ({
+  vi.doMock("../../../src/features/killfeed/killEventDeduplicator.ts", () => ({
     hasSentBucket,
   }));
 
-  vi.doMock("../../../src/features/killfeed/killfeedQueue.js", () => ({
+  vi.doMock("../../../src/features/killfeed/killfeedQueue.ts", () => ({
     queueKillfeedEvent,
   }));
 

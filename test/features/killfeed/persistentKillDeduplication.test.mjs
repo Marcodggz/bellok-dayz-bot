@@ -3,10 +3,8 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 
 const require = createRequire(import.meta.url);
 
-const deduplicatorPath = require.resolve("../../../src/features/killfeed/killEventDeduplicator.js");
 const handlerPath = require.resolve("../../../src/features/killfeed/killEventHandler.ts");
 const stateStorePath = require.resolve("../../../src/storage/stateStore.js");
-const queuePath = require.resolve("../../../src/features/killfeed/killfeedQueue.js");
 const positionTrackerPath = require.resolve("../../../src/features/tracking/positionTracker.ts");
 
 let persistedState;
@@ -30,15 +28,6 @@ function installMocks() {
     },
   };
 
-  require.cache[queuePath] = {
-    id: queuePath,
-    filename: queuePath,
-    loaded: true,
-    exports: {
-      queueKillfeedEvent,
-    },
-  };
-
   require.cache[positionTrackerPath] = {
     id: positionTrackerPath,
     filename: positionTrackerPath,
@@ -52,16 +41,22 @@ function installMocks() {
 async function reloadKillfeedModules() {
   vi.resetModules();
 
-  delete require.cache[deduplicatorPath];
   delete require.cache[handlerPath];
 
   installMocks();
 
-  const deduplicator = require(deduplicatorPath);
+  vi.doMock("../../../src/storage/stateStore.js", () => ({
+    loadState: () => persistedState,
+    saveState: (nextState) => {
+      persistedState = structuredClone(nextState);
+    },
+  }));
 
-  vi.doMock("../../../src/features/killfeed/killEventDeduplicator.js", () => deduplicator);
+  const deduplicator = await import("../../../src/features/killfeed/killEventDeduplicator.ts");
 
-  vi.doMock("../../../src/features/killfeed/killfeedQueue.js", () => ({
+  vi.doMock("../../../src/features/killfeed/killEventDeduplicator.ts", () => deduplicator);
+
+  vi.doMock("../../../src/features/killfeed/killfeedQueue.ts", () => ({
     queueKillfeedEvent,
   }));
 
@@ -81,10 +76,8 @@ beforeEach(() => {
 
   persistedState = {};
 
-  delete require.cache[deduplicatorPath];
   delete require.cache[handlerPath];
   delete require.cache[stateStorePath];
-  delete require.cache[queuePath];
   delete require.cache[positionTrackerPath];
 });
 

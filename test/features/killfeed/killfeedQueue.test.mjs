@@ -1,23 +1,14 @@
-import { createRequire } from "node:module";
 import { beforeEach, describe, expect, test, vi } from "vitest";
-
-const require = createRequire(import.meta.url);
-
-const queuePath = require.resolve("../../../src/features/killfeed/killfeedQueue.js");
-const embedBuildersPath = require.resolve("../../../src/features/killfeed/embedBuilders.js");
-const deduplicatorPath = require.resolve("../../../src/features/killfeed/killEventDeduplicator.js");
 
 let queueKillfeedEvent;
 let flushKillfeedQueue;
 let buildKillEmbed;
 let markSentBucket;
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.useFakeTimers();
-
-  delete require.cache[queuePath];
-  delete require.cache[embedBuildersPath];
-  delete require.cache[deduplicatorPath];
+  vi.resetModules();
+  vi.clearAllMocks();
 
   buildKillEmbed = vi.fn(() => ({
     embeds: [{ description: "kill embed" }],
@@ -25,21 +16,16 @@ beforeEach(() => {
 
   markSentBucket = vi.fn();
 
-  require.cache[embedBuildersPath] = {
-    id: embedBuildersPath,
-    filename: embedBuildersPath,
-    loaded: true,
-    exports: { buildKillEmbed },
-  };
+  vi.doMock("../../../src/features/killfeed/embedBuilders.js", () => ({
+    buildKillEmbed,
+  }));
 
-  require.cache[deduplicatorPath] = {
-    id: deduplicatorPath,
-    filename: deduplicatorPath,
-    loaded: true,
-    exports: { markSentBucket },
-  };
+  vi.doMock("../../../src/features/killfeed/killEventDeduplicator.ts", () => ({
+    markSentBucket,
+  }));
 
-  ({ queueKillfeedEvent, flushKillfeedQueue } = require(queuePath));
+  ({ queueKillfeedEvent, flushKillfeedQueue } =
+    await import("../../../src/features/killfeed/killfeedQueue.ts"));
 });
 
 describe("killfeedQueue", () => {
