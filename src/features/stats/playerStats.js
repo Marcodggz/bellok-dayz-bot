@@ -32,6 +32,7 @@ function applyVictimDeath(stats, victimName, normalizedEventTimeMs) {
   }
 
   victimStats.deaths++;
+  victimStats.deathStreak = (victimStats.deathStreak ?? 0) + 1;
   victimStats.killStreak = 0;
   victimStats.kd = calculateKD(victimStats.kills, victimStats.deaths);
   victimStats.score = calculateScore(victimStats);
@@ -55,6 +56,7 @@ function updateStatsFromEvent(stats, event, normalizedEventTimeMs = null) {
       const killerStats = ensurePlayerStats(stats, event.killer);
       killerStats.kills++;
       killerStats.killStreak++;
+      killerStats.deathStreak = 0;
 
       // Track headshots
       if (event.hitZone && event.hitZone === "Head") {
@@ -108,6 +110,7 @@ function ensurePlayerStats(stats, playerName) {
       headshots: 0,
       kd: 0.0,
       killStreak: 0,
+      deathStreak: 0,
       score: 0.0,
       rank: "Private",
       // Longest kill tracking
@@ -122,6 +125,9 @@ function ensurePlayerStats(stats, playerName) {
       accumulatedPlayedMs: 0, // Total time played accumulated across all sessions
     };
   }
+  stats[playerName].killStreak ??= 0;
+  stats[playerName].deathStreak ??= 0;
+
   return stats[playerName];
 }
 

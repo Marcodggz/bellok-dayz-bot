@@ -229,6 +229,84 @@ describe("playerStats", () => {
     });
   });
 
+  describe("death streak tracking", () => {
+    test("increments death streak after consecutive deaths", () => {
+      const stats = playerStats.createEmptyStats();
+
+      playerStats.updateStatsFromEvent(stats, {
+        type: "pvp",
+        killer: "Killer1",
+        victim: "Victim",
+        weapon: "M4A1",
+      });
+
+      playerStats.updateStatsFromEvent(stats, {
+        type: "pvp",
+        killer: "Killer2",
+        victim: "Victim",
+        weapon: "AKM",
+      });
+
+      expect(stats.Victim.deathStreak).toBe(2);
+      expect(stats.Victim.killStreak).toBe(0);
+    });
+
+    test("resets death streak when the player gets a kill", () => {
+      const stats = playerStats.createEmptyStats();
+
+      playerStats.updateStatsFromEvent(stats, {
+        type: "pvp",
+        killer: "Killer1",
+        victim: "Survivor",
+        weapon: "M4A1",
+      });
+
+      expect(stats.Survivor.deathStreak).toBe(1);
+
+      playerStats.updateStatsFromEvent(stats, {
+        type: "pvp",
+        killer: "Survivor",
+        victim: "Target",
+        weapon: "SKS",
+      });
+
+      expect(stats.Survivor.deathStreak).toBe(0);
+      expect(stats.Survivor.killStreak).toBe(1);
+    });
+
+    test("increments death streak after an explosion death", () => {
+      const stats = playerStats.createEmptyStats();
+
+      playerStats.updateStatsFromEvent(stats, {
+        type: "explosion",
+        victim: "BoomGuy",
+        device: "Landmine",
+      });
+
+      expect(stats.BoomGuy.deathStreak).toBe(1);
+      expect(stats.BoomGuy.killStreak).toBe(0);
+    });
+
+    test("adds missing death streak to legacy player data", () => {
+      const stats = playerStats.createEmptyStats();
+
+      stats.LegacyPlayer = {
+        kills: 3,
+        deaths: 2,
+        headshots: 0,
+        kd: 1.5,
+        killStreak: 2,
+        score: 20,
+        rank: "Private",
+      };
+
+      playerStats.handlePlayerConnect(stats, "LegacyPlayer", 1000);
+
+      expect(stats.LegacyPlayer.killStreak).toBe(2);
+      expect(stats.LegacyPlayer.deathStreak).toBe(0);
+    });
+  });
+
   describe("shared victim death updates", () => {
     test("applies identical victim updates for PvP and explosion deaths", () => {
       const pvpStats = playerStats.createEmptyStats();
