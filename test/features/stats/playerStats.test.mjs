@@ -6,7 +6,7 @@ describe("playerStats", () => {
 
   beforeEach(async () => {
     vi.resetModules();
-    playerStats = await import("../../../src/features/stats/playerStats.js");
+    playerStats = await import("../../../src/features/stats/playerStats.ts");
 
     // Suppress only expected warnings
     const originalWarn = console.warn;

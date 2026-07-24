@@ -1,50 +1,31 @@
-import { createRequire } from "node:module";
 import { beforeEach, describe, expect, test, vi } from "vitest";
-
-const require = createRequire(import.meta.url);
-
-const handlerPath = require.resolve("../../../src/features/killfeed/killEventHandler.js");
-const deduplicatorPath = require.resolve("../../../src/features/killfeed/killEventDeduplicator.js");
-const queuePath = require.resolve("../../../src/features/killfeed/killfeedQueue.js");
-const positionTrackerPath = require.resolve("../../../src/features/tracking/positionTracker.js");
 
 let handleKillEvents;
 let hasSentBucket;
 let queueKillfeedEvent;
 let posForVictimFromLine;
 
-beforeEach(() => {
-  delete require.cache[handlerPath];
-  delete require.cache[deduplicatorPath];
-  delete require.cache[queuePath];
-  delete require.cache[positionTrackerPath];
+beforeEach(async () => {
+  vi.resetModules();
+  vi.clearAllMocks();
 
   hasSentBucket = vi.fn(() => false);
   queueKillfeedEvent = vi.fn();
   posForVictimFromLine = vi.fn();
 
-  require.cache[deduplicatorPath] = {
-    id: deduplicatorPath,
-    filename: deduplicatorPath,
-    loaded: true,
-    exports: { hasSentBucket },
-  };
+  vi.doMock("../../../src/features/killfeed/killEventDeduplicator.js", () => ({
+    hasSentBucket,
+  }));
 
-  require.cache[queuePath] = {
-    id: queuePath,
-    filename: queuePath,
-    loaded: true,
-    exports: { queueKillfeedEvent },
-  };
+  vi.doMock("../../../src/features/killfeed/killfeedQueue.js", () => ({
+    queueKillfeedEvent,
+  }));
 
-  require.cache[positionTrackerPath] = {
-    id: positionTrackerPath,
-    filename: positionTrackerPath,
-    loaded: true,
-    exports: { posForVictimFromLine },
-  };
+  vi.doMock("../../../src/features/tracking/positionTracker.js", () => ({
+    posForVictimFromLine,
+  }));
 
-  ({ handleKillEvents } = require(handlerPath));
+  ({ handleKillEvents } = await import("../../../src/features/killfeed/killEventHandler.ts"));
 });
 
 describe("killEventHandler", () => {

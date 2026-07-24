@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 const require = createRequire(import.meta.url);
 
 const deduplicatorPath = require.resolve("../../../src/features/killfeed/killEventDeduplicator.js");
-const handlerPath = require.resolve("../../../src/features/killfeed/killEventHandler.js");
+const handlerPath = require.resolve("../../../src/features/killfeed/killEventHandler.ts");
 const stateStorePath = require.resolve("../../../src/storage/stateStore.js");
 const queuePath = require.resolve("../../../src/features/killfeed/killfeedQueue.js");
 const positionTrackerPath = require.resolve("../../../src/features/tracking/positionTracker.js");
@@ -49,15 +49,29 @@ function installMocks() {
   };
 }
 
-function reloadKillfeedModules() {
+async function reloadKillfeedModules() {
+  vi.resetModules();
+
   delete require.cache[deduplicatorPath];
   delete require.cache[handlerPath];
 
   installMocks();
 
+  const deduplicator = require(deduplicatorPath);
+
+  vi.doMock("../../../src/features/killfeed/killEventDeduplicator.js", () => deduplicator);
+
+  vi.doMock("../../../src/features/killfeed/killfeedQueue.js", () => ({
+    queueKillfeedEvent,
+  }));
+
+  vi.doMock("../../../src/features/tracking/positionTracker.js", () => ({
+    posForVictimFromLine: vi.fn(() => null),
+  }));
+
   return {
-    deduplicator: require(deduplicatorPath),
-    handler: require(handlerPath),
+    deduplicator,
+    handler: await import("../../../src/features/killfeed/killEventHandler.ts"),
   };
 }
 
@@ -75,7 +89,7 @@ beforeEach(() => {
 });
 
 describe("persistent kill deduplication", () => {
-  test("does not queue the same ADM kill again after a restart and reread", () => {
+  test("does not queue the same ADM kill again after a restart and reread", async () => {
     const line =
       '14:23:45 | Player "Killer" (id=1 pos=<100, 100, 100>) killed Player "Victim" (id=2 pos=<200, 200, 200>) with M4A1';
 
@@ -88,7 +102,7 @@ describe("persistent kill deduplication", () => {
       line,
     };
 
-    let { deduplicator, handler } = reloadKillfeedModules();
+    let { deduplicator, handler } = await reloadKillfeedModules();
 
     const key = deduplicator.victimBucketKey(kill.victim, kill.t);
     const groups = new Map([[key, kill]]);
@@ -99,7 +113,7 @@ describe("persistent kill deduplication", () => {
 
     deduplicator.markSentBucket(key);
 
-    ({ handler } = reloadKillfeedModules());
+    ({ handler } = await reloadKillfeedModules());
 
     handler.handleKillEvents(groups, [line]);
 
