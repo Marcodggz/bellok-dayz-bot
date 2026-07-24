@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 const require = createRequire(import.meta.url);
 
-const pollerPath = require.resolve("../../../src/features/polling/admFilePoller.js");
+const pollerPath = require.resolve("../../../src/features/polling/admFilePoller.ts");
 const nitradoClientPath = require.resolve("../../../src/api/nitradoClient.js");
 const stateStorePath = require.resolve("../../../src/storage/stateStore.js");
 const fileStateStorePath = require.resolve("../../../src/storage/fileStateStore.js");

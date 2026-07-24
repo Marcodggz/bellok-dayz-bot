@@ -53,7 +53,7 @@ async function readNewLines(filePath) {
   if (buf.length === fsState.size) return [];
 
   const rotated = buf.length < fsState.size;
-  let from = rotated ? 0 : Math.min(fsState.size, buf.length);
+  const from = rotated ? 0 : Math.min(fsState.size, buf.length);
   let chunk = buf.slice(from).toString("utf8");
 
   if (fsState.carry) {
