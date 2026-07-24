@@ -7,6 +7,7 @@ export interface PlayerStats {
   headshots: number;
   kd: number;
   killStreak: number;
+  deathStreak: number;
   score: number;
   rank: PlayerRank;
   longestKill: number;
