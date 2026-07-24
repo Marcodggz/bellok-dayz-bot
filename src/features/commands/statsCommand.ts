@@ -131,7 +131,7 @@ function buildStatsEmbed(
 
   const files: AttachmentBuilder[] = [];
 
-  const rankBadgePath = getRankBadgePath(rank) as string | null;
+  const rankBadgePath = getRankBadgePath(rank);
 
   if (rankBadgePath) {
     const attachment = new AttachmentBuilder(rankBadgePath, {
