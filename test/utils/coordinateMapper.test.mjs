@@ -1,16 +1,7 @@
-import { createRequire } from "node:module";
 import { beforeEach, describe, expect, test, vi } from "vitest";
-
-const require = createRequire(import.meta.url);
-
-const configPath = require.resolve("../../src/config/config.js");
-const mapperPath = require.resolve("../../src/utils/coordinateMapper.js");
 
 beforeEach(() => {
   vi.resetModules();
-
-  delete require.cache[configPath];
-  delete require.cache[mapperPath];
 
   process.env.MAP_SIZE = "12800";
   process.env.MAP_MIN_X = "0";
@@ -29,8 +20,8 @@ beforeEach(() => {
 });
 
 describe("coordinateMapper", () => {
-  test("maps the verified Livonia kill coordinates to the expected pixel", () => {
-    const { mapToPixelCoords } = require(mapperPath);
+  test("maps the verified Livonia kill coordinates to the expected pixel", async () => {
+    const { mapToPixelCoords } = await import("../../src/utils/coordinateMapper.ts");
 
     const result = mapToPixelCoords(10703.8, 10937.7, 2048, 2048);
 

@@ -44,7 +44,7 @@ const {
 const { handleCommandInteraction } = require("./src/features/commands/commandHandler");
 const { registerCommands } = require("./src/features/commands/registerCommands");
 import { maybeSendWeekendHeatmap } from "./src/utils/weekendHeatmapHelpers.js";
-const { mapToPixelCoords } = require("./src/utils/coordinateMapper");
+import { mapToPixelCoords } from "./src/utils/coordinateMapper.js";
 const { createHeatmapCycle } = require("./src/utils/heatmapCycle");
 const {
   buildHeatClusters,

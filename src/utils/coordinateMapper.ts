@@ -1,7 +1,7 @@
-// src/utils/coordinateMapper.js — World-to-pixel coordinate mapping
+// src/utils/coordinateMapper.ts — World-to-pixel coordinate mapping
 
-const { clamp } = require("./helpers");
-const {
+import { clamp } from "./helpers.js";
+import {
   MAP_MIN_X,
   MAP_MAX_X,
   MAP_MIN_Y,
@@ -11,9 +11,9 @@ const {
   MAP_OFFSET_Y,
   MAP_SCALE_X,
   MAP_SCALE_Y,
-} = require("../config/config");
+} from "../config/config.js";
 
-function mapToPixelCoords(x, y, W, H, debug = false) {
+export function mapToPixelCoords(x, y, W, H, debug = false) {
   // Normalize world coordinates with optional cropping/offset/scale
   const nx = (x - MAP_MIN_X) / Math.max(1, MAP_MAX_X - MAP_MIN_X);
   const ny = (y - MAP_MIN_Y) / Math.max(1, MAP_MAX_Y - MAP_MIN_Y);
@@ -51,5 +51,3 @@ function mapToPixelCoords(x, y, W, H, debug = false) {
 
   return { px, py };
 }
-
-module.exports = { mapToPixelCoords };
