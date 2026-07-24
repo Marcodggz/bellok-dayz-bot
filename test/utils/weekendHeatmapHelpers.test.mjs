@@ -1,21 +1,14 @@
-import { createRequire } from "node:module";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-
-const require = createRequire(import.meta.url);
-
-const helpersPath = require.resolve("../../src/utils/weekendHeatmapHelpers.js");
-const storePath = require.resolve("../../src/storage/weekendHeatStore.js");
 
 let state;
 let saveWeekendHeat;
 let addWeekendHeatPoint;
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.useFakeTimers();
   vi.setSystemTime(new Date("2026-07-18T12:00:00Z"));
 
-  delete require.cache[helpersPath];
-  delete require.cache[storePath];
+  vi.resetModules();
 
   state = {
     points: [],
@@ -27,23 +20,17 @@ beforeEach(() => {
     state = structuredClone(nextState);
   });
 
-  require.cache[storePath] = {
-    id: storePath,
-    filename: storePath,
-    loaded: true,
-    exports: {
-      loadWeekendHeat: () => structuredClone(state),
-      saveWeekendHeat,
-    },
-  };
+  vi.doMock("../../src/storage/weekendHeatStore.js", () => ({
+    loadWeekendHeat: () => structuredClone(state),
+    saveWeekendHeat,
+  }));
 
-  ({ addWeekendHeatPoint } = require(helpersPath));
+  ({ addWeekendHeatPoint } = await import("../../src/utils/weekendHeatmapHelpers.ts"));
 });
 
 afterEach(() => {
   vi.useRealTimers();
-  delete require.cache[helpersPath];
-  delete require.cache[storePath];
+  vi.resetModules();
 });
 
 describe("addWeekendHeatPoint", () => {

@@ -1,17 +1,17 @@
-// src/utils/weekendHeatmapHelpers.js — Weekend Heatmap utilities
+// src/utils/weekendHeatmapHelpers.ts — Weekend Heatmap utilities
 
-const { PNG } = require("pngjs");
-const fs = require("fs");
-const { clamp } = require("./helpers");
-const { mapToPixelCoords } = require("./coordinateMapper");
-const {
+import { PNG } from "pngjs";
+import fs from "node:fs";
+import { clamp } from "./helpers.js";
+import { mapToPixelCoords } from "./coordinateMapper.js";
+import {
   buildHeatClusters,
   drawHeatCluster,
   composeHeatmapOverlay,
   drawSoftBridge,
-} = require("./heatmapRenderer");
-const { loadWeekendHeat, saveWeekendHeat } = require("../storage/weekendHeatStore");
-const {
+} from "./heatmapRenderer.js";
+import { loadWeekendHeat, saveWeekendHeat } from "../storage/weekendHeatStore.js";
+import {
   WEEKEND_HEATMAP_WINDOW_MIN,
   WEEKEND_HEATMAP_CHANNEL_ID,
   WEEKEND_HEATMAP_IMG_PATH,
@@ -20,8 +20,8 @@ const {
   HEATMAP_WIDTH,
   HEATMAP_HEIGHT,
   MAP_SIZE,
-} = require("../config/config");
-const { EmbedBuilder, AttachmentBuilder } = require("discord.js");
+} from "../config/config.js";
+import { AttachmentBuilder, EmbedBuilder } from "discord.js";
 
 // Prevent concurrent weekend heatmap sends
 let weekendHeatmapSending = false;
@@ -31,7 +31,7 @@ let weekendHeatmapSending = false;
  * @param {Date} date - Date to check (defaults to now)
  * @returns {boolean} True if Friday, Saturday, or Sunday
  */
-function isWeekendHeatmapActive(date = new Date()) {
+export function isWeekendHeatmapActive(date = new Date()) {
   const day = date.getDay();
   return day === 0 || day === 5 || day === 6;
 }
@@ -42,7 +42,7 @@ function isWeekendHeatmapActive(date = new Date()) {
  * @param {number} x - X coordinate
  * @param {number} y - Y coordinate
  */
-function addWeekendHeatPoint(name, x, y) {
+export function addWeekendHeatPoint(name, x, y) {
   if (!isWeekendHeatmapActive()) return;
 
   const wh = loadWeekendHeat();
@@ -157,7 +157,7 @@ function renderWeekendHeatPng(points, outPath, baseMapPath = "") {
  * Send or update weekend heatmap message
  * @param {Client} client - Discord client
  */
-async function maybeSendWeekendHeatmap(client) {
+export async function maybeSendWeekendHeatmap(client) {
   if (!WEEKEND_HEATMAP_CHANNEL_ID) return;
 
   // Only send/update on Friday, Saturday, Sunday
@@ -261,9 +261,3 @@ async function maybeSendWeekendHeatmap(client) {
     weekendHeatmapSending = false;
   }
 }
-
-module.exports = {
-  isWeekendHeatmapActive,
-  addWeekendHeatPoint,
-  maybeSendWeekendHeatmap,
-};

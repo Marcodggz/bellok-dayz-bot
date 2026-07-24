@@ -43,7 +43,7 @@ const {
 } = require("./src/features/stats/playerSessionProcessor");
 const { handleCommandInteraction } = require("./src/features/commands/commandHandler");
 const { registerCommands } = require("./src/features/commands/registerCommands");
-const { maybeSendWeekendHeatmap } = require("./src/utils/weekendHeatmapHelpers");
+import { maybeSendWeekendHeatmap } from "./src/utils/weekendHeatmapHelpers.js";
 const { mapToPixelCoords } = require("./src/utils/coordinateMapper");
 const { createHeatmapCycle } = require("./src/utils/heatmapCycle");
 const {

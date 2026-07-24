@@ -1,19 +1,10 @@
-import { createRequire } from "node:module";
 import { describe, test, expect, beforeEach, vi } from "vitest";
-
-const require = createRequire(import.meta.url);
-
-const processorPath = require.resolve("../../../src/features/killfeed/killEventProcessor.ts");
-const weekendHelpersPath = require.resolve("../../../src/utils/weekendHeatmapHelpers.js");
 
 describe("killEventProcessor", () => {
   let processor;
 
   beforeEach(async () => {
     vi.resetModules();
-
-    delete require.cache[processorPath];
-    delete require.cache[weekendHelpersPath];
 
     const addWeekendHeatPoint = vi.fn();
 

@@ -3,7 +3,7 @@
 
 import type { Position2D } from "../../types/domainEvents";
 import { escapeRegExp } from "../../utils/helpers";
-import { addWeekendHeatPoint } from "../../utils/weekendHeatmapHelpers";
+import { addWeekendHeatPoint } from "../../utils/weekendHeatmapHelpers.js";
 
 interface TrackedPosition extends Position2D {
   ts: number;
