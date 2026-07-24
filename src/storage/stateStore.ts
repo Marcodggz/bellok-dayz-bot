@@ -1,13 +1,13 @@
-// src/storage/stateStore.js — Kill-feed state management
+// src/storage/stateStore.ts — Kill-feed state management
 
-const { loadJSON, saveJSON } = require("./jsonStore");
-const { STATE_FILE } = require("../config/config");
+import { loadJSON, saveJSON } from "./jsonStore.js";
+import { STATE_FILE } from "../config/config.js";
 
 /**
  * Load kill-feed state from disk
  * @returns {Object} State object with file positions and carry buffers
  */
-function loadState() {
+export function loadState() {
   return loadJSON(STATE_FILE, {});
 }
 
@@ -15,11 +15,6 @@ function loadState() {
  * Save kill-feed state to disk
  * @param {Object} s - State object to save
  */
-function saveState(s) {
+export function saveState(s) {
   saveJSON(STATE_FILE, s);
 }
-
-module.exports = {
-  loadState,
-  saveState,
-};

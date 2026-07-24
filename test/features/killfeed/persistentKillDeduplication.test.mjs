@@ -4,29 +4,13 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 const require = createRequire(import.meta.url);
 
 const handlerPath = require.resolve("../../../src/features/killfeed/killEventHandler.ts");
-const stateStorePath = require.resolve("../../../src/storage/stateStore.js");
 const positionTrackerPath = require.resolve("../../../src/features/tracking/positionTracker.ts");
 
 let persistedState;
 let queueKillfeedEvent;
 
 function installMocks() {
-  const loadState = vi.fn(() => persistedState);
-  const saveState = vi.fn((nextState) => {
-    persistedState = structuredClone(nextState);
-  });
-
   queueKillfeedEvent = vi.fn();
-
-  require.cache[stateStorePath] = {
-    id: stateStorePath,
-    filename: stateStorePath,
-    loaded: true,
-    exports: {
-      loadState,
-      saveState,
-    },
-  };
 
   require.cache[positionTrackerPath] = {
     id: positionTrackerPath,
@@ -77,7 +61,6 @@ beforeEach(() => {
   persistedState = {};
 
   delete require.cache[handlerPath];
-  delete require.cache[stateStorePath];
   delete require.cache[positionTrackerPath];
 });
 
