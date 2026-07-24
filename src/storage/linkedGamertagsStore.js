@@ -1,9 +1,9 @@
 // src/storage/linkedGamertagsStore.js — Manages Discord user ID to DayZ gamertag links
 
 const { loadJSON, saveJSON } = require("./jsonStore");
-const path = require("path");
+const { resolveProjectPath } = require("../config/projectPaths");
 
-const LINKED_GAMERTAGS_FILE = path.join(__dirname, "../../data/linked-gamertags.json");
+const LINKED_GAMERTAGS_FILE = resolveProjectPath("data", "linked-gamertags.json");
 
 /**
  * Load linked gamertags from file

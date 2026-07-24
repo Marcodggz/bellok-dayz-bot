@@ -1,6 +1,6 @@
 // src/utils/rankBadges.js — Map ranks to badge images
 const fs = require("fs");
-const path = require("path");
+const { resolveProjectPath } = require("../config/projectPaths");
 
 /**
  * Map rank names to their corresponding badge image paths
@@ -24,7 +24,7 @@ function getRankBadgePath(rank) {
     return null;
   }
 
-  const badgePath = path.join(__dirname, "..", "assets", "ranks", badgeFilename);
+  const badgePath = resolveProjectPath("src", "assets", "ranks", badgeFilename);
 
   // Check if file exists before returning
   try {
