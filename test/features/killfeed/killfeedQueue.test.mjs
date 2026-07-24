@@ -16,7 +16,7 @@ beforeEach(async () => {
 
   markSentBucket = vi.fn();
 
-  vi.doMock("../../../src/features/killfeed/embedBuilders.js", () => ({
+  vi.doMock("../../../src/features/killfeed/embedBuilders.ts", () => ({
     buildKillEmbed,
   }));
 

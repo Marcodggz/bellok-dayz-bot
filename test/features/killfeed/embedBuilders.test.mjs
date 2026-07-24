@@ -4,7 +4,7 @@ import {
   buildVictimStatsLines,
   embedPvp,
   embedExplosion,
-} from "../../../src/features/killfeed/embedBuilders.js";
+} from "../../../src/features/killfeed/embedBuilders.ts";
 
 describe("embedBuilders", () => {
   describe("shared presentation helpers", () => {
