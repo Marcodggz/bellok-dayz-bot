@@ -12,7 +12,7 @@ import {
   getGamertagByDiscordUserId,
 } from "../../storage/linkedGamertagsStore";
 import { findPlayerStats, loadPlayerStats } from "../../storage/playerStatsStore";
-import { SERVER_NAME } from "../../config/config";
+import { SERVER_NAME } from "../../config/config.js";
 import { getRankBadgePath } from "../../utils/rankBadges";
 import type { PersistedPlayerStats } from "../../types/domainPersistence";
 

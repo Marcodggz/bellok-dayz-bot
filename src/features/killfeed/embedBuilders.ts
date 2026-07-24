@@ -2,7 +2,7 @@
 // ADM pos=<X, Y, Z>: X/Y are map coordinates; Z is elevation.
 
 import { EmbedBuilder } from "discord.js";
-import { IZURVIVE_MAP_SLUG } from "../../config/config";
+import { IZURVIVE_MAP_SLUG } from "../../config/config.js";
 import type {
   ExplosionKillEvent,
   KillEvent,

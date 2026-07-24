@@ -12,7 +12,7 @@ const { Client, GatewayIntentBits, EmbedBuilder, AttachmentBuilder } = require("
 const { PNG } = require("pngjs");
 
 // Import config and helpers
-const config = require("./src/config/config");
+import * as config from "./src/config/config.js";
 import {
   bufToText,
   looksLikeHtml,
