@@ -1,13 +1,13 @@
-// src/utils/heatmapRenderer.js — Shared heatmap rendering utilities
+// src/utils/heatmapRenderer.ts — Shared heatmap rendering utilities
 
-const { PNG } = require("pngjs");
+import { PNG } from "pngjs";
 
 /**
  * Build spatial clusters from point array using proximity merging
  * @param {Array} points - Array of {x, y} world coordinates
  * @returns {Array} Array of {x, y, count} clusters
  */
-function buildHeatClusters(points) {
+export function buildHeatClusters(points) {
   const MERGE_RADIUS_METERS = 125;
   const clusters = [];
 
@@ -114,7 +114,7 @@ const HEAT_GRADIENTS = {
 /**
  * Draw a continuous radial heat gradient for one cluster.
  */
-function drawHeatCluster(overlay, pixelX, pixelY, visualCount, width, height) {
+export function drawHeatCluster(overlay, pixelX, pixelY, visualCount, width, height) {
   const radii = {
     1: 16,
     2: 18,
@@ -162,7 +162,7 @@ function drawHeatCluster(overlay, pixelX, pixelY, visualCount, width, height) {
  * @param {number} height - Canvas height
  * @returns {PNG} Composed PNG (or overlay if no base map)
  */
-function composeHeatmapOverlay(basePng, overlay, width, height) {
+export function composeHeatmapOverlay(basePng, overlay, width, height) {
   if (!basePng) {
     return overlay;
   }
@@ -207,7 +207,7 @@ function composeHeatmapOverlay(basePng, overlay, width, height) {
  * @param {number} W - Canvas width
  * @param {number} H - Canvas height
  */
-function drawSoftBridge(png, x1, y1, x2, y2, radius, r, g, b, maxAlpha, W, H) {
+export function drawSoftBridge(png, x1, y1, x2, y2, radius, r, g, b, maxAlpha, W, H) {
   const minX = Math.max(0, Math.min(x1, x2) - radius - 1);
   const maxX = Math.min(W - 1, Math.max(x1, x2) + radius + 1);
   const minY = Math.max(0, Math.min(y1, y2) - radius - 1);
@@ -247,10 +247,3 @@ function drawSoftBridge(png, x1, y1, x2, y2, radius, r, g, b, maxAlpha, W, H) {
     }
   }
 }
-
-module.exports = {
-  buildHeatClusters,
-  drawHeatCluster,
-  composeHeatmapOverlay,
-  drawSoftBridge,
-};

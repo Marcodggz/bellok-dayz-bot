@@ -46,12 +46,12 @@ const { registerCommands } = require("./src/features/commands/registerCommands")
 import { maybeSendWeekendHeatmap } from "./src/utils/weekendHeatmapHelpers.js";
 import { mapToPixelCoords } from "./src/utils/coordinateMapper.js";
 const { createHeatmapCycle } = require("./src/utils/heatmapCycle");
-const {
+import {
   buildHeatClusters,
   drawHeatCluster,
   composeHeatmapOverlay,
   drawSoftBridge,
-} = require("./src/utils/heatmapRenderer");
+} from "./src/utils/heatmapRenderer.js";
 const {
   runDiscordTest,
   runDiscordHeatmapTest,
