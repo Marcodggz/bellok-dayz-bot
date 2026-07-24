@@ -6,7 +6,6 @@ import {
   loadPlayerStatsForLeaderboard,
   replyLeaderboard,
 } from "./leaderboardHelpers";
-import type { PersistedPlayerStatsCollection } from "../../types/domainPersistence";
 
 /**
  * Define the /leaderboard command with subcommands
@@ -103,7 +102,7 @@ export const leaderboardCommand = {
  * @param {import('discord.js').CommandInteraction} interaction
  */
 async function handleRankLeaderboard(interaction: ChatInputCommandInteraction): Promise<void> {
-  const allStats = loadPlayerStatsForLeaderboard() as PersistedPlayerStatsCollection;
+  const allStats = loadPlayerStatsForLeaderboard();
 
   const playerArray = Object.entries(allStats)
     .filter(([, stats]) => stats.kills > 0 || stats.deaths > 0)
@@ -128,7 +127,7 @@ async function handleRankLeaderboard(interaction: ChatInputCommandInteraction): 
  * @param {import('discord.js').CommandInteraction} interaction
  */
 async function handleKillsLeaderboard(interaction: ChatInputCommandInteraction): Promise<void> {
-  const allStats = loadPlayerStatsForLeaderboard() as PersistedPlayerStatsCollection;
+  const allStats = loadPlayerStatsForLeaderboard();
 
   const playerArray = Object.entries(allStats)
     .filter(([, stats]) => stats.kills > 0 || stats.deaths > 0)
@@ -152,7 +151,7 @@ async function handleKillsLeaderboard(interaction: ChatInputCommandInteraction):
  * @param {import('discord.js').CommandInteraction} interaction
  */
 async function handleDeathsLeaderboard(interaction: ChatInputCommandInteraction): Promise<void> {
-  const allStats = loadPlayerStatsForLeaderboard() as PersistedPlayerStatsCollection;
+  const allStats = loadPlayerStatsForLeaderboard();
 
   const playerArray = Object.entries(allStats)
     .filter(([, stats]) => stats.kills > 0 || stats.deaths > 0)
@@ -176,7 +175,7 @@ async function handleDeathsLeaderboard(interaction: ChatInputCommandInteraction)
  * @param {import('discord.js').CommandInteraction} interaction
  */
 async function handleKdLeaderboard(interaction: ChatInputCommandInteraction): Promise<void> {
-  const allStats = loadPlayerStatsForLeaderboard() as PersistedPlayerStatsCollection;
+  const allStats = loadPlayerStatsForLeaderboard();
 
   const playerArray = Object.entries(allStats)
     .filter(([, stats]) => stats.kills > 0 || stats.deaths > 0)
@@ -200,7 +199,7 @@ async function handleKdLeaderboard(interaction: ChatInputCommandInteraction): Pr
  * @param {import('discord.js').CommandInteraction} interaction
  */
 async function handleHeadshotsLeaderboard(interaction: ChatInputCommandInteraction): Promise<void> {
-  const allStats = loadPlayerStatsForLeaderboard() as PersistedPlayerStatsCollection;
+  const allStats = loadPlayerStatsForLeaderboard();
 
   const playerArray = Object.entries(allStats)
     .filter(([, stats]) => stats.kills > 0 || stats.deaths > 0)
@@ -226,7 +225,7 @@ async function handleHeadshotsLeaderboard(interaction: ChatInputCommandInteracti
 async function handleKillStreakLeaderboard(
   interaction: ChatInputCommandInteraction
 ): Promise<void> {
-  const allStats = loadPlayerStatsForLeaderboard() as PersistedPlayerStatsCollection;
+  const allStats = loadPlayerStatsForLeaderboard();
 
   const playerArray = Object.entries(allStats)
     .filter(([, stats]) => stats.kills > 0 || stats.deaths > 0)
@@ -252,7 +251,7 @@ async function handleKillStreakLeaderboard(
 async function handleDeathStreakLeaderboard(
   interaction: ChatInputCommandInteraction
 ): Promise<void> {
-  const allStats = loadPlayerStatsForLeaderboard() as PersistedPlayerStatsCollection;
+  const allStats = loadPlayerStatsForLeaderboard();
 
   const playerArray = Object.entries(allStats)
     .filter(([, stats]) => stats.kills > 0 || stats.deaths > 0)
@@ -278,7 +277,7 @@ async function handleDeathStreakLeaderboard(
 async function handleLongestKillLeaderboard(
   interaction: ChatInputCommandInteraction
 ): Promise<void> {
-  const allStats = loadPlayerStatsForLeaderboard() as PersistedPlayerStatsCollection;
+  const allStats = loadPlayerStatsForLeaderboard();
 
   const playerArray = Object.entries(allStats)
     .filter(([, stats]) => stats.kills > 0 || stats.deaths > 0)
@@ -302,7 +301,7 @@ async function handleLongestKillLeaderboard(
  * @param {import('discord.js').CommandInteraction} interaction
  */
 async function handleTimeAliveLeaderboard(interaction: ChatInputCommandInteraction): Promise<void> {
-  const allStats = loadPlayerStatsForLeaderboard() as PersistedPlayerStatsCollection;
+  const allStats = loadPlayerStatsForLeaderboard();
 
   const playerArray = Object.entries(allStats)
     .filter(
@@ -327,7 +326,7 @@ async function handleTimeAliveLeaderboard(interaction: ChatInputCommandInteracti
 async function handleTimePlayedLeaderboard(
   interaction: ChatInputCommandInteraction
 ): Promise<void> {
-  const allStats = loadPlayerStatsForLeaderboard() as PersistedPlayerStatsCollection;
+  const allStats = loadPlayerStatsForLeaderboard();
 
   const playerArray = Object.entries(allStats)
     .filter(
