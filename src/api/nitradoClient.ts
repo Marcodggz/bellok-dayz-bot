@@ -2,9 +2,45 @@
 import axios from "axios";
 
 import * as config from "../config/config.js";
+import type {
+  AdmFile,
+  NitradoDownloadResult,
+  NitradoDownloadTokenResponse,
+  NitradoFileEntry,
+  NitradoFileListResponse,
+} from "../types/domainNitrado.js";
 import { bufToText, looksLikeHtml, looksLikeRateLimit } from "../utils/helpers.js";
 
 const { NIT_API, SERVICE_ID, NIT_TOKEN, ROTATE_CHECK_MS, LIST_COOLDOWN_MS } = config;
+
+interface HttpErrorDetails {
+  status?: number;
+  data?: unknown;
+  message: string;
+}
+
+function getHttpErrorDetails(error: unknown): HttpErrorDetails {
+  if (typeof error !== "object" || error === null) {
+    return {
+      message: typeof error === "string" ? error : "",
+    };
+  }
+
+  const response =
+    "response" in error && typeof error.response === "object" && error.response !== null
+      ? error.response
+      : null;
+
+  const status =
+    response && "status" in response && typeof response.status === "number"
+      ? response.status
+      : undefined;
+
+  const data = response && "data" in response ? response.data : undefined;
+  const message = "message" in error && typeof error.message === "string" ? error.message : "";
+
+  return { status, data, message };
+}
 
 // ================== NITRADO API CLIENT ==================
 const nit = axios.create({
@@ -13,35 +49,41 @@ const nit = axios.create({
   timeout: 12000,
 });
 
-async function nitDownload(filePath) {
+async function nitDownload(filePath: string): Promise<NitradoDownloadResult> {
   try {
-    const r1 = await nit.get(`/services/${SERVICE_ID}/gameservers/file_server/download`, {
-      params: { file: filePath, _: Date.now() },
-      responseType: "arraybuffer",
-      headers: {
-        "Cache-Control": "no-cache, no-store, must-revalidate",
-        Pragma: "no-cache",
-        Expires: "0",
-      },
-      validateStatus: (s) => s >= 200 && s < 300,
-    });
-    let buf = Buffer.from(r1.data);
-    const txt = buf.toString("utf8").trim();
-
-    if (txt.startsWith("{")) {
-      const j = JSON.parse(txt);
-      const rawUrl = j?.data?.token?.url || j?.token?.url;
-      if (!rawUrl) return { error: true };
-      const r2 = await axios.get(rawUrl + (rawUrl.includes("?") ? "&" : "?") + "_=" + Date.now(), {
+    const r1 = await nit.get<ArrayBuffer>(
+      `/services/${SERVICE_ID}/gameservers/file_server/download`,
+      {
+        params: { file: filePath, _: Date.now() },
         responseType: "arraybuffer",
         headers: {
           "Cache-Control": "no-cache, no-store, must-revalidate",
           Pragma: "no-cache",
           Expires: "0",
         },
-        timeout: 12000,
         validateStatus: (s) => s >= 200 && s < 300,
-      });
+      }
+    );
+    let buf = Buffer.from(r1.data);
+    const txt = buf.toString("utf8").trim();
+
+    if (txt.startsWith("{")) {
+      const j = JSON.parse(txt) as NitradoDownloadTokenResponse;
+      const rawUrl = j?.data?.token?.url || j?.token?.url;
+      if (!rawUrl) return { error: true };
+      const r2 = await axios.get<ArrayBuffer>(
+        rawUrl + (rawUrl.includes("?") ? "&" : "?") + "_=" + Date.now(),
+        {
+          responseType: "arraybuffer",
+          headers: {
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            Pragma: "no-cache",
+            Expires: "0",
+          },
+          timeout: 12000,
+          validateStatus: (s) => s >= 200 && s < 300,
+        }
+      );
       buf = Buffer.from(r2.data);
       const t2 = bufToText(buf).slice(0, 200);
       if (looksLikeHtml(t2)) return { error: true };
@@ -49,30 +91,32 @@ async function nitDownload(filePath) {
       return { error: true };
     }
     return { buffer: buf };
-  } catch (e) {
-    const status = e?.response?.status;
-    const txt = bufToText(e?.response?.data);
+  } catch (error: unknown) {
+    const { status, data, message } = getHttpErrorDetails(error);
+    const txt = bufToText(data);
     if (looksLikeHtml(txt)) console.warn("[download] Unexpected HTML response");
     else if (status === 429 || looksLikeRateLimit(txt))
       console.warn("[download] Nitrado rate limit");
-    else console.warn("[download] error:", status || "", (txt || e.message).slice(0, 200));
+    else {
+      console.warn("[download] error:", status || "", (txt || message).slice(0, 200));
+    }
     return { error: true };
   }
 }
 
 // ================== NITRADO ADM LIST (with backoff + cooldown + cache) ==================
 let listCooldownUntil = 0;
-const listCache = new Map();
+const listCache = new Map<string, AdmFile[]>();
 let lastRotateCheck = 0;
 
-function tsFromName(n) {
-  const m = n.match(/(\d{4})[-_](\d{2})[-_](\d{2})[ _-](\d{2})[-_](\d{2})[-_](\d{2})/);
+function tsFromName(name: string): number {
+  const m = name.match(/(\d{4})[-_](\d{2})[-_](\d{2})[ _-](\d{2})[-_](\d{2})[-_](\d{2})/);
   if (!m) return 0;
   const [Y, Mo, D, h, mi, s] = [+m[1], +m[2], +m[3], +m[4], +m[5], +m[6]];
   return Date.UTC(Y, Mo - 1, D, h, mi, s);
 }
 
-async function listAdmNames(dir, force = false) {
+async function listAdmNames(dir: string, force = false): Promise<AdmFile[]> {
   const now = Date.now();
   if (!force) {
     if (now < listCooldownUntil) return listCache.get(dir) || [];
@@ -82,17 +126,20 @@ async function listAdmNames(dir, force = false) {
 
   for (let i = 0; i < 3; i++) {
     try {
-      const r = await nit.get(`/services/${SERVICE_ID}/gameservers/file_server/list`, {
-        params: { dir, _: Date.now() + i },
-        responseType: "json",
-        headers: {
-          "Cache-Control": "no-cache, no-store, must-revalidate",
-          Pragma: "no-cache",
-          Expires: "0",
-        },
-        validateStatus: (s) => s >= 200 && s < 300,
-      });
-      const entries = r.data?.data?.entries || [];
+      const r = await nit.get<NitradoFileListResponse["data"]>(
+        `/services/${SERVICE_ID}/gameservers/file_server/list`,
+        {
+          params: { dir, _: Date.now() + i },
+          responseType: "json",
+          headers: {
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            Pragma: "no-cache",
+            Expires: "0",
+          },
+          validateStatus: (s) => s >= 200 && s < 300,
+        }
+      );
+      const entries: NitradoFileEntry[] = r.data?.data?.entries ?? [];
       const rows = entries
         .filter((e) => e.type === "file" && /\.adm$/i.test(e.name))
         .map((e) => ({
@@ -102,9 +149,9 @@ async function listAdmNames(dir, force = false) {
         .sort((a, b) => (tsFromName(b.name) || 0) - (tsFromName(a.name) || 0));
       listCache.set(dir, rows);
       return rows;
-    } catch (e) {
-      const status = e?.response?.status;
-      const txt = bufToText(e?.response?.data);
+    } catch (error: unknown) {
+      const { status, data, message } = getHttpErrorDetails(error);
+      const txt = bufToText(data);
       const html = looksLikeHtml(txt);
       const rl = status === 429 || looksLikeRateLimit(txt);
       if (html || rl) {
@@ -117,7 +164,7 @@ async function listAdmNames(dir, force = false) {
         if (config.DEBUG) console.log(`[list] backoff ${wait}ms`);
         await new Promise((r) => setTimeout(r, wait));
       } else {
-        console.warn("[list] error:", status || "", (txt || e.message).slice(0, 200));
+        console.warn("[list] error:", status || "", (txt || message).slice(0, 200));
         return listCache.get(dir) || [];
       }
     }
@@ -125,7 +172,7 @@ async function listAdmNames(dir, force = false) {
   return listCache.get(dir) || [];
 }
 
-function startListCooldown(durationMs) {
+function startListCooldown(durationMs: number): boolean {
   const now = Date.now();
   const startedNewCooldown = now >= listCooldownUntil;
   listCooldownUntil = now + durationMs;
