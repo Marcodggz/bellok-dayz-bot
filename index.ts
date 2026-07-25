@@ -7,7 +7,7 @@
 
 import type { PersistedPlayerStatsCollection } from "./src/types/domainPersistence";
 
-const fs = require("fs");
+import fs from "node:fs";
 const { Client, GatewayIntentBits, EmbedBuilder, AttachmentBuilder } = require("discord.js");
 const { PNG } = require("pngjs");
 
