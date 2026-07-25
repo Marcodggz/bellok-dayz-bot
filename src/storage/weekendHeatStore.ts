@@ -1,16 +1,17 @@
 // src/storage/weekendHeatStore.ts — Weekend Heatmap state management
 
-import { loadJSON, saveJSON } from "./jsonStore.js";
 import { WEEKEND_HEATMAP_STATE_FILE } from "../config/config.js";
+import type { WeekendHeatState } from "../types/domainHeatmap.js";
+import { loadJSON, saveJSON } from "./jsonStore.js";
 
-export function loadWeekendHeat() {
-  return loadJSON(WEEKEND_HEATMAP_STATE_FILE, {
+export function loadWeekendHeat(): WeekendHeatState {
+  return loadJSON<WeekendHeatState>(WEEKEND_HEATMAP_STATE_FILE, {
     points: [],
     messageId: null,
     lastUpdate: 0,
   });
 }
 
-export function saveWeekendHeat(wh) {
-  saveJSON(WEEKEND_HEATMAP_STATE_FILE, wh);
+export function saveWeekendHeat(weekendHeatState: WeekendHeatState): void {
+  saveJSON(WEEKEND_HEATMAP_STATE_FILE, weekendHeatState);
 }

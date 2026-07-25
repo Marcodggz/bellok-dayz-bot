@@ -1,6 +1,8 @@
 import type { Position2D } from "./domainEvents.js";
 
-export type HeatPoint = Position2D;
+export interface HeatPoint extends Position2D {
+  ts: number;
+}
 
 export interface TrackedPlayerPosition extends Position2D {
   name: string;
