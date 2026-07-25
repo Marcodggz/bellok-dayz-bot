@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
+import type { PlayerStats } from "../../../src/types/domainEvents.ts";
 
 let handleKillEvents;
 let hasSentBucket;
@@ -192,7 +193,7 @@ describe("killEventHandler", () => {
       line: killLine,
     };
 
-    const stats = {};
+    const stats: Record<string, Partial<PlayerStats>> = {};
     const normalizedEventTimes = new Map();
 
     const processSessionLine = (line) => {

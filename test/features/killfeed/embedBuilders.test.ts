@@ -1,10 +1,42 @@
 import { describe, test, expect } from "vitest";
+import type {
+  ExplosionKillEvent,
+  PlayerStats,
+  PvPKillEvent,
+} from "../../../src/types/domainEvents.ts";
 import {
   buildLocationLine,
   buildVictimStatsLines,
   embedPvp,
   embedExplosion,
 } from "../../../src/features/killfeed/embedBuilders.ts";
+
+function createPvpEvent(overrides: Partial<PvPKillEvent> = {}): PvPKillEvent {
+  return {
+    type: "pvp",
+    killer: "TestKiller",
+    victim: "TestVictim",
+    weapon: "M4A1",
+    distanceMeters: null,
+    ammo: null,
+    hitZone: null,
+    damage: null,
+    t: "14:23:45",
+    line: "test PvP line",
+    ...overrides,
+  };
+}
+
+function createExplosionEvent(overrides: Partial<ExplosionKillEvent> = {}): ExplosionKillEvent {
+  return {
+    type: "explosion",
+    victim: "TestVictim",
+    device: "Landmine",
+    t: "14:23:45",
+    line: "test explosion line",
+    ...overrides,
+  };
+}
 
 describe("embedBuilders", () => {
   describe("shared presentation helpers", () => {
@@ -48,13 +80,13 @@ describe("embedBuilders", () => {
 
   describe("embedPvp", () => {
     test("shows zero values and Unranked when stats are missing", () => {
-      const killEvent = {
+      const killEvent = createPvpEvent({
         killer: "TestKiller",
         victim: "TestVictim",
         weapon: "M4A1",
         distanceMeters: 50,
         t: "14:23:45",
-      };
+      });
 
       const result = embedPvp(killEvent, null, null, null);
 
@@ -74,13 +106,13 @@ describe("embedBuilders", () => {
     });
 
     test("sanitizes backticks in killer and victim names", () => {
-      const killEvent = {
+      const killEvent = createPvpEvent({
         killer: "Test`Killer",
         victim: "Test`Victim",
         weapon: "M4A1",
         distanceMeters: 50,
         t: "14:23:45",
-      };
+      });
 
       const result = embedPvp(killEvent, null, null, null);
       const description = result.embeds[0].data.description;
@@ -92,7 +124,7 @@ describe("embedBuilders", () => {
     });
 
     test("shows weapon and ammo using the PvP killfeed structure", () => {
-      const killEvent = {
+      const killEvent = createPvpEvent({
         killer: "Aizenn-7",
         victim: "mrboderlandsfn-_",
         weapon: "M70 Tundra",
@@ -102,7 +134,7 @@ describe("embedBuilders", () => {
         damage: 146,
         victimPosition: { x: 3276.3, y: 5142.0, z: 398.1 },
         t: "17:07:55",
-      };
+      });
 
       const result = embedPvp(killEvent, null, null, null);
       const description = result.embeds[0].data.description;
@@ -117,7 +149,7 @@ describe("embedBuilders", () => {
     });
 
     test("shows melee weapons without empty ammo parentheses", () => {
-      const killEvent = {
+      const killEvent = createPvpEvent({
         killer: "TestKiller",
         victim: "TestVictim",
         weapon: "Combat Knife",
@@ -126,7 +158,7 @@ describe("embedBuilders", () => {
         hitZone: "Torso",
         damage: 35,
         t: "17:07:55",
-      };
+      });
 
       const result = embedPvp(killEvent, null, null, null);
       const description = result.embeds[0].data.description;
@@ -137,13 +169,13 @@ describe("embedBuilders", () => {
     });
 
     test("shows provided stats when available", () => {
-      const killEvent = {
+      const killEvent = createPvpEvent({
         killer: "TestKiller",
         victim: "TestVictim",
         weapon: "M4A1",
         distanceMeters: 50,
         t: "14:23:45",
-      };
+      });
 
       const killerStats = {
         rank: "Corporal",
@@ -152,7 +184,7 @@ describe("embedBuilders", () => {
         deaths: 2,
         kd: 5.0,
         killStreak: 3,
-      };
+      } satisfies Partial<PlayerStats>;
 
       const victimStats = {
         rank: "Private",
@@ -161,7 +193,7 @@ describe("embedBuilders", () => {
         deaths: 8,
         kd: 0.625,
         lastTimeAlive: "15m 30s",
-      };
+      } satisfies Partial<PlayerStats>;
 
       const result = embedPvp(killEvent, null, killerStats, victimStats);
 
@@ -179,13 +211,13 @@ describe("embedBuilders", () => {
     });
 
     test("uses X and Y coordinates for location display", () => {
-      const killEvent = {
+      const killEvent = createPvpEvent({
         killer: "TestKiller",
         victim: "TestVictim",
         weapon: "M4A1",
         victimPosition: { x: 13044.9, y: 7786.9, z: 250.5 },
         t: "14:23:45",
-      };
+      });
 
       const result = embedPvp(killEvent, null, null, null);
 
@@ -197,17 +229,17 @@ describe("embedBuilders", () => {
     });
 
     test("handles partially populated killer stats without showing undefined or NaN", () => {
-      const killEvent = {
+      const killEvent = createPvpEvent({
         killer: "TestKiller",
         victim: "TestVictim",
         weapon: "M4A1",
         t: "14:23:45",
-      };
+      });
 
       const killerStats = {
         kills: 5,
         // Missing: rank, score, deaths, kd, killStreak
-      };
+      } satisfies Partial<PlayerStats>;
 
       const result = embedPvp(killEvent, null, killerStats, null);
 
@@ -225,19 +257,19 @@ describe("embedBuilders", () => {
     });
 
     test("handles partially populated victim stats without showing undefined or NaN", () => {
-      const killEvent = {
+      const killEvent = createPvpEvent({
         killer: "TestKiller",
         victim: "TestVictim",
         weapon: "M4A1",
         t: "14:23:45",
-      };
+      });
 
       const victimStats = {
         rank: "Private",
         kills: 3,
         deaths: 7,
         // Missing: score, kd, lastTimeAlive
-      };
+      } satisfies Partial<PlayerStats>;
 
       const result = embedPvp(killEvent, null, null, victimStats);
 
@@ -255,12 +287,12 @@ describe("embedBuilders", () => {
     });
 
     test("handles stats with missing kd field specifically", () => {
-      const killEvent = {
+      const killEvent = createPvpEvent({
         killer: "TestKiller",
         victim: "TestVictim",
         weapon: "M4A1",
         t: "14:23:45",
-      };
+      });
 
       const killerStats = {
         rank: "Specialist",
@@ -269,7 +301,7 @@ describe("embedBuilders", () => {
         deaths: 5,
         killStreak: 2,
         // Missing: kd (which could be calculated but might be missing)
-      };
+      } satisfies Partial<PlayerStats>;
 
       const result = embedPvp(killEvent, null, killerStats, null);
 
@@ -283,11 +315,11 @@ describe("embedBuilders", () => {
 
   describe("embedExplosion", () => {
     test("shows zero values and Unranked when victim stats are missing", () => {
-      const killEvent = {
+      const killEvent = createExplosionEvent({
         victim: "TestVictim",
         device: "Landmine",
         t: "14:23:45",
-      };
+      });
 
       const result = embedExplosion(killEvent, null, null);
 
@@ -301,11 +333,11 @@ describe("embedBuilders", () => {
     });
 
     test("sanitizes backticks in victim names", () => {
-      const killEvent = {
+      const killEvent = createExplosionEvent({
         victim: "Test`Victim",
         device: "Landmine",
         t: "14:23:45",
-      };
+      });
 
       const result = embedExplosion(killEvent, null, null);
       const description = result.embeds[0].data.description;
@@ -315,11 +347,11 @@ describe("embedBuilders", () => {
     });
 
     test("shows provided victim stats when available", () => {
-      const killEvent = {
+      const killEvent = createExplosionEvent({
         victim: "TestVictim",
         device: "Grenade",
         t: "14:23:45",
-      };
+      });
 
       const victimStats = {
         rank: "Private",
@@ -328,7 +360,7 @@ describe("embedBuilders", () => {
         deaths: 8,
         kd: 0.625,
         lastTimeAlive: "15m 30s",
-      };
+      } satisfies Partial<PlayerStats>;
 
       const result = embedExplosion(killEvent, null, victimStats);
 
@@ -340,12 +372,12 @@ describe("embedBuilders", () => {
     });
 
     test("uses X and Y coordinates for location display", () => {
-      const killEvent = {
+      const killEvent = createExplosionEvent({
         victim: "TestVictim",
         device: "Landmine",
         victimPosition: { x: 13044.9, y: 7786.9, z: 250.5 },
         t: "14:23:45",
-      };
+      });
 
       const result = embedExplosion(killEvent, null, null);
 
@@ -357,17 +389,17 @@ describe("embedBuilders", () => {
     });
 
     test("handles partially populated victim stats without showing undefined or NaN", () => {
-      const killEvent = {
+      const killEvent = createExplosionEvent({
         victim: "TestVictim",
         device: "Grenade",
         t: "14:23:45",
-      };
+      });
 
       const victimStats = {
         score: 50.5,
         kills: 2,
         // Missing: rank, deaths, kd, lastTimeAlive
-      };
+      } satisfies Partial<PlayerStats>;
 
       const result = embedExplosion(killEvent, null, victimStats);
 
@@ -385,11 +417,11 @@ describe("embedBuilders", () => {
     });
 
     test("handles missing lastTimeAlive field specifically", () => {
-      const killEvent = {
+      const killEvent = createExplosionEvent({
         victim: "TestVictim",
         device: "Landmine",
         t: "14:23:45",
-      };
+      });
 
       const victimStats = {
         rank: "Private",
@@ -398,7 +430,7 @@ describe("embedBuilders", () => {
         deaths: 5,
         kd: 1.6,
         // Missing: lastTimeAlive
-      };
+      } satisfies Partial<PlayerStats>;
 
       const result = embedExplosion(killEvent, null, victimStats);
 

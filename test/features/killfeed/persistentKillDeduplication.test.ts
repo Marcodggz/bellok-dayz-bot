@@ -1,37 +1,20 @@
-import { createRequire } from "node:module";
 import { beforeEach, describe, expect, test, vi } from "vitest";
+import type { PvPKillEvent } from "../../../src/types/domainEvents.ts";
 
-const require = createRequire(import.meta.url);
+let persistedState: {
+  sentBuckets?: Record<string, number>;
+};
 
-const handlerPath = require.resolve("../../../src/features/killfeed/killEventHandler.ts");
-const positionTrackerPath = require.resolve("../../../src/features/tracking/positionTracker.ts");
-
-let persistedState;
-let queueKillfeedEvent;
-
-function installMocks() {
-  queueKillfeedEvent = vi.fn();
-
-  require.cache[positionTrackerPath] = {
-    id: positionTrackerPath,
-    filename: positionTrackerPath,
-    loaded: true,
-    exports: {
-      posForVictimFromLine: vi.fn(() => null),
-    },
-  };
-}
+let queueKillfeedEvent: ReturnType<typeof vi.fn>;
 
 async function reloadKillfeedModules() {
   vi.resetModules();
 
-  delete require.cache[handlerPath];
-
-  installMocks();
+  queueKillfeedEvent = vi.fn();
 
   vi.doMock("../../../src/storage/stateStore.js", () => ({
     loadState: () => persistedState,
-    saveState: (nextState) => {
+    saveState: (nextState: typeof persistedState) => {
       persistedState = structuredClone(nextState);
     },
   }));
@@ -59,9 +42,6 @@ beforeEach(() => {
   vi.setSystemTime(new Date("2026-07-15T10:00:00.000Z"));
 
   persistedState = {};
-
-  delete require.cache[handlerPath];
-  delete require.cache[positionTrackerPath];
 });
 
 describe("persistent kill deduplication", () => {
@@ -69,16 +49,22 @@ describe("persistent kill deduplication", () => {
     const line =
       '14:23:45 | Player "Killer" (id=1 pos=<100, 100, 100>) killed Player "Victim" (id=2 pos=<200, 200, 200>) with M4A1';
 
-    const kill = {
+    const kill: PvPKillEvent = {
       type: "pvp",
       killer: "Killer",
       victim: "Victim",
       weapon: "M4A1",
+      distanceMeters: null,
+      ammo: null,
+      hitZone: null,
+      damage: null,
       t: "14:23:45",
       line,
     };
 
-    let { deduplicator, handler } = await reloadKillfeedModules();
+    const firstLoad = await reloadKillfeedModules();
+    const deduplicator = firstLoad.deduplicator;
+    let handler = firstLoad.handler;
 
     const key = deduplicator.victimBucketKey(kill.victim, kill.t);
     const groups = new Map([[key, kill]]);
@@ -94,6 +80,6 @@ describe("persistent kill deduplication", () => {
     handler.handleKillEvents(groups, [line]);
 
     expect(queueKillfeedEvent).not.toHaveBeenCalled();
-    expect(persistedState.sentBuckets[key]).toBe(Date.now());
+    expect(persistedState.sentBuckets?.[key]).toBe(Date.now());
   });
 });

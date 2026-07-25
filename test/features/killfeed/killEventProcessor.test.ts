@@ -1,7 +1,31 @@
 import { describe, test, expect, beforeEach, vi } from "vitest";
+import type {
+  ExplosionKillEvent,
+  KillEvent,
+  PvPKillEvent,
+} from "../../../src/types/domainEvents.ts";
+
+function expectPvpEvent(event: KillEvent | undefined): asserts event is PvPKillEvent {
+  expect(event).toBeDefined();
+
+  if (!event || event.type !== "pvp") {
+    throw new Error("Expected a PvP kill event");
+  }
+}
+
+function expectExplosionEvent(event: KillEvent | undefined): asserts event is ExplosionKillEvent {
+  expect(event).toBeDefined();
+
+  if (!event || event.type !== "explosion") {
+    throw new Error("Expected an explosion kill event");
+  }
+}
+
+type KillEventProcessorModule =
+  typeof import("../../../src/features/killfeed/killEventProcessor.ts");
 
 describe("killEventProcessor", () => {
-  let processor;
+  let processor: KillEventProcessorModule;
 
   beforeEach(async () => {
     vi.resetModules();
@@ -39,7 +63,7 @@ describe("killEventProcessor", () => {
       // Should parse the kill event correctly
       expect(result.size).toBe(1);
       const event = Array.from(result.values())[0];
-      expect(event.type).toBe("pvp");
+      expectPvpEvent(event);
       expect(event.killer).toBe("Survivor1");
       expect(event.victim).toBe("Victim1");
       expect(event.weapon).toBe("M4A1");
@@ -99,7 +123,7 @@ describe("killEventProcessor", () => {
 
       expect(result.size).toBe(1);
       const event = Array.from(result.values())[0];
-      expect(event.type).toBe("pvp");
+      expectPvpEvent(event);
       expect(event.killer).toBe("Killer1");
       expect(event.weapon).toBe("M4A1");
     });
@@ -113,7 +137,7 @@ describe("killEventProcessor", () => {
 
       expect(result.size).toBe(1);
       const event = Array.from(result.values())[0];
-      expect(event.type).toBe("explosion");
+      expectExplosionEvent(event);
       expect(event.victim).toBe("BoomGuy");
       expect(event.device).toBe("Grenade explosion");
     });
@@ -156,6 +180,8 @@ describe("killEventProcessor", () => {
       expect(result.size).toBe(2);
 
       const events = Array.from(result.values());
+      expectPvpEvent(events[0]);
+      expectPvpEvent(events[1]);
       expect(events[0].weapon).toBe("M4A1");
       expect(events[1].weapon).toBe("AKM");
     });
@@ -180,17 +206,17 @@ describe("killEventProcessor", () => {
 
       // Victim1: PvP
       const victim1Event = events.find((e) => e.victim === "Victim1");
-      expect(victim1Event.type).toBe("pvp");
+      expectPvpEvent(victim1Event);
       expect(victim1Event.weapon).toBe("M4A1");
 
       // Victim2: PvP (explosion overridden)
       const victim2Event = events.find((e) => e.victim === "Victim2");
-      expect(victim2Event.type).toBe("pvp");
+      expectPvpEvent(victim2Event);
       expect(victim2Event.weapon).toBe("AKM");
 
       // Victim3: Explosion
       const victim3Event = events.find((e) => e.victim === "Victim3");
-      expect(victim3Event.type).toBe("explosion");
+      expectExplosionEvent(victim3Event);
       expect(victim3Event.device).toBe("Landmine explosion");
     });
   });
