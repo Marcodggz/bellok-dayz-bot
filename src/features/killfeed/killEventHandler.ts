@@ -76,7 +76,7 @@ export function handleKillEvents(
       key
     );
 
-    const position = posForVictimFromLine(kill.victim, kill.line || line);
+    const position = kill.victim ? posForVictimFromLine(kill.victim, kill.line || line) : null;
 
     if (position && Number.isFinite(position.x) && Number.isFinite(position.y)) {
       heatmapPoints.push(position);
