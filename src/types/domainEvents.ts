@@ -74,3 +74,11 @@ export interface NoSessionEvent {
 }
 
 export type PlayerSessionEvent = ConnectSessionEvent | DisconnectSessionEvent | NoSessionEvent;
+
+export function isPvpKillEvent(event: KillEvent): event is PvPKillEvent {
+  return event.type === "pvp";
+}
+
+export function isExplosionKillEvent(event: KillEvent): event is ExplosionKillEvent {
+  return event.type === "explosion";
+}

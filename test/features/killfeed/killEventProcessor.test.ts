@@ -1,22 +1,28 @@
 import { describe, test, expect, beforeEach, vi } from "vitest";
-import type {
-  ExplosionKillEvent,
-  KillEvent,
-  PvPKillEvent,
+import {
+  isExplosionKillEvent,
+  isPvpKillEvent,
+  type KillEvent,
 } from "../../../src/types/domainEvents.ts";
 
-function expectPvpEvent(event: KillEvent | undefined): asserts event is PvPKillEvent {
+function expectPvpEvent(event: KillEvent | undefined): asserts event is KillEvent & {
+  type: "pvp";
+} {
   expect(event).toBeDefined();
+  expect(event && isPvpKillEvent(event)).toBe(true);
 
-  if (!event || event.type !== "pvp") {
+  if (!event || !isPvpKillEvent(event)) {
     throw new Error("Expected a PvP kill event");
   }
 }
 
-function expectExplosionEvent(event: KillEvent | undefined): asserts event is ExplosionKillEvent {
+function expectExplosionEvent(event: KillEvent | undefined): asserts event is KillEvent & {
+  type: "explosion";
+} {
   expect(event).toBeDefined();
+  expect(event && isExplosionKillEvent(event)).toBe(true);
 
-  if (!event || event.type !== "explosion") {
+  if (!event || !isExplosionKillEvent(event)) {
     throw new Error("Expected an explosion kill event");
   }
 }
