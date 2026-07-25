@@ -21,7 +21,32 @@ import {
   HEATMAP_HEIGHT,
   MAP_SIZE,
 } from "../config/config.js";
-import { AttachmentBuilder, EmbedBuilder } from "discord.js";
+import {
+  AttachmentBuilder,
+  EmbedBuilder,
+  type Client,
+  type MessageCreateOptions,
+  type MessageEditOptions,
+} from "discord.js";
+import type { TrackedPlayerPosition, WeekendHeatState } from "../types/domainHeatmap.js";
+
+function getErrorDetail(error: unknown): unknown {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === "object" && error !== null) {
+    if ("code" in error && error.code) {
+      return error.code;
+    }
+
+    if ("message" in error && error.message) {
+      return error.message;
+    }
+  }
+
+  return error;
+}
 
 // Prevent concurrent weekend heatmap sends
 let weekendHeatmapSending = false;
@@ -31,7 +56,7 @@ let weekendHeatmapSending = false;
  * @param {Date} date - Date to check (defaults to now)
  * @returns {boolean} True if Friday, Saturday, or Sunday
  */
-export function isWeekendHeatmapActive(date = new Date()) {
+export function isWeekendHeatmapActive(date: Date = new Date()): boolean {
   const day = date.getDay();
   return day === 0 || day === 5 || day === 6;
 }
@@ -42,7 +67,7 @@ export function isWeekendHeatmapActive(date = new Date()) {
  * @param {number} x - X coordinate
  * @param {number} y - Y coordinate
  */
-export function addWeekendHeatPoint(name, x, y) {
+export function addWeekendHeatPoint(name: string, x: number, y: number): void {
   if (!isWeekendHeatmapActive()) return;
 
   const wh = loadWeekendHeat();
@@ -65,11 +90,11 @@ export function addWeekendHeatPoint(name, x, y) {
   saveWeekendHeat(wh);
 }
 
-function pruneWeekendHeat(wh) {
+function pruneWeekendHeat(weekendHeat: WeekendHeatState): void {
   const minTs = Date.now() - WEEKEND_HEATMAP_WINDOW_MIN * 60 * 1000;
-  const latestByPlayer = new Map();
+  const latestByPlayer = new Map<string, TrackedPlayerPosition>();
 
-  for (const point of wh.points) {
+  for (const point of weekendHeat.points) {
     if (point.ts < minTs) continue;
 
     const previous = latestByPlayer.get(point.name);
@@ -78,7 +103,7 @@ function pruneWeekendHeat(wh) {
     }
   }
 
-  wh.points = Array.from(latestByPlayer.values());
+  weekendHeat.points = Array.from(latestByPlayer.values());
 }
 
 /**
@@ -87,7 +112,11 @@ function pruneWeekendHeat(wh) {
  * @param {string} outPath - Output image path
  * @param {string} baseMapPath - Base map image path
  */
-function renderWeekendHeatPng(points, outPath, baseMapPath = "") {
+function renderWeekendHeatPng(
+  points: TrackedPlayerPosition[],
+  outPath: string,
+  baseMapPath = ""
+): void {
   let basePng = null;
   let W = HEATMAP_WIDTH;
   let H = HEATMAP_HEIGHT;
@@ -101,7 +130,10 @@ function renderWeekendHeatPng(points, outPath, baseMapPath = "") {
       H = basePng.height;
     }
   } catch (e) {
-    console.warn("[weekend-heatmap] Could not read base map, using transparent canvas:", e.message);
+    console.warn(
+      "[weekend-heatmap] Could not read base map, using transparent canvas:",
+      getErrorDetail(e)
+    );
   }
 
   // Build clusters
@@ -157,7 +189,7 @@ function renderWeekendHeatPng(points, outPath, baseMapPath = "") {
  * Send or update weekend heatmap message
  * @param {Client} client - Discord client
  */
-export async function maybeSendWeekendHeatmap(client) {
+export async function maybeSendWeekendHeatmap(client: Client): Promise<void> {
   if (!WEEKEND_HEATMAP_CHANNEL_ID) return;
 
   // Only send/update on Friday, Saturday, Sunday
@@ -184,7 +216,12 @@ export async function maybeSendWeekendHeatmap(client) {
 
   try {
     const ch = await client.channels.fetch(WEEKEND_HEATMAP_CHANNEL_ID).catch(() => null);
-    if (!ch || typeof ch.send !== "function") {
+    if (
+      !ch?.isTextBased() ||
+      !("send" in ch) ||
+      typeof ch.send !== "function" ||
+      !("messages" in ch)
+    ) {
       console.warn("[weekend-heatmap] Invalid channel");
       return;
     }
@@ -196,7 +233,7 @@ export async function maybeSendWeekendHeatmap(client) {
       .setFooter({ text: `Bellok's Killfeed • ${MAP_DISPLAY_NAME}` })
       .setTimestamp(now);
 
-    let payload;
+    let payload: MessageCreateOptions & MessageEditOptions;
 
     if (wh.points.length) {
       renderWeekendHeatPng(wh.points, WEEKEND_HEATMAP_IMG_PATH, MAP_IMAGE_PATH);
@@ -219,8 +256,6 @@ export async function maybeSendWeekendHeatmap(client) {
       payload = {
         content: "",
         embeds: [embed],
-        files: [],
-        attachments: [],
       };
     }
 
@@ -240,7 +275,7 @@ export async function maybeSendWeekendHeatmap(client) {
       } catch (e) {
         console.warn(
           "[weekend-heatmap] Failed to edit message, sending new one:",
-          e?.code || e?.message
+          getErrorDetail(e)
         );
         wh.messageId = null;
       }
@@ -256,7 +291,7 @@ export async function maybeSendWeekendHeatmap(client) {
     wh.lastUpdate = now;
     saveWeekendHeat(wh);
   } catch (e) {
-    console.warn("[weekend-heatmap] Send error:", e?.code || e?.message || e);
+    console.warn("[weekend-heatmap] Send error:", getErrorDetail(e));
   } finally {
     weekendHeatmapSending = false;
   }
