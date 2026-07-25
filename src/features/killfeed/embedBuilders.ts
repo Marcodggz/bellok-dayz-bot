@@ -133,7 +133,7 @@ export function embedPvp(
   lines.push(`**Weapon** ${weaponText}${ammoText}`);
 
   const distanceText =
-    distanceMeters !== null && distanceMeters !== undefined ? distanceMeters.toFixed(0) : "0";
+    distanceMeters !== null && distanceMeters !== undefined ? distanceMeters.toFixed(2) : "0.00";
 
   lines.push(`**Distance** ${distanceText} meters`);
 

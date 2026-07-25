@@ -75,6 +75,23 @@ describe("killEventProcessor", () => {
       expect(event.weapon).toBe("M4A1");
     });
 
+    test("enriches a real PvP kill with the lethal hit details", () => {
+      const lines = [
+        '13:25:56 | Player "Xoto1987" (DEAD) (id=victim pos=<1681.9, 7482.8, 181.2>)[HP: 0] hit by Player "BL6CKx" (id=killer pos=<1684.7, 7483.3, 181.1>) into Head(0) for 30.671 damage (Bullet_308Win) with LAR from 2.78068 meters',
+        '13:25:56 | Player "Xoto1987" (DEAD) (id=victim pos=<1681.9, 7482.8, 181.2>) killed by Player "BL6CKx" (id=killer pos=<1684.7, 7483.3, 181.1>) with LAR from 2.78068 meters',
+      ];
+
+      const result = processor.processKillEvents(lines);
+      const event = Array.from(result.values())[0];
+
+      expectPvpEvent(event);
+      expect(event.weapon).toBe("LAR");
+      expect(event.distanceMeters).toBe(2.78068);
+      expect(event.ammo).toBe("Bullet_308Win");
+      expect(event.hitZone).toBe("Head");
+      expect(event.damage).toBe(30.671);
+    });
+
     test("ignores unrelated lines", () => {
       const lines = [
         "14:32:18 | ##### PlayerList log: 12 players online",

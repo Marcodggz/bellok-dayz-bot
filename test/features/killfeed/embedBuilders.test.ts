@@ -141,7 +141,7 @@ describe("embedBuilders", () => {
 
       expect(description).toContain("### PVP Kill - 17:07:55");
       expect(description).toContain("**Weapon** M70 Tundra (Bullet_308Win)");
-      expect(description).toContain("**Distance** 72 meters");
+      expect(description).toContain("**Distance** 72.17 meters");
       expect(description).toContain("**Hit** Torso 146 damage");
       expect(description).toContain("**Location** [3276.3;5142.0;398.1]");
       expect(description).toContain("__**Killer:**__ `Aizenn-7`");

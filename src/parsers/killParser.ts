@@ -60,21 +60,39 @@ export function extractDistance(text: string): number | null {
 }
 
 export function extractAmmo(text: string): string | null {
-  const ammoMatch = text.match(/Ammo:\s*([^,)]+)/i);
+  const labelledMatch = text.match(/Ammo:\s*([^,)]+)/i);
 
-  return ammoMatch ? ammoMatch[1].trim() : null;
+  if (labelledMatch) {
+    return labelledMatch[1].trim();
+  }
+
+  const admMatch = text.match(/damage\s+\(([^)]+)\)\s+with\s+/i);
+
+  return admMatch ? admMatch[1].trim() : null;
 }
 
 export function extractHitZone(text: string): string | null {
-  const hitMatch = text.match(/Hit:\s*([^,)]+)/i);
+  const labelledMatch = text.match(/Hit:\s*([^,)]+)/i);
 
-  return hitMatch ? hitMatch[1].trim() : null;
+  if (labelledMatch) {
+    return labelledMatch[1].trim();
+  }
+
+  const admMatch = text.match(/\sinto\s+([^\s(]+)\(\d+\)\s+for\s+/i);
+
+  return admMatch ? admMatch[1].trim() : null;
 }
 
 export function extractDamage(text: string): number | null {
-  const damageMatch = text.match(/Damage:\s*([\d.]+)/i);
+  const labelledMatch = text.match(/Damage:\s*([\d.]+)/i);
 
-  return damageMatch ? parseFloat(damageMatch[1]) : null;
+  if (labelledMatch) {
+    return parseFloat(labelledMatch[1]);
+  }
+
+  const admMatch = text.match(/\sfor\s+([\d.]+)\s+damage\b/i);
+
+  return admMatch ? parseFloat(admMatch[1]) : null;
 }
 
 export function shouldIgnore(line: string): boolean {

@@ -103,6 +103,15 @@ describe("killParser", () => {
       });
     });
 
+    test("extracts metadata from a real ADM hit line", () => {
+      const line =
+        '13:25:56 | Player "Xoto1987" (DEAD) (id=victim pos=<1681.9, 7482.8, 181.2>)[HP: 0] hit by Player "BL6CKx" (id=killer pos=<1684.7, 7483.3, 181.1>) into Head(0) for 30.671 damage (Bullet_308Win) with LAR from 2.78068 meters';
+
+      expect(parser.extractHitZone(line)).toBe("Head");
+      expect(parser.extractDamage(line)).toBe(30.671);
+      expect(parser.extractAmmo(line)).toBe("Bullet_308Win");
+    });
+
     test("handles missing optional metadata without failing", () => {
       const line =
         '14:40:55 | Player "Melee1" (id=22334455 pos=<8765.4, 4321.0, 95.7>) killed Player "Unlucky" (id=11223344 pos=<8763.8, 4322.3, 95.5>) with Shovel';

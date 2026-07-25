@@ -1,9 +1,36 @@
 // Process raw ADM log lines into deduplicated kill event groups
 
-import { parseKill } from "../../parsers/killParser.js";
+import { extractAmmo, extractDamage, extractHitZone, parseKill } from "../../parsers/killParser.js";
 import type { KillEvent } from "../../types/domainEvents.js";
 import { updatePositionsFromLine } from "../tracking/positionTracker.js";
 import { typeRank, victimBucketKey } from "./killEventDeduplicator.js";
+
+function enrichPvpFinalHit(event: KillEvent, lines: string[]): KillEvent {
+  if (event.type !== "pvp" || !event.victim || !event.killer || !event.t) {
+    return event;
+  }
+
+  const eventTime = event.t;
+
+  const finalHitLine = lines.find(
+    (line) =>
+      line.startsWith(eventTime) &&
+      line.includes(`Player "${event.victim}" (DEAD)`) &&
+      line.includes(`hit by Player "${event.killer}"`) &&
+      line.includes("[HP: 0]")
+  );
+
+  if (!finalHitLine) {
+    return event;
+  }
+
+  return {
+    ...event,
+    ammo: extractAmmo(finalHitLine) ?? event.ammo,
+    hitZone: extractHitZone(finalHitLine) ?? event.hitZone,
+    damage: extractDamage(finalHitLine) ?? event.damage,
+  };
+}
 
 export function processKillEvents(lines: string[]): Map<string, KillEvent> {
   for (const line of lines) {
@@ -27,7 +54,7 @@ export function processKillEvents(lines: string[]): Map<string, KillEvent> {
     const currentEvent = groups.get(key);
 
     if (!currentEvent || typeRank(event.type) > typeRank(currentEvent.type)) {
-      groups.set(key, event);
+      groups.set(key, enrichPvpFinalHit(event, lines));
     }
   }
 
