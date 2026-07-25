@@ -8,10 +8,10 @@ import { listAdmNames, nitDownload } from "../../api/nitradoClient.js";
 
 const { ADM_DIR, START_AT_END, DEBUG, HEATMAP_RESET_ON_ROTATE } = config;
 
-let _currentAdm = null;
+let _currentAdm: string | null = null;
 let _initialized = false;
 
-async function ensureLatestAdmSelected() {
+async function ensureLatestAdmSelected(): Promise<string | null> {
   if (!ADM_DIR) {
     console.warn("[rotate] Missing NITRADO_ADM_DIR");
     return null;
@@ -26,10 +26,10 @@ async function ensureLatestAdmSelected() {
     _currentAdm = latest;
     console.log("[rotate] New ADM file →", _currentAdm);
     const st = loadState();
-    const dl = await nitDownload(_currentAdm);
-    const buf = dl.error ? Buffer.alloc(0) : dl.buffer;
+    const dl = await nitDownload(latest);
+    const buf = dl.buffer ?? Buffer.alloc(0);
     const startSize = _initialized ? 0 : START_AT_END ? buf.length : 0;
-    setFileState(st, _currentAdm, { size: startSize, carry: "" });
+    setFileState(st, latest, { size: startSize, carry: "" });
     _initialized = true;
 
     if (HEATMAP_RESET_ON_ROTATE) {
@@ -42,12 +42,16 @@ async function ensureLatestAdmSelected() {
   return _currentAdm;
 }
 
-async function readNewLines(filePath) {
+async function readNewLines(filePath: string): Promise<string[]> {
   const st = loadState();
   const fsState = getFileState(st, filePath);
 
   const dl = await nitDownload(filePath);
-  if (dl.error) return [];
+
+  if (!dl.buffer) {
+    return [];
+  }
+
   const buf = dl.buffer;
 
   if (buf.length === fsState.size) return [];
