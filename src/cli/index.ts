@@ -1,6 +1,6 @@
 // CLI test and diagnostic handlers
 
-const fs = require("fs");
+import fs from "node:fs";
 const { Client, GatewayIntentBits, EmbedBuilder } = require("discord.js");
 
 async function runDiscordTest(config, checkEnv) {
