@@ -6,9 +6,17 @@
 // - Coordinate calibration: min/max/offset/scale/flip for accurate map overlay
 
 import type { PersistedPlayerStatsCollection } from "./src/types/domainPersistence.js";
+import type { HeatPoint, HeatState } from "./src/types/domainHeatmap.js";
 
 import fs from "node:fs";
-import { AttachmentBuilder, Client, EmbedBuilder, GatewayIntentBits } from "discord.js";
+import {
+  AttachmentBuilder,
+  Client,
+  EmbedBuilder,
+  GatewayIntentBits,
+  type MessageCreateOptions,
+  type MessageEditOptions,
+} from "discord.js";
 import { PNG } from "pngjs";
 
 // Import config and helpers
@@ -67,6 +75,40 @@ import { ensureLatestAdmSelected, readNewLines } from "./src/features/polling/ad
 import { processKillEvents } from "./src/features/killfeed/killEventProcessor.js";
 import { handleKillEvents } from "./src/features/killfeed/killEventHandler.js";
 
+interface HttpErrorDetails {
+  status?: number;
+  data?: unknown;
+  message: string;
+}
+
+function getHttpErrorDetails(error: unknown): HttpErrorDetails {
+  if (typeof error !== "object" || error === null) {
+    return {
+      message: typeof error === "string" ? error : "",
+    };
+  }
+
+  const response =
+    "response" in error && typeof error.response === "object" && error.response !== null
+      ? error.response
+      : null;
+
+  const status =
+    response && "status" in response && typeof response.status === "number"
+      ? response.status
+      : undefined;
+
+  const data = response && "data" in response ? response.data : undefined;
+  const message = "message" in error && typeof error.message === "string" ? error.message : "";
+
+  return { status, data, message };
+}
+
+function getErrorDetail(error: unknown): unknown {
+  const { message } = getHttpErrorDetails(error);
+  return message || error;
+}
+
 const MODE = process.argv[2] || "run";
 
 // Destructure config for convenience
@@ -92,20 +134,20 @@ const {
 } = config;
 
 // ================== PVP HEATMAP STATE ==================
-function addHeatPoint(x, y) {
+function addHeatPoint(x: number, y: number): void {
   const h = loadHeat();
   const ts = Date.now();
   h.points.push({ x: clamp(x, 0, MAP_SIZE), y: clamp(y, 0, MAP_SIZE), ts });
   pruneHeat(h);
   saveHeat(h);
 }
-function pruneHeat(h) {
+function pruneHeat(heatState: HeatState): void {
   const minTs = Date.now() - HEATMAP_WINDOW_MIN * 60 * 1000;
-  h.points = h.points.filter((p) => p.ts >= minTs);
+  heatState.points = heatState.points.filter((point) => point.ts >= minTs);
 }
 
 // ================== HEATMAP RENDER (compact clustered dots) ==================
-function renderHeatPng(points, outPath, baseMapPath = "") {
+function renderHeatPng(points: HeatPoint[], outPath: string, baseMapPath = ""): void {
   let basePng = null;
   let W = HEATMAP_WIDTH,
     H = HEATMAP_HEIGHT;
@@ -119,7 +161,10 @@ function renderHeatPng(points, outPath, baseMapPath = "") {
       H = basePng.height;
     }
   } catch (e) {
-    console.warn("[heatmap] no se pudo leer MAP_IMAGE_PATH, uso lienzo transparente:", e.message);
+    console.warn(
+      "[heatmap] no se pudo leer MAP_IMAGE_PATH, uso lienzo transparente:",
+      getErrorDetail(e)
+    );
   }
 
   // 2) Build clusters from the already-pruned world coordinates
@@ -208,7 +253,7 @@ function checkEnv() {
 // ================== LOOP PRINCIPAL ==================
 let heatmapSending = false;
 
-async function maybeSendHeatmap(client) {
+async function maybeSendHeatmap(client: Client): Promise<void> {
   if (!HEATMAP_CHANNEL_ID) return;
 
   const now = Date.now();
@@ -227,7 +272,12 @@ async function maybeSendHeatmap(client) {
   try {
     const ch = await client.channels.fetch(HEATMAP_CHANNEL_ID).catch(() => null);
 
-    if (!ch || typeof ch.send !== "function") {
+    if (
+      !ch?.isTextBased() ||
+      !("send" in ch) ||
+      typeof ch.send !== "function" ||
+      !("messages" in ch)
+    ) {
       console.warn("[heatmap] Invalid channel or missing permissions");
       return;
     }
@@ -239,7 +289,7 @@ async function maybeSendHeatmap(client) {
       .setFooter({ text: `Bellok's Killfeed • ${MAP_DISPLAY_NAME}` })
       .setTimestamp(now);
 
-    let payload;
+    let payload: MessageCreateOptions & MessageEditOptions;
 
     if (h.points.length) {
       renderHeatPng(h.points, HEAT_IMG_PATH, MAP_IMAGE_PATH);
@@ -260,8 +310,6 @@ async function maybeSendHeatmap(client) {
       payload = {
         content: "",
         embeds: [embed],
-        files: [],
-        attachments: [],
       };
     }
 
@@ -279,7 +327,7 @@ async function maybeSendHeatmap(client) {
           h.messageId = null;
         }
       } catch (e) {
-        console.warn("[heatmap] failed to edit message, sending new one:", e?.code || e?.message);
+        console.warn("[heatmap] failed to edit message, sending new one:", getErrorDetail(e));
         h.messageId = null;
       }
     }
@@ -295,14 +343,22 @@ async function maybeSendHeatmap(client) {
     h.lastUpdate = now;
     saveHeat(h);
   } catch (e) {
-    console.warn("[heatmap] send error:", e?.code || e?.message || e);
+    console.warn("[heatmap] send error:", getErrorDetail(e));
   } finally {
     heatmapSending = false;
   }
 }
 
-async function runBot() {
+async function runBot(): Promise<void> {
   checkEnv();
+
+  const discordToken = config.DISCORD_TOKEN;
+  const channelId = CHANNEL_ID;
+
+  if (!discordToken || !channelId) {
+    throw new Error("Missing required Discord configuration");
+  }
+
   const client = new Client({ intents: [GatewayIntentBits.Guilds] });
   const stats: PersistedPlayerStatsCollection = loadPlayerStats();
   const normalizeEventTime = createEventTimeNormalizer();
@@ -348,10 +404,10 @@ async function runBot() {
         return;
       }
 
-      const normalizedEventTimes = new Map();
+      const normalizedEventTimes = new Map<string, number | null>();
       const groups = processKillEvents(lines);
 
-      const processSessionLine = (line) => {
+      const processSessionLine = (line: string): void => {
         const sessionEvent = processPlayerSessionLine(
           line,
           stats,
@@ -376,15 +432,15 @@ async function runBot() {
       for (const pos of heatmapPoints) {
         addHeatPoint(pos.x, pos.y);
       }
-    } catch (e) {
-      const status = e?.response?.status;
-      const txt = bufToText(e?.response?.data);
+    } catch (error: unknown) {
+      const { status, data, message } = getHttpErrorDetails(error);
+      const txt = bufToText(data);
       if (looksLikeHtml(txt) || status === 429 || looksLikeRateLimit(txt)) {
         if (startListCooldown(LIST_COOLDOWN_MS)) {
           console.warn("[tick] Nitrado busy; entering cooldown");
         }
       } else {
-        console.warn("[tick] error:", status || "", (txt || e.message).slice(0, 200));
+        console.warn("[tick] error:", status || "", (txt || message).slice(0, 200));
       }
     }
   }
@@ -392,14 +448,14 @@ async function runBot() {
   client.once("clientReady", async () => {
     if (readyOnce) return;
     readyOnce = true;
-    console.log(`✅ Bot online as ${client.user.tag}`);
+    console.log(`✅ Bot online as ${client.user?.tag ?? "unknown user"}`);
 
     // Register slash commands
     if (config.CLIENT_ID) {
       try {
-        await registerCommands(config.DISCORD_TOKEN, config.CLIENT_ID);
+        await registerCommands(discordToken, config.CLIENT_ID);
       } catch (error) {
-        console.warn("[commands] Failed to register slash commands:", error.message);
+        console.warn("[commands] Failed to register slash commands:", getErrorDetail(error));
       }
     } else {
       console.warn("[commands] DISCORD_CLIENT_ID not set, skipping command registration");
@@ -410,7 +466,7 @@ async function runBot() {
 
     // Start killfeed flush interval (every 10 minutes)
     setInterval(
-      () => flushKillfeedQueue(client, CHANNEL_ID, DEBUG, RAW_TO_DISCORD),
+      () => flushKillfeedQueue(client, channelId, DEBUG, RAW_TO_DISCORD),
       KILLFEED_FLUSH_INTERVAL_MS
     );
     console.log(
@@ -421,8 +477,8 @@ async function runBot() {
   // Handle slash command interactions
   client.on("interactionCreate", handleCommandInteraction);
 
-  client.login(config.DISCORD_TOKEN).catch((e) => {
-    console.error("[login error]", e?.message || e);
+  client.login(discordToken).catch((e: unknown) => {
+    console.error("[login error]", getErrorDetail(e));
     process.exit(1);
   });
 }
