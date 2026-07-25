@@ -3,12 +3,84 @@
 import fs from "node:fs";
 import { Client, EmbedBuilder, GatewayIntentBits } from "discord.js";
 
-async function runDiscordTest(config, checkEnv) {
+type AppConfig = typeof import("../config/config.js");
+type CheckEnv = () => void;
+
+type ListAdmNames = typeof import("../api/nitradoClient.js").listAdmNames;
+type TsFromName = typeof import("../api/nitradoClient.js").tsFromName;
+type NitDownload = typeof import("../api/nitradoClient.js").nitDownload;
+type TMadrid = typeof import("../utils/helpers.js").tMadrid;
+type ParseKill = typeof import("../parsers/killParser.js").parseKill;
+
+type LoadMockStats = typeof import("../storage/mockStatsStore.js").loadMockStats;
+type SaveMockStats = typeof import("../storage/mockStatsStore.js").saveMockStats;
+type HandlePlayerConnect = typeof import("../features/stats/playerStats.js").handlePlayerConnect;
+type HandlePlayerDisconnect =
+  typeof import("../features/stats/playerStats.js").handlePlayerDisconnect;
+type UpdateStatsFromEvent = typeof import("../features/stats/playerStats.js").updateStatsFromEvent;
+type GetPlayerStats = typeof import("../features/stats/playerStats.js").getPlayerStats;
+type FormatKillfeedNotification =
+  typeof import("../features/killfeed/formatKillfeedNotification.js").formatKillfeedNotification;
+
+type PlayerStats = import("../types/domainEvents.js").PlayerStats;
+type PersistedPlayerStats = import("../types/domainPersistence.js").PersistedPlayerStats;
+
+function getErrorDetail(error: unknown): unknown {
+  if (typeof error !== "object" || error === null) {
+    return error;
+  }
+
+  if ("code" in error && error.code) {
+    return error.code;
+  }
+
+  if ("message" in error && typeof error.message === "string") {
+    return error.message;
+  }
+
+  return error;
+}
+
+function requireConfigValue(value: string | undefined, name: string): string {
+  if (!value) {
+    throw new Error(`Missing required configuration: ${name}`);
+  }
+
+  return value;
+}
+
+function normalizePlayerStats(stats: PersistedPlayerStats | null): PlayerStats | null {
+  if (!stats) {
+    return null;
+  }
+
+  return {
+    kills: stats.kills ?? 0,
+    deaths: stats.deaths ?? 0,
+    headshots: stats.headshots ?? 0,
+    kd: stats.kd ?? 0,
+    killStreak: stats.killStreak ?? 0,
+    deathStreak: stats.deathStreak ?? 0,
+    score: stats.score ?? 0,
+    rank: stats.rank ?? "Private",
+    longestKill: stats.longestKill ?? 0,
+    longestKillWeapon: stats.longestKillWeapon ?? null,
+    connectedSince: stats.connectedSince ?? null,
+    accumulatedAliveMs: stats.accumulatedAliveMs ?? 0,
+    isConnected: stats.isConnected ?? false,
+    lastTimeAlive: stats.lastTimeAlive ?? null,
+    accumulatedPlayedMs: stats.accumulatedPlayedMs ?? 0,
+  };
+}
+
+async function runDiscordTest(config: AppConfig, checkEnv: CheckEnv): Promise<void> {
   checkEnv();
+  const channelId = requireConfigValue(config.CHANNEL_ID, "DISCORD_CHANNEL_ID");
+  const discordToken = requireConfigValue(config.DISCORD_TOKEN, "DISCORD_TOKEN");
   const client = new Client({ intents: [GatewayIntentBits.Guilds] });
   client.once("clientReady", async () => {
     try {
-      const ch = await client.channels.fetch(config.CHANNEL_ID);
+      const ch = await client.channels.fetch(channelId);
 
       if (!ch?.isSendable()) {
         throw new Error("Killfeed channel is unavailable or not sendable");
@@ -24,27 +96,25 @@ async function runDiscordTest(config, checkEnv) {
       });
       console.log("[discord-test] Message sent successfully to killfeed channel");
     } catch (e) {
-      console.error("[discord-test] ERROR:", e?.code || e?.message || e);
+      console.error("[discord-test] ERROR:", getErrorDetail(e));
     } finally {
       process.exit(0);
     }
   });
-  client.login(config.DISCORD_TOKEN).catch((e) => {
-    console.error("[login error]", e?.message || e);
+  client.login(discordToken).catch((e: unknown) => {
+    console.error("[login error]", getErrorDetail(e));
     process.exit(1);
   });
 }
 
-async function runDiscordHeatmapTest(config, checkEnv) {
+async function runDiscordHeatmapTest(config: AppConfig, checkEnv: CheckEnv): Promise<void> {
   checkEnv();
-  if (!config.HEATMAP_CHANNEL_ID) {
-    console.error("Missing HEATMAP_CHANNEL_ID in .env");
-    process.exit(1);
-  }
+  const channelId = requireConfigValue(config.HEATMAP_CHANNEL_ID, "HEATMAP_CHANNEL_ID");
+  const discordToken = requireConfigValue(config.DISCORD_TOKEN, "DISCORD_TOKEN");
   const client = new Client({ intents: [GatewayIntentBits.Guilds] });
   client.once("clientReady", async () => {
     try {
-      const ch = await client.channels.fetch(config.HEATMAP_CHANNEL_ID);
+      const ch = await client.channels.fetch(channelId);
 
       if (!ch?.isSendable()) {
         throw new Error("Heatmap channel is unavailable or not sendable");
@@ -60,29 +130,30 @@ async function runDiscordHeatmapTest(config, checkEnv) {
       });
       console.log("[discord-heatmap-test] Message sent successfully to heatmap channel");
     } catch (e) {
-      console.error("[discord-heatmap-test] ERROR:", e?.code || e?.message || e);
+      console.error("[discord-heatmap-test] ERROR:", getErrorDetail(e));
     } finally {
       process.exit(0);
     }
   });
-  client.login(config.DISCORD_TOKEN).catch((e) => {
-    console.error("[login error]", e?.message || e);
+  client.login(discordToken).catch((e: unknown) => {
+    console.error("[login error]", getErrorDetail(e));
     process.exit(1);
   });
 }
 
 async function runDiagnose(
-  config,
-  checkEnv,
-  listAdmNames,
-  tsFromName,
-  tMadrid,
-  nitDownload,
-  parseKill
-) {
+  config: AppConfig,
+  checkEnv: CheckEnv,
+  listAdmNames: ListAdmNames,
+  tsFromName: TsFromName,
+  tMadrid: TMadrid,
+  nitDownload: NitDownload,
+  parseKill: ParseKill
+): Promise<void> {
   checkEnv();
-  console.log("\n[diagnose] ADM directory:", config.ADM_DIR);
-  const rows = await listAdmNames(config.ADM_DIR, true);
+  const admDir = requireConfigValue(config.ADM_DIR, "NITRADO_ADM_DIR");
+  console.log("\n[diagnose] ADM directory:", admDir);
+  const rows = await listAdmNames(admDir, true);
   if (!rows.length) {
     console.log("[diagnose] ❌ No ADM files listed (rate-limit or incorrect path)");
     process.exit(1);
@@ -95,11 +166,14 @@ async function runDiagnose(
   const latest = rows[0].path;
   console.log("[diagnose] Latest ADM:", latest);
   const dl = await nitDownload(latest);
-  if (dl.error) {
+  const buffer = dl.buffer;
+
+  if (!buffer) {
     console.log("[diagnose] ❌ Could not download ADM file");
     process.exit(1);
   }
-  const lines = dl.buffer.toString("utf8").split(/\r?\n/).filter(Boolean);
+
+  const lines = buffer.toString("utf8").split(/\r?\n/).filter(Boolean);
   const tail = lines.slice(-40);
   console.log("\n[diagnose] Last 40 lines:\n" + tail.join("\n"));
 
@@ -117,15 +191,15 @@ async function runDiagnose(
 }
 
 async function runMockParse(
-  parseKill,
-  loadMockStats,
-  saveMockStats,
-  handlePlayerConnect,
-  handlePlayerDisconnect,
-  updateStatsFromEvent,
-  getPlayerStats,
-  formatKillfeedNotification
-) {
+  parseKill: ParseKill,
+  loadMockStats: LoadMockStats,
+  saveMockStats: SaveMockStats,
+  handlePlayerConnect: HandlePlayerConnect,
+  handlePlayerDisconnect: HandlePlayerDisconnect,
+  updateStatsFromEvent: UpdateStatsFromEvent,
+  getPlayerStats: GetPlayerStats,
+  formatKillfeedNotification: FormatKillfeedNotification
+): Promise<void> {
   const mockLogPath = process.argv[3] || "./mock/sample-adm.txt";
   console.log(`[mock-parse] Reading ${mockLogPath}...\n`);
 
@@ -148,10 +222,10 @@ async function runMockParse(
   );
 
   // Midnight rollover tracking: detect when HH:MM:SS wraps from 23:59:59 → 00:00:00
-  let previousRawTimeMs = null;
+  let previousRawTimeMs: number | null = null;
   let dayOffsetMs = 0;
 
-  function parseRawTimeMs(timeStr) {
+  function parseRawTimeMs(timeStr: string | null): number | null {
     if (!timeStr) return null;
     const match = timeStr.match(/^(\d{2}):(\d{2}):(\d{2})$/);
     if (!match) return null;
@@ -163,7 +237,7 @@ async function runMockParse(
     return (hours * 3600 + minutes * 60 + seconds) * 1000;
   }
 
-  function getNormalizedEventTimeMs(timeStr) {
+  function getNormalizedEventTimeMs(timeStr: string | null): number | null {
     const rawTimeMs = parseRawTimeMs(timeStr);
     if (rawTimeMs === null) return null;
 
@@ -254,8 +328,14 @@ async function runMockParse(
         explosionCount++;
       }
 
-      const killerStats = event.killer ? getPlayerStats(stats, event.killer) : null;
-      const victimStats = event.victim ? getPlayerStats(stats, event.victim) : null;
+      const killerStats =
+        event.type === "pvp" && event.killer
+          ? normalizePlayerStats(getPlayerStats(stats, event.killer))
+          : null;
+
+      const victimStats = event.victim
+        ? normalizePlayerStats(getPlayerStats(stats, event.victim))
+        : null;
 
       console.log("\n📋 FORMATTED KILLFEED NOTIFICATION:");
       console.log(formatKillfeedNotification(event, killerStats, victimStats));
@@ -278,16 +358,17 @@ async function runMockParse(
   process.exit(0);
 }
 
-async function runDiscordWeekendHeatmapTest(config, checkEnv) {
+async function runDiscordWeekendHeatmapTest(config: AppConfig, checkEnv: CheckEnv): Promise<void> {
   checkEnv();
-  if (!config.WEEKEND_HEATMAP_CHANNEL_ID) {
-    console.error("Missing WEEKEND_HEATMAP_CHANNEL_ID in .env");
-    process.exit(1);
-  }
+  const channelId = requireConfigValue(
+    config.WEEKEND_HEATMAP_CHANNEL_ID,
+    "WEEKEND_HEATMAP_CHANNEL_ID"
+  );
+  const discordToken = requireConfigValue(config.DISCORD_TOKEN, "DISCORD_TOKEN");
   const client = new Client({ intents: [GatewayIntentBits.Guilds] });
   client.once("clientReady", async () => {
     try {
-      const ch = await client.channels.fetch(config.WEEKEND_HEATMAP_CHANNEL_ID);
+      const ch = await client.channels.fetch(channelId);
 
       if (!ch?.isSendable()) {
         throw new Error("Weekend heatmap channel is unavailable or not sendable");
@@ -305,13 +386,13 @@ async function runDiscordWeekendHeatmapTest(config, checkEnv) {
         "[discord-weekend-heatmap-test] Message sent successfully to weekend heatmap channel"
       );
     } catch (e) {
-      console.error("[discord-weekend-heatmap-test] ERROR:", e?.code || e?.message || e);
+      console.error("[discord-weekend-heatmap-test] ERROR:", getErrorDetail(e));
     } finally {
       process.exit(0);
     }
   });
-  client.login(config.DISCORD_TOKEN).catch((e) => {
-    console.error("[login error]", e?.message || e);
+  client.login(discordToken).catch((e: unknown) => {
+    console.error("[login error]", getErrorDetail(e));
     process.exit(1);
   });
 }
