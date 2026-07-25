@@ -10,11 +10,11 @@ import {
 import {
   getDiscordUserIdByGamertag,
   getGamertagByDiscordUserId,
-} from "../../storage/linkedGamertagsStore";
-import { findPlayerStats, loadPlayerStats } from "../../storage/playerStatsStore";
+} from "../../storage/linkedGamertagsStore.js";
+import { findPlayerStats, loadPlayerStats } from "../../storage/playerStatsStore.js";
 import { SERVER_NAME } from "../../config/config.js";
-import { getRankBadgePath } from "../../utils/rankBadges";
-import type { PersistedPlayerStats } from "../../types/domainPersistence";
+import { getRankBadgePath } from "../../utils/rankBadges.js";
+import type { PersistedPlayerStats } from "../../types/domainPersistence.js";
 
 interface StatsDisplayData extends PersistedPlayerStats {
   bestKillStreak?: number;

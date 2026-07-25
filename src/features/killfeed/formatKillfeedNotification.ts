@@ -5,7 +5,7 @@ import type {
   KillEvent,
   PlayerStats,
   PvPKillEvent,
-} from "../../types/domainEvents";
+} from "../../types/domainEvents.js";
 
 export function formatKillfeedNotification(
   event: KillEvent | null | undefined,

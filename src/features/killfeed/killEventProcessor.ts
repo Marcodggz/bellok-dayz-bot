@@ -1,9 +1,9 @@
 // Process raw ADM log lines into deduplicated kill event groups
 
-import { parseKill } from "../../parsers/killParser";
-import type { KillEvent } from "../../types/domainEvents";
-import { updatePositionsFromLine } from "../tracking/positionTracker";
-import { typeRank, victimBucketKey } from "./killEventDeduplicator";
+import { parseKill } from "../../parsers/killParser.js";
+import type { KillEvent } from "../../types/domainEvents.js";
+import { updatePositionsFromLine } from "../tracking/positionTracker.js";
+import { typeRank, victimBucketKey } from "./killEventDeduplicator.js";
 
 export function processKillEvents(lines: string[]): Map<string, KillEvent> {
   for (const line of lines) {

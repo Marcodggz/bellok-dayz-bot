@@ -1,4 +1,4 @@
-import type { PlayerStats } from "./domainEvents";
+import type { PlayerStats } from "./domainEvents.js";
 
 export interface FileTailState {
   size: number;

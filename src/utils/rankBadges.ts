@@ -1,7 +1,7 @@
 // Map ranks to badge images
 
 import fs from "node:fs";
-import { resolveProjectPath } from "../config/projectPaths";
+import { resolveProjectPath } from "../config/projectPaths.js";
 
 const RANK_BADGE_MAP: Record<string, string> = {
   Private: "private.png",

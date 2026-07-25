@@ -1,4 +1,4 @@
-import type { Position2D } from "./domainEvents";
+import type { Position2D } from "./domainEvents.js";
 
 export type HeatPoint = Position2D;
 

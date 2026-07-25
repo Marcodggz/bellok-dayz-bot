@@ -3,7 +3,7 @@
 
 import "dotenv/config";
 
-import { registerCommands } from "./src/features/commands/registerCommands";
+import { registerCommands } from "./src/features/commands/registerCommands.js";
 
 const discordToken = process.env.DISCORD_TOKEN;
 const clientId = process.env.DISCORD_CLIENT_ID;

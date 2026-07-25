@@ -1,11 +1,11 @@
 // Real player statistics persistence
 
-import { resolveProjectPath } from "../config/projectPaths";
+import { resolveProjectPath } from "../config/projectPaths.js";
 import { loadJSON, saveJSON } from "./jsonStore.js";
 import type {
   PersistedPlayerStatsCollection,
   PlayerStatsSearchResult,
-} from "../types/domainPersistence";
+} from "../types/domainPersistence.js";
 
 const PLAYER_STATS_FILE = resolveProjectPath("data", "player-stats.json");
 

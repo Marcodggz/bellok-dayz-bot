@@ -7,9 +7,9 @@ import {
   type InteractionReplyOptions,
 } from "discord.js";
 
-import { linkCommand, unlinkCommand } from "./linkCommands";
-import { statsCommand } from "./statsCommand";
-import { leaderboardCommand } from "./leaderboardCommand";
+import { linkCommand, unlinkCommand } from "./linkCommands.js";
+import { statsCommand } from "./statsCommand.js";
+import { leaderboardCommand } from "./leaderboardCommand.js";
 
 interface SlashCommand {
   data: {

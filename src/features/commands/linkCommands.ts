@@ -6,8 +6,8 @@ import {
   getGamertagByDiscordUserId,
   linkGamertag,
   unlinkGamertag,
-} from "../../storage/linkedGamertagsStore";
-import { findPlayerStats, loadPlayerStats } from "../../storage/playerStatsStore";
+} from "../../storage/linkedGamertagsStore.js";
+import { findPlayerStats, loadPlayerStats } from "../../storage/playerStatsStore.js";
 
 export const linkCommand = {
   data: new SlashCommandBuilder()

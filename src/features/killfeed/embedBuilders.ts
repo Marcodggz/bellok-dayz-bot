@@ -8,8 +8,8 @@ import type {
   KillEvent,
   Position3D,
   PvPKillEvent,
-} from "../../types/domainEvents";
-import type { PersistedPlayerStats } from "../../types/domainPersistence";
+} from "../../types/domainEvents.js";
+import type { PersistedPlayerStats } from "../../types/domainPersistence.js";
 
 interface NormalizedStats {
   rank: string;

@@ -2,8 +2,8 @@
 
 import { EmbedBuilder, type ChatInputCommandInteraction } from "discord.js";
 import { SERVER_NAME } from "../../config/config.js";
-import { loadPlayerStats } from "../../storage/playerStatsStore";
-import type { PersistedPlayerStatsCollection } from "../../types/domainPersistence";
+import { loadPlayerStats } from "../../storage/playerStatsStore.js";
+import type { PersistedPlayerStatsCollection } from "../../types/domainPersistence.js";
 
 interface LeaderboardPlayer {
   gamertag: string;

@@ -1,7 +1,7 @@
 // Kill event deduplication logic for 20-second buckets with persistent tracking
 
 import { loadState, saveState } from "../../storage/stateStore.js";
-import type { KillfeedState, SentBuckets } from "../../types/domainPersistence";
+import type { KillfeedState, SentBuckets } from "../../types/domainPersistence.js";
 
 const BUCKET_SECONDS = 20;
 const SENT_BUCKET_TTL_MS = 60 * 60 * 1000;

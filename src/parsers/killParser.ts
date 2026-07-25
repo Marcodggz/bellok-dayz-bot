@@ -6,7 +6,7 @@ import type {
   KillEvent,
   Position3D,
   PvPKillEvent,
-} from "../types/domainEvents";
+} from "../types/domainEvents.js";
 
 const TIME_RE = /^\s*(\d{2}:\d{2}:\d{2})\s*\|/;
 const q = `["'""]`;

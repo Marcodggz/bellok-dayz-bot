@@ -1,7 +1,7 @@
-import type { KillEvent } from "../../types/domainEvents";
-import type { PersistedPlayerStats } from "../../types/domainPersistence";
-import { buildKillEmbed } from "./embedBuilders";
-import { markSentBucket } from "./killEventDeduplicator";
+import type { KillEvent } from "../../types/domainEvents.js";
+import type { PersistedPlayerStats } from "../../types/domainPersistence.js";
+import { buildKillEmbed } from "./embedBuilders.js";
+import { markSentBucket } from "./killEventDeduplicator.js";
 
 export const KILLFEED_FLUSH_INTERVAL_MS = 10 * 60 * 1000;
 

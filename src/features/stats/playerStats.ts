@@ -1,10 +1,10 @@
 // Player statistics tracking
 
-import type { KillEvent, PlayerRank, PlayerStats } from "../../types/domainEvents";
+import type { KillEvent, PlayerRank, PlayerStats } from "../../types/domainEvents.js";
 import type {
   PersistedPlayerStats,
   PersistedPlayerStatsCollection,
-} from "../../types/domainPersistence";
+} from "../../types/domainPersistence.js";
 
 type MutableStatsCollection = PersistedPlayerStatsCollection;
 

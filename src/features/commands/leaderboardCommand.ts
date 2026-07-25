@@ -5,7 +5,7 @@ import {
   getTopPlayers,
   loadPlayerStatsForLeaderboard,
   replyLeaderboard,
-} from "./leaderboardHelpers";
+} from "./leaderboardHelpers.js";
 
 /**
  * Define the /leaderboard command with subcommands

@@ -1,14 +1,14 @@
 // Handle deduplicated kill events: update stats, queue Discord events, extract positions
 
-import type { KillEvent, Position2D } from "../../types/domainEvents";
+import type { KillEvent, Position2D } from "../../types/domainEvents.js";
 import type {
   PersistedPlayerStats,
   PersistedPlayerStatsCollection,
-} from "../../types/domainPersistence";
-import { getPlayerStats, updateStatsFromEvent } from "../stats/playerStats";
-import { posForVictimFromLine } from "../tracking/positionTracker";
-import { hasSentBucket } from "./killEventDeduplicator";
-import { queueKillfeedEvent } from "./killfeedQueue";
+} from "../../types/domainPersistence.js";
+import { getPlayerStats, updateStatsFromEvent } from "../stats/playerStats.js";
+import { posForVictimFromLine } from "../tracking/positionTracker.js";
+import { hasSentBucket } from "./killEventDeduplicator.js";
+import { queueKillfeedEvent } from "./killfeedQueue.js";
 
 type SessionLineProcessor = (line: string) => void;
 
