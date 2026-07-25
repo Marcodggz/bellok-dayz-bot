@@ -8,8 +8,8 @@
 import type { PersistedPlayerStatsCollection } from "./src/types/domainPersistence";
 
 import fs from "node:fs";
-const { Client, GatewayIntentBits, EmbedBuilder, AttachmentBuilder } = require("discord.js");
-const { PNG } = require("pngjs");
+import { AttachmentBuilder, Client, EmbedBuilder, GatewayIntentBits } from "discord.js";
+import { PNG } from "pngjs";
 
 // Import config and helpers
 import * as config from "./src/config/config.js";
