@@ -1,7 +1,7 @@
 // CLI test and diagnostic handlers
 
 import fs from "node:fs";
-const { Client, GatewayIntentBits, EmbedBuilder } = require("discord.js");
+import { Client, EmbedBuilder, GatewayIntentBits } from "discord.js";
 
 async function runDiscordTest(config, checkEnv) {
   checkEnv();
@@ -9,6 +9,11 @@ async function runDiscordTest(config, checkEnv) {
   client.once("clientReady", async () => {
     try {
       const ch = await client.channels.fetch(config.CHANNEL_ID);
+
+      if (!ch?.isSendable()) {
+        throw new Error("Killfeed channel is unavailable or not sendable");
+      }
+
       await ch.send({
         embeds: [
           new EmbedBuilder()
@@ -40,6 +45,11 @@ async function runDiscordHeatmapTest(config, checkEnv) {
   client.once("clientReady", async () => {
     try {
       const ch = await client.channels.fetch(config.HEATMAP_CHANNEL_ID);
+
+      if (!ch?.isSendable()) {
+        throw new Error("Heatmap channel is unavailable or not sendable");
+      }
+
       await ch.send({
         embeds: [
           new EmbedBuilder()
@@ -278,6 +288,11 @@ async function runDiscordWeekendHeatmapTest(config, checkEnv) {
   client.once("clientReady", async () => {
     try {
       const ch = await client.channels.fetch(config.WEEKEND_HEATMAP_CHANNEL_ID);
+
+      if (!ch?.isSendable()) {
+        throw new Error("Weekend heatmap channel is unavailable or not sendable");
+      }
+
       await ch.send({
         embeds: [
           new EmbedBuilder()
