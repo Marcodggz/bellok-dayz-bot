@@ -13,7 +13,13 @@ import {
   MAP_SCALE_Y,
 } from "../config/config.js";
 
-export function mapToPixelCoords(x, y, W, H, debug = false) {
+export function mapToPixelCoords(
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  debug = false
+): { px: number; py: number } {
   // Normalize world coordinates with optional cropping/offset/scale
   const nx = (x - MAP_MIN_X) / Math.max(1, MAP_MAX_X - MAP_MIN_X);
   const ny = (y - MAP_MIN_Y) / Math.max(1, MAP_MAX_Y - MAP_MIN_Y);
@@ -21,9 +27,9 @@ export function mapToPixelCoords(x, y, W, H, debug = false) {
   const sy = ny * MAP_SCALE_Y + MAP_OFFSET_Y;
 
   // Letterbox: center square within image dimensions
-  const side = Math.min(W, H);
-  const offX = (W - side) / 2;
-  const offY = (H - side) / 2;
+  const side = Math.min(width, height);
+  const offX = (width - side) / 2;
+  const offY = (height - side) / 2;
 
   // Pixel insets to crop inner map border
   const INSET_L = Number(process.env.MAP_PIX_INSET_L || 0);
