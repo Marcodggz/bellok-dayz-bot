@@ -1,4 +1,4 @@
-// src/cli/index.js - CLI test and diagnostic handlers
+// CLI test and diagnostic handlers
 
 const fs = require("fs");
 const { Client, GatewayIntentBits, EmbedBuilder } = require("discord.js");
@@ -301,7 +301,7 @@ async function runDiscordWeekendHeatmapTest(config, checkEnv) {
   });
 }
 
-module.exports = {
+export {
   runDiscordTest,
   runDiscordHeatmapTest,
   runDiagnose,
