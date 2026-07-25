@@ -13,45 +13,29 @@ export function createEmptyStats(): MutableStatsCollection {
 }
 
 function ensurePlayerStats(stats: MutableStatsCollection, playerName: string): PlayerStats {
-  if (!stats[playerName]) {
-    stats[playerName] = {
-      kills: 0,
-      deaths: 0,
-      headshots: 0,
-      kd: 0,
-      killStreak: 0,
-      deathStreak: 0,
-      score: 0,
-      rank: "Private",
-      longestKill: 0,
-      longestKillWeapon: null,
-      connectedSince: null,
-      accumulatedAliveMs: 0,
-      isConnected: false,
-      lastTimeAlive: null,
-      accumulatedPlayedMs: 0,
-    };
-  }
+  const persistedStats = stats[playerName] ?? {};
 
-  const playerStats = stats[playerName] as PersistedPlayerStats;
+  const playerStats: PlayerStats = {
+    kills: persistedStats.kills ?? 0,
+    deaths: persistedStats.deaths ?? 0,
+    headshots: persistedStats.headshots ?? 0,
+    kd: persistedStats.kd ?? 0,
+    killStreak: persistedStats.killStreak ?? 0,
+    deathStreak: persistedStats.deathStreak ?? 0,
+    score: persistedStats.score ?? 0,
+    rank: persistedStats.rank ?? "Private",
+    longestKill: persistedStats.longestKill ?? 0,
+    longestKillWeapon: persistedStats.longestKillWeapon ?? null,
+    connectedSince: persistedStats.connectedSince ?? null,
+    accumulatedAliveMs: persistedStats.accumulatedAliveMs ?? 0,
+    isConnected: persistedStats.isConnected ?? false,
+    lastTimeAlive: persistedStats.lastTimeAlive ?? null,
+    accumulatedPlayedMs: persistedStats.accumulatedPlayedMs ?? 0,
+  };
 
-  playerStats.kills ??= 0;
-  playerStats.deaths ??= 0;
-  playerStats.headshots ??= 0;
-  playerStats.kd ??= 0;
-  playerStats.killStreak ??= 0;
-  playerStats.deathStreak ??= 0;
-  playerStats.score ??= 0;
-  playerStats.rank ??= "Private";
-  playerStats.longestKill ??= 0;
-  playerStats.longestKillWeapon ??= null;
-  playerStats.connectedSince ??= null;
-  playerStats.accumulatedAliveMs ??= 0;
-  playerStats.isConnected ??= false;
-  playerStats.lastTimeAlive ??= null;
-  playerStats.accumulatedPlayedMs ??= 0;
+  stats[playerName] = playerStats;
 
-  return playerStats as PlayerStats;
+  return playerStats;
 }
 
 function applyVictimDeath(

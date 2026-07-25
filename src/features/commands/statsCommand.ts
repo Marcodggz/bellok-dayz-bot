@@ -79,7 +79,7 @@ export const statsCommand = {
       }
 
       gamertag = playerResult.gamertag;
-      const playerStats = playerResult.stats as StatsDisplayData;
+      const playerStats: StatsDisplayData = playerResult.stats;
 
       const linkedUserId = getDiscordUserIdByGamertag(gamertag);
       const discordDisplay = linkedUserId ? `<@${linkedUserId}>` : "Not Linked";

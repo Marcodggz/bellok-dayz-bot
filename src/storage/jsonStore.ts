@@ -5,9 +5,9 @@ import fs from "node:fs";
 /**
  * Load and parse JSON file, return fallback on error
  */
-export function loadJSON(file, fallback) {
+export function loadJSON<T>(file: string, fallback: T): T {
   try {
-    return JSON.parse(fs.readFileSync(file, "utf8"));
+    return JSON.parse(fs.readFileSync(file, "utf8")) as T;
   } catch {
     return fallback;
   }
@@ -16,7 +16,7 @@ export function loadJSON(file, fallback) {
 /**
  * Save data to JSON file using an atomic temporary-file replacement
  */
-export function saveJSON(file, data, spacing = undefined) {
+export function saveJSON(file: string, data: unknown, spacing?: number): void {
   const temporaryFile = `${file}.tmp`;
   const serializedData = JSON.stringify(data, null, spacing);
 

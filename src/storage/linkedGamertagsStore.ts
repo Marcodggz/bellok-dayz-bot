@@ -7,7 +7,7 @@ import type { LinkedGamertags } from "../types/domainPersistence.js";
 const LINKED_GAMERTAGS_FILE = resolveProjectPath("data", "linked-gamertags.json");
 
 export function loadLinkedGamertags(): LinkedGamertags {
-  return loadJSON(LINKED_GAMERTAGS_FILE, {}) as LinkedGamertags;
+  return loadJSON<LinkedGamertags>(LINKED_GAMERTAGS_FILE, {});
 }
 
 export function saveLinkedGamertags(links: LinkedGamertags): void {

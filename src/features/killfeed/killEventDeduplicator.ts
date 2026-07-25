@@ -1,14 +1,13 @@
 // Kill event deduplication logic for 20-second buckets with persistent tracking
 
 import { loadState, saveState } from "../../storage/stateStore.js";
-import type { KillfeedState, SentBuckets } from "../../types/domainPersistence.js";
 
 const BUCKET_SECONDS = 20;
 const SENT_BUCKET_TTL_MS = 60 * 60 * 1000;
 const MAX_SENT_BUCKETS = 1000;
 
 function loadSentBuckets(): Map<string, number> {
-  const state = loadState() as KillfeedState;
+  const state = loadState();
   const persistedBuckets = state.sentBuckets;
 
   if (
@@ -88,9 +87,9 @@ function cleanupSentBuckets(now: number = Date.now()): void {
 }
 
 function persistSentBuckets(): void {
-  const state = loadState() as KillfeedState;
+  const state = loadState();
 
-  state.sentBuckets = Object.fromEntries(sentBuckets) as SentBuckets;
+  state.sentBuckets = Object.fromEntries(sentBuckets);
 
   saveState(state);
 }

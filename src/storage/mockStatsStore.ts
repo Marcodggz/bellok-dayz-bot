@@ -7,7 +7,7 @@ import type { PersistedPlayerStatsCollection } from "../types/domainPersistence.
 const MOCK_STATS_FILE = resolveProjectPath("data", "mock-player-stats.json");
 
 export function loadMockStats(): PersistedPlayerStatsCollection {
-  return loadJSON(MOCK_STATS_FILE, {}) as PersistedPlayerStatsCollection;
+  return loadJSON<PersistedPlayerStatsCollection>(MOCK_STATS_FILE, {});
 }
 
 export function saveMockStats(stats: PersistedPlayerStatsCollection): void {

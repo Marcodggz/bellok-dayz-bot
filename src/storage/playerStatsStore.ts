@@ -10,7 +10,7 @@ import type {
 const PLAYER_STATS_FILE = resolveProjectPath("data", "player-stats.json");
 
 export function loadPlayerStats(): PersistedPlayerStatsCollection {
-  return loadJSON(PLAYER_STATS_FILE, {}) as PersistedPlayerStatsCollection;
+  return loadJSON<PersistedPlayerStatsCollection>(PLAYER_STATS_FILE, {});
 }
 
 export function savePlayerStats(stats: PersistedPlayerStatsCollection): void {
