@@ -105,7 +105,7 @@ async function handleRankLeaderboard(interaction: ChatInputCommandInteraction): 
   const allStats = loadPlayerStatsForLeaderboard();
 
   const playerArray = Object.entries(allStats)
-    .filter(([, stats]) => stats.kills > 0 || stats.deaths > 0)
+    .filter(([, stats]) => (stats.kills ?? 0) > 0 || (stats.deaths ?? 0) > 0)
     .map(([gamertag, stats]) => ({
       gamertag,
       score: stats.score ?? 0,
@@ -130,7 +130,7 @@ async function handleKillsLeaderboard(interaction: ChatInputCommandInteraction):
   const allStats = loadPlayerStatsForLeaderboard();
 
   const playerArray = Object.entries(allStats)
-    .filter(([, stats]) => stats.kills > 0 || stats.deaths > 0)
+    .filter(([, stats]) => (stats.kills ?? 0) > 0 || (stats.deaths ?? 0) > 0)
     .map(([gamertag, stats]) => ({
       gamertag,
       kills: stats.kills ?? 0,
@@ -154,7 +154,7 @@ async function handleDeathsLeaderboard(interaction: ChatInputCommandInteraction)
   const allStats = loadPlayerStatsForLeaderboard();
 
   const playerArray = Object.entries(allStats)
-    .filter(([, stats]) => stats.kills > 0 || stats.deaths > 0)
+    .filter(([, stats]) => (stats.kills ?? 0) > 0 || (stats.deaths ?? 0) > 0)
     .map(([gamertag, stats]) => ({
       gamertag,
       deaths: stats.deaths ?? 0,
@@ -178,7 +178,7 @@ async function handleKdLeaderboard(interaction: ChatInputCommandInteraction): Pr
   const allStats = loadPlayerStatsForLeaderboard();
 
   const playerArray = Object.entries(allStats)
-    .filter(([, stats]) => stats.kills > 0 || stats.deaths > 0)
+    .filter(([, stats]) => (stats.kills ?? 0) > 0 || (stats.deaths ?? 0) > 0)
     .map(([gamertag, stats]) => ({
       gamertag,
       kd: stats.kd ?? 0,
@@ -202,7 +202,7 @@ async function handleHeadshotsLeaderboard(interaction: ChatInputCommandInteracti
   const allStats = loadPlayerStatsForLeaderboard();
 
   const playerArray = Object.entries(allStats)
-    .filter(([, stats]) => stats.kills > 0 || stats.deaths > 0)
+    .filter(([, stats]) => (stats.kills ?? 0) > 0 || (stats.deaths ?? 0) > 0)
     .map(([gamertag, stats]) => ({
       gamertag,
       headshots: stats.headshots ?? 0,
@@ -228,7 +228,7 @@ async function handleKillStreakLeaderboard(
   const allStats = loadPlayerStatsForLeaderboard();
 
   const playerArray = Object.entries(allStats)
-    .filter(([, stats]) => stats.kills > 0 || stats.deaths > 0)
+    .filter(([, stats]) => (stats.kills ?? 0) > 0 || (stats.deaths ?? 0) > 0)
     .map(([gamertag, stats]) => ({
       gamertag,
       killStreak: stats.killStreak ?? 0,
@@ -254,7 +254,7 @@ async function handleDeathStreakLeaderboard(
   const allStats = loadPlayerStatsForLeaderboard();
 
   const playerArray = Object.entries(allStats)
-    .filter(([, stats]) => stats.kills > 0 || stats.deaths > 0)
+    .filter(([, stats]) => (stats.kills ?? 0) > 0 || (stats.deaths ?? 0) > 0)
     .map(([gamertag, stats]) => ({
       gamertag,
       deathStreak: stats.deathStreak ?? 0,
@@ -280,7 +280,7 @@ async function handleLongestKillLeaderboard(
   const allStats = loadPlayerStatsForLeaderboard();
 
   const playerArray = Object.entries(allStats)
-    .filter(([, stats]) => stats.kills > 0 || stats.deaths > 0)
+    .filter(([, stats]) => (stats.kills ?? 0) > 0 || (stats.deaths ?? 0) > 0)
     .map(([gamertag, stats]) => ({
       gamertag,
       longestKill: stats.longestKill ?? 0,
@@ -305,7 +305,8 @@ async function handleTimeAliveLeaderboard(interaction: ChatInputCommandInteracti
 
   const playerArray = Object.entries(allStats)
     .filter(
-      ([, stats]) => stats.kills > 0 || stats.deaths > 0 || (stats.accumulatedAliveMs ?? 0) > 0
+      ([, stats]) =>
+        (stats.kills ?? 0) > 0 || (stats.deaths ?? 0) > 0 || (stats.accumulatedAliveMs ?? 0) > 0
     )
     .map(([gamertag, stats]) => ({
       gamertag,
@@ -331,8 +332,8 @@ async function handleTimePlayedLeaderboard(
   const playerArray = Object.entries(allStats)
     .filter(
       ([, stats]) =>
-        stats.kills > 0 ||
-        stats.deaths > 0 ||
+        (stats.kills ?? 0) > 0 ||
+        (stats.deaths ?? 0) > 0 ||
         (stats.accumulatedAliveMs ?? 0) > 0 ||
         (stats.accumulatedPlayedMs ?? 0) > 0
     )
