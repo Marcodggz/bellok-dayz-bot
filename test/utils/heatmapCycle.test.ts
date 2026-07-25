@@ -25,12 +25,12 @@ describe("createHeatmapCycle", () => {
   });
 
   test("prevents overlapping heatmap cycles", async () => {
-    let releaseCycle;
-    const pendingCycle = new Promise((resolve) => {
+    let releaseCycle!: () => void;
+    const pendingCycle = new Promise<void>((resolve) => {
       releaseCycle = resolve;
     });
 
-    const runCycle = vi.fn(() => pendingCycle);
+    const runCycle = vi.fn((): Promise<void> => pendingCycle);
 
     const maybeRun = createHeatmapCycle({
       intervalMs: 0,
@@ -51,7 +51,7 @@ describe("createHeatmapCycle", () => {
     const runCycle = vi
       .fn()
       .mockRejectedValueOnce(new Error("Discord failed"))
-      .mockResolvedValueOnce();
+      .mockResolvedValueOnce(undefined);
 
     const maybeRun = createHeatmapCycle({
       intervalMs: 0,
