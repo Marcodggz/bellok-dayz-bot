@@ -1,15 +1,27 @@
 // src/utils/heatmapRenderer.ts — Shared heatmap rendering utilities
 
 import { PNG } from "pngjs";
+import type { Position2D } from "../types/domainEvents.js";
+import type { HeatCluster } from "../types/domainHeatmap.js";
+
+interface HeatGradientStop {
+  position: number;
+  r: number;
+  g: number;
+  b: number;
+  alpha: number;
+}
+
+type HeatLevel = 1 | 2 | 3 | 4 | 5;
 
 /**
  * Build spatial clusters from point array using proximity merging
  * @param {Array} points - Array of {x, y} world coordinates
  * @returns {Array} Array of {x, y, count} clusters
  */
-export function buildHeatClusters(points) {
+export function buildHeatClusters(points: Position2D[]): HeatCluster[] {
   const MERGE_RADIUS_METERS = 125;
-  const clusters = [];
+  const clusters: HeatCluster[] = [];
 
   for (const p of points) {
     let merged = false;
@@ -33,25 +45,16 @@ export function buildHeatClusters(points) {
   return clusters;
 }
 
-/**
- * Draw radial heat gradient for a single cluster
- * @param {PNG} overlay - PNG overlay object to draw on
- * @param {number} pixelX - Center X coordinate in pixels
- * @param {number} pixelY - Center Y coordinate in pixels
- * @param {number} visualCount - Cluster count (1-5)
- * @param {number} width - Canvas width
- * @param {number} height - Canvas height
- */
-function lerp(start, end, amount) {
+function lerp(start: number, end: number, amount: number): number {
   return start + (end - start) * amount;
 }
 
-function smoothstep(amount) {
+function smoothstep(amount: number): number {
   const t = Math.max(0, Math.min(1, amount));
   return t * t * (3 - 2 * t);
 }
 
-function sampleHeatGradient(stops, distance) {
+function sampleHeatGradient(stops: HeatGradientStop[], distance: number): HeatGradientStop {
   const normalizedDistance = Math.max(0, Math.min(1, distance));
 
   for (let i = 0; i < stops.length - 1; i++) {
@@ -64,6 +67,7 @@ function sampleHeatGradient(stops, distance) {
       const amount = smoothstep(rawAmount);
 
       return {
+        position: normalizedDistance,
         r: Math.round(lerp(current.r, next.r, amount)),
         g: Math.round(lerp(current.g, next.g, amount)),
         b: Math.round(lerp(current.b, next.b, amount)),
@@ -75,7 +79,7 @@ function sampleHeatGradient(stops, distance) {
   return stops[stops.length - 1];
 }
 
-const HEAT_GRADIENTS = {
+const HEAT_GRADIENTS: Record<HeatLevel, HeatGradientStop[]> = {
   1: [
     { position: 0, r: 72, g: 145, b: 255, alpha: 210 },
     { position: 0.35, r: 45, g: 112, b: 255, alpha: 180 },
@@ -113,9 +117,22 @@ const HEAT_GRADIENTS = {
 
 /**
  * Draw a continuous radial heat gradient for one cluster.
+ * @param overlay - PNG overlay object to draw on
+ * @param pixelX - Center X coordinate in pixels
+ * @param pixelY - Center Y coordinate in pixels
+ * @param visualCount - Cluster count from 1 to 5
+ * @param width - Canvas width
+ * @param height - Canvas height
  */
-export function drawHeatCluster(overlay, pixelX, pixelY, visualCount, width, height) {
-  const radii = {
+export function drawHeatCluster(
+  overlay: PNG,
+  pixelX: number,
+  pixelY: number,
+  visualCount: number,
+  width: number,
+  height: number
+): void {
+  const radii: Record<HeatLevel, number> = {
     1: 16,
     2: 18,
     3: 21,
@@ -123,7 +140,16 @@ export function drawHeatCluster(overlay, pixelX, pixelY, visualCount, width, hei
     5: 28,
   };
 
-  const normalizedCount = Math.max(1, Math.min(5, visualCount));
+  const normalizedCount: HeatLevel =
+    visualCount <= 1
+      ? 1
+      : visualCount === 2
+        ? 2
+        : visualCount === 3
+          ? 3
+          : visualCount === 4
+            ? 4
+            : 5;
   const maxRadius = radii[normalizedCount];
   const gradient = HEAT_GRADIENTS[normalizedCount];
 
@@ -162,7 +188,12 @@ export function drawHeatCluster(overlay, pixelX, pixelY, visualCount, width, hei
  * @param {number} height - Canvas height
  * @returns {PNG} Composed PNG (or overlay if no base map)
  */
-export function composeHeatmapOverlay(basePng, overlay, width, height) {
+export function composeHeatmapOverlay(
+  basePng: PNG | null,
+  overlay: PNG,
+  width: number,
+  height: number
+): PNG {
   if (!basePng) {
     return overlay;
   }
@@ -204,14 +235,27 @@ export function composeHeatmapOverlay(basePng, overlay, width, height) {
  * @param {number} g - Green value (0-255)
  * @param {number} b - Blue value (0-255)
  * @param {number} maxAlpha - Maximum alpha value (0-255)
- * @param {number} W - Canvas width
- * @param {number} H - Canvas height
+ * @param width - Canvas width
+ * @param height - Canvas height
  */
-export function drawSoftBridge(png, x1, y1, x2, y2, radius, r, g, b, maxAlpha, W, H) {
+export function drawSoftBridge(
+  png: PNG,
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  radius: number,
+  r: number,
+  g: number,
+  b: number,
+  maxAlpha: number,
+  width: number,
+  height: number
+): void {
   const minX = Math.max(0, Math.min(x1, x2) - radius - 1);
-  const maxX = Math.min(W - 1, Math.max(x1, x2) + radius + 1);
+  const maxX = Math.min(width - 1, Math.max(x1, x2) + radius + 1);
   const minY = Math.max(0, Math.min(y1, y2) - radius - 1);
-  const maxY = Math.min(H - 1, Math.max(y1, y2) + radius + 1);
+  const maxY = Math.min(height - 1, Math.max(y1, y2) + radius + 1);
 
   const dx = x2 - x1;
   const dy = y2 - y1;
@@ -234,7 +278,7 @@ export function drawSoftBridge(png, x1, y1, x2, y2, radius, r, g, b, maxAlpha, W
         const falloff = 1 - distance / radius;
         const alpha = Math.round(maxAlpha * Math.pow(falloff, 1.5));
 
-        const o = (y * W + x) * 4;
+        const o = (y * width + x) * 4;
         const existingAlpha = png.data[o + 3];
 
         if (alpha > existingAlpha) {
