@@ -5,7 +5,7 @@
 // - Weekend Heatmap: single editable message with player position density (Fri-Sun only)
 // - Coordinate calibration: min/max/offset/scale/flip for accurate map overlay
 
-import type { PersistedPlayerStatsCollection } from "./src/types/domainPersistence";
+import type { PersistedPlayerStatsCollection } from "./src/types/domainPersistence.js";
 
 import fs from "node:fs";
 import { AttachmentBuilder, Client, EmbedBuilder, GatewayIntentBits } from "discord.js";
@@ -21,53 +21,51 @@ import {
   clamp,
 } from "./src/utils/helpers.js";
 import { loadHeat, saveHeat } from "./src/storage/heatStore.js";
-const { loadMockStats, saveMockStats } = require("./src/storage/mockStatsStore");
-const { loadPlayerStats, savePlayerStats } = require("./src/storage/playerStatsStore");
-const { parseKill } = require("./src/parsers/killParser");
-const {
-  formatKillfeedNotification,
-} = require("./src/features/killfeed/formatKillfeedNotification");
-const {
+import { loadMockStats, saveMockStats } from "./src/storage/mockStatsStore.js";
+import { loadPlayerStats, savePlayerStats } from "./src/storage/playerStatsStore.js";
+import { parseKill } from "./src/parsers/killParser.js";
+import { formatKillfeedNotification } from "./src/features/killfeed/formatKillfeedNotification.js";
+import {
   KILLFEED_FLUSH_INTERVAL_MS,
   flushKillfeedQueue,
-} = require("./src/features/killfeed/killfeedQueue");
-const {
-  updateStatsFromEvent,
+} from "./src/features/killfeed/killfeedQueue.js";
+import {
   getPlayerStats,
   handlePlayerConnect,
   handlePlayerDisconnect,
-} = require("./src/features/stats/playerStats");
-const {
+  updateStatsFromEvent,
+} from "./src/features/stats/playerStats.js";
+import {
   createEventTimeNormalizer,
   processPlayerSessionLine,
-} = require("./src/features/stats/playerSessionProcessor");
-const { handleCommandInteraction } = require("./src/features/commands/commandHandler");
-const { registerCommands } = require("./src/features/commands/registerCommands");
+} from "./src/features/stats/playerSessionProcessor.js";
+import { handleCommandInteraction } from "./src/features/commands/commandHandler.js";
+import { registerCommands } from "./src/features/commands/registerCommands.js";
 import { maybeSendWeekendHeatmap } from "./src/utils/weekendHeatmapHelpers.js";
 import { mapToPixelCoords } from "./src/utils/coordinateMapper.js";
-const { createHeatmapCycle } = require("./src/utils/heatmapCycle");
+import { createHeatmapCycle } from "./src/utils/heatmapCycle.js";
 import {
   buildHeatClusters,
   drawHeatCluster,
   composeHeatmapOverlay,
   drawSoftBridge,
 } from "./src/utils/heatmapRenderer.js";
-const {
-  runDiscordTest,
-  runDiscordHeatmapTest,
+import {
   runDiagnose,
-  runMockParse,
+  runDiscordHeatmapTest,
+  runDiscordTest,
   runDiscordWeekendHeatmapTest,
-} = require("./src/cli");
-const {
-  nitDownload,
+  runMockParse,
+} from "./src/cli/index.js";
+import {
   listAdmNames,
-  tsFromName,
+  nitDownload,
   startListCooldown,
-} = require("./src/api/nitradoClient");
-const { ensureLatestAdmSelected, readNewLines } = require("./src/features/polling/admFilePoller");
-const { processKillEvents } = require("./src/features/killfeed/killEventProcessor");
-const { handleKillEvents } = require("./src/features/killfeed/killEventHandler");
+  tsFromName,
+} from "./src/api/nitradoClient.js";
+import { ensureLatestAdmSelected, readNewLines } from "./src/features/polling/admFilePoller.js";
+import { processKillEvents } from "./src/features/killfeed/killEventProcessor.js";
+import { handleKillEvents } from "./src/features/killfeed/killEventHandler.js";
 
 const MODE = process.argv[2] || "run";
 
