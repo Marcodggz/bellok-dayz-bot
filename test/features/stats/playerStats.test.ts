@@ -230,25 +230,39 @@ describe("playerStats", () => {
   });
 
   describe("death streak tracking", () => {
-    test("increments death streak after consecutive deaths", () => {
+    test("increments death streak across consecutive lives", () => {
       const stats = playerStats.createEmptyStats();
 
-      playerStats.updateStatsFromEvent(stats, {
-        type: "pvp",
-        killer: "Killer1",
-        victim: "Victim",
-        weapon: "M4A1",
-      });
+      playerStats.handlePlayerConnect(stats, "Victim", 1_000);
 
-      playerStats.updateStatsFromEvent(stats, {
-        type: "pvp",
-        killer: "Killer2",
-        victim: "Victim",
-        weapon: "AKM",
-      });
+      playerStats.updateStatsFromEvent(
+        stats,
+        {
+          type: "pvp",
+          killer: "Killer1",
+          victim: "Victim",
+          weapon: "M4A1",
+        },
+        10_000
+      );
 
+      playerStats.handlePlayerConnect(stats, "Victim", 20_000);
+
+      playerStats.updateStatsFromEvent(
+        stats,
+        {
+          type: "pvp",
+          killer: "Killer2",
+          victim: "Victim",
+          weapon: "AKM",
+        },
+        30_000
+      );
+
+      expect(stats.Victim.deaths).toBe(2);
       expect(stats.Victim.deathStreak).toBe(2);
       expect(stats.Victim.killStreak).toBe(0);
+      expect(stats.Victim.isAlive).toBe(false);
     });
 
     test("resets death streak when the player gets a kill", () => {
@@ -371,8 +385,9 @@ describe("playerStats", () => {
         lastTimeAlive: "00H 01M 30S",
         accumulatedAliveMs: 0,
         accumulatedPlayedMs: 180000,
-        connectedSince: 61000,
-        isConnected: true,
+        connectedSince: null,
+        isConnected: false,
+        isAlive: false,
       });
     });
   });
@@ -466,5 +481,139 @@ describe("playerStats", () => {
       const result = playerStats.getPlayerStats(stats, "NonExistent");
       expect(result).toBeNull();
     });
+  });
+});
+
+describe("non-PvP death lifecycle", () => {
+  test("closes a life without incrementing PvP death statistics", async () => {
+    const playerStats = await import("../../../src/features/stats/playerStats.ts");
+    const stats = playerStats.createEmptyStats();
+
+    playerStats.handlePlayerConnect(stats, "Survivor", 10_000);
+    stats.Survivor.kills = 4;
+    stats.Survivor.deaths = 2;
+    stats.Survivor.deathStreak = 1;
+    stats.Survivor.killStreak = 3;
+
+    playerStats.applyNonPvpDeath(stats, "Survivor", 70_000);
+
+    expect(stats.Survivor).toMatchObject({
+      kills: 4,
+      deaths: 2,
+      deathStreak: 1,
+      killStreak: 0,
+      lastTimeAlive: "00H 01M 00S",
+      accumulatedAliveMs: 0,
+      accumulatedPlayedMs: 60_000,
+      connectedSince: null,
+      isConnected: false,
+      isAlive: false,
+    });
+  });
+
+  test("does not count a disconnection after death as alive time", async () => {
+    const playerStats = await import("../../../src/features/stats/playerStats.ts");
+    const stats = playerStats.createEmptyStats();
+
+    playerStats.handlePlayerConnect(stats, "Survivor", 10_000);
+    playerStats.applyNonPvpDeath(stats, "Survivor", 70_000);
+    playerStats.handlePlayerDisconnect(stats, "Survivor", 73_000);
+
+    expect(stats.Survivor.accumulatedAliveMs).toBe(0);
+    expect(stats.Survivor.accumulatedPlayedMs).toBe(60_000);
+    expect(stats.Survivor.isAlive).toBe(false);
+  });
+
+  test("starts a new life when a dead player connects again", async () => {
+    const playerStats = await import("../../../src/features/stats/playerStats.ts");
+    const stats = playerStats.createEmptyStats();
+
+    playerStats.handlePlayerConnect(stats, "Survivor", 10_000);
+    playerStats.applyNonPvpDeath(stats, "Survivor", 70_000);
+    playerStats.handlePlayerConnect(stats, "Survivor", 81_000);
+
+    expect(stats.Survivor).toMatchObject({
+      accumulatedAliveMs: 0,
+      connectedSince: 81_000,
+      isConnected: true,
+      isAlive: true,
+      lastTimeAlive: "00H 01M 00S",
+    });
+  });
+
+  test("resumes the same life when a living player reconnects", async () => {
+    const playerStats = await import("../../../src/features/stats/playerStats.ts");
+    const stats = playerStats.createEmptyStats();
+
+    playerStats.handlePlayerConnect(stats, "Survivor", 10_000);
+    playerStats.handlePlayerDisconnect(stats, "Survivor", 40_000);
+    playerStats.handlePlayerConnect(stats, "Survivor", 70_000);
+    playerStats.applyNonPvpDeath(stats, "Survivor", 100_000);
+
+    expect(stats.Survivor.lastTimeAlive).toBe("00H 01M 00S");
+    expect(stats.Survivor.accumulatedPlayedMs).toBe(60_000);
+    expect(stats.Survivor.isAlive).toBe(false);
+  });
+});
+
+describe("duplicate death protection", () => {
+  test("does not close an already finished life a second time", async () => {
+    const playerStats = await import("../../../src/features/stats/playerStats.ts");
+    const stats = playerStats.createEmptyStats();
+
+    playerStats.handlePlayerConnect(stats, "Survivor", 10_000);
+    playerStats.applyNonPvpDeath(stats, "Survivor", 70_000);
+    playerStats.applyNonPvpDeath(stats, "Survivor", 71_000);
+
+    expect(stats.Survivor.lastTimeAlive).toBe("00H 01M 00S");
+    expect(stats.Survivor.accumulatedPlayedMs).toBe(60_000);
+    expect(stats.Survivor.accumulatedAliveMs).toBe(0);
+    expect(stats.Survivor.isAlive).toBe(false);
+  });
+});
+
+describe("duplicate competitive death protection", () => {
+  test("does not increment PvP deaths twice after the life is already closed", async () => {
+    const playerStats = await import("../../../src/features/stats/playerStats.ts");
+    const stats = playerStats.createEmptyStats();
+
+    playerStats.handlePlayerConnect(stats, "Victim", 10_000);
+
+    const event = {
+      type: "pvp",
+      killer: "Killer",
+      victim: "Victim",
+      weapon: "M4A1",
+      distanceMeters: 20,
+    };
+
+    playerStats.updateStatsFromEvent(stats, event, 70_000);
+    playerStats.updateStatsFromEvent(stats, event, 70_000);
+
+    expect(stats.Victim.deaths).toBe(1);
+    expect(stats.Victim.deathStreak).toBe(1);
+    expect(stats.Victim.lastTimeAlive).toBe("00H 01M 00S");
+  });
+
+  test("does not increment explosion deaths after another event already closed the life", async () => {
+    const playerStats = await import("../../../src/features/stats/playerStats.ts");
+    const stats = playerStats.createEmptyStats();
+
+    playerStats.handlePlayerConnect(stats, "Victim", 10_000);
+    playerStats.applyNonPvpDeath(stats, "Victim", 70_000);
+
+    playerStats.updateStatsFromEvent(
+      stats,
+      {
+        type: "explosion",
+        victim: "Victim",
+        device: "Landmine",
+      },
+      70_000
+    );
+
+    expect(stats.Victim.deaths).toBe(0);
+    expect(stats.Victim.deathStreak).toBe(0);
+    expect(stats.Victim.lastTimeAlive).toBe("00H 01M 00S");
   });
 });

@@ -29,6 +29,7 @@ function ensurePlayerStats(stats: MutableStatsCollection, playerName: string): P
     connectedSince: persistedStats.connectedSince ?? null,
     accumulatedAliveMs: persistedStats.accumulatedAliveMs ?? 0,
     isConnected: persistedStats.isConnected ?? false,
+    isAlive: persistedStats.isAlive ?? true,
     lastTimeAlive: persistedStats.lastTimeAlive ?? null,
     accumulatedPlayedMs: persistedStats.accumulatedPlayedMs ?? 0,
   };
@@ -38,41 +39,46 @@ function ensurePlayerStats(stats: MutableStatsCollection, playerName: string): P
   return playerStats;
 }
 
-function applyVictimDeath(
+function finishPlayerLife(
   stats: MutableStatsCollection,
   victimName: string,
   normalizedEventTimeMs: number | null
-): PlayerStats {
+): PlayerStats | null {
   const victimStats = ensurePlayerStats(stats, victimName);
+
+  if (!victimStats.isAlive) {
+    return null;
+  }
+
+  let totalAliveMs = victimStats.accumulatedAliveMs;
 
   if (
     victimStats.isConnected &&
     victimStats.connectedSince !== null &&
     normalizedEventTimeMs !== null
   ) {
-    const sessionMs = normalizedEventTimeMs - victimStats.connectedSince;
-    const totalAliveMs = victimStats.accumulatedAliveMs + sessionMs;
+    const sessionMs = Math.max(0, normalizedEventTimeMs - victimStats.connectedSince);
 
-    victimStats.lastTimeAlive = formatTimeAlive(totalAliveMs);
+    totalAliveMs += sessionMs;
     victimStats.accumulatedPlayedMs += sessionMs;
-    victimStats.accumulatedAliveMs = 0;
-    victimStats.connectedSince = normalizedEventTimeMs;
-  } else {
-    victimStats.lastTimeAlive = "N/A";
-
-    console.warn(
-      `[mock-parse] WARNING: No connection info for victim ${victimName}. Time Alive set to N/A.`
-    );
   }
 
+  victimStats.lastTimeAlive = formatTimeAlive(totalAliveMs);
+  victimStats.accumulatedAliveMs = 0;
+  victimStats.connectedSince = null;
+  victimStats.isConnected = false;
+  victimStats.isAlive = false;
+  victimStats.killStreak = 0;
+
+  return victimStats;
+}
+
+function applyCompetitiveDeathStats(victimStats: PlayerStats): void {
   victimStats.deaths++;
   victimStats.deathStreak++;
-  victimStats.killStreak = 0;
   victimStats.kd = calculateKD(victimStats.kills, victimStats.deaths);
   victimStats.score = calculateScore(victimStats);
   victimStats.rank = calculateRank(victimStats.score);
-
-  return victimStats;
 }
 
 export function updateStatsFromEvent(
@@ -107,15 +113,31 @@ export function updateStatsFromEvent(
     }
 
     if (event.victim) {
-      applyVictimDeath(stats, event.victim, normalizedEventTimeMs);
+      const victimStats = finishPlayerLife(stats, event.victim, normalizedEventTimeMs);
+
+      if (victimStats) {
+        applyCompetitiveDeathStats(victimStats);
+      }
     }
 
     return;
   }
 
   if (event.type === "explosion" && event.victim) {
-    applyVictimDeath(stats, event.victim, normalizedEventTimeMs);
+    const victimStats = finishPlayerLife(stats, event.victim, normalizedEventTimeMs);
+
+    if (victimStats) {
+      applyCompetitiveDeathStats(victimStats);
+    }
   }
+}
+
+export function applyNonPvpDeath(
+  stats: MutableStatsCollection,
+  victimName: string,
+  normalizedEventTimeMs: number | null = null
+): void {
+  finishPlayerLife(stats, victimName, normalizedEventTimeMs);
 }
 
 export function getPlayerStats(
@@ -191,6 +213,11 @@ export function handlePlayerConnect(
   const playerStats = ensurePlayerStats(stats, playerName);
 
   if (normalizedConnectTimeMs !== null) {
+    if (!playerStats.isAlive) {
+      playerStats.accumulatedAliveMs = 0;
+      playerStats.isAlive = true;
+    }
+
     playerStats.isConnected = true;
     playerStats.connectedSince = normalizedConnectTimeMs;
   }
@@ -204,11 +231,12 @@ export function handlePlayerDisconnect(
   const playerStats = ensurePlayerStats(stats, playerName);
 
   if (
+    playerStats.isAlive &&
     playerStats.isConnected &&
     playerStats.connectedSince !== null &&
     normalizedDisconnectTimeMs !== null
   ) {
-    const sessionMs = normalizedDisconnectTimeMs - playerStats.connectedSince;
+    const sessionMs = Math.max(0, normalizedDisconnectTimeMs - playerStats.connectedSince);
 
     playerStats.accumulatedAliveMs += sessionMs;
     playerStats.accumulatedPlayedMs += sessionMs;

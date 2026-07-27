@@ -15,6 +15,7 @@ export interface PlayerStats {
   connectedSince: number | null;
   accumulatedAliveMs: number;
   isConnected: boolean;
+  isAlive: boolean;
   lastTimeAlive: string | null;
   accumulatedPlayedMs: number;
 }
@@ -54,6 +55,18 @@ export interface ExplosionKillEvent extends BaseKillEvent {
 }
 
 export type KillEvent = PvPKillEvent | ExplosionKillEvent;
+
+export type NonPvpDeathCause = "zombie" | "wolf" | "bear" | "general";
+
+export interface NonPvpDeathEvent {
+  type: "non-pvp-death";
+  victim: string;
+  cause: NonPvpDeathCause;
+  entity: string | null;
+  t: string | null;
+  line: string;
+  victimPosition?: Position3D;
+}
 
 export interface ConnectSessionEvent {
   type: "connect";

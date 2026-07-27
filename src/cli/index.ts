@@ -68,6 +68,7 @@ function normalizePlayerStats(stats: PersistedPlayerStats | null): PlayerStats |
     connectedSince: stats.connectedSince ?? null,
     accumulatedAliveMs: stats.accumulatedAliveMs ?? 0,
     isConnected: stats.isConnected ?? false,
+    isAlive: stats.isAlive ?? true,
     lastTimeAlive: stats.lastTimeAlive ?? null,
     accumulatedPlayedMs: stats.accumulatedPlayedMs ?? 0,
   };
