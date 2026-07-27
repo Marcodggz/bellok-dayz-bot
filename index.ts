@@ -49,6 +49,7 @@ import {
   processPlayerSessionLine,
 } from "./src/features/stats/playerSessionProcessor.js";
 import { processNonPvpDeathLine } from "./src/features/stats/nonPvpDeathProcessor.js";
+import { updateAdmClock } from "./src/features/stats/admClock.js";
 import { handleCommandInteraction } from "./src/features/commands/commandHandler.js";
 import { registerCommands } from "./src/features/commands/registerCommands.js";
 import { maybeSendWeekendHeatmap } from "./src/utils/weekendHeatmapHelpers.js";
@@ -410,6 +411,7 @@ async function runBot(): Promise<void> {
         );
 
         normalizedEventTimes.set(line, sessionEvent.normalizedTimeMs);
+        updateAdmClock(sessionEvent.normalizedTimeMs);
         processNonPvpDeathLine(line, stats, sessionEvent.normalizedTimeMs, groups.values());
       };
 

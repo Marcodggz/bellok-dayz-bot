@@ -37,10 +37,10 @@ describe("statsCommand", () => {
         },
         favouriteWeapon: "M4A1",
         connectedSince: null,
-        accumulatedAliveMs: 0,
+        accumulatedAliveMs: 600_000,
         isConnected: false,
-        isAlive: false,
-        lastTimeAlive: "00H 10M 00S",
+        isAlive: true,
+        lastTimeAlive: "00H 05M 00S",
         bestTimeAliveMs: 1_200_000,
         accumulatedPlayedMs: 7_200_000,
       },
@@ -78,5 +78,58 @@ describe("statsCommand", () => {
     expect(values).toContain("Favourite Weapon: **N/A**");
     expect(values).toContain("Time Played: **N/A**");
     expect(values).toContain("Best Time Alive: **N/A**");
+  });
+});
+
+describe("current time alive", () => {
+  test("includes the active connected session", async () => {
+    const { calculateCurrentTimeAliveMs } =
+      await import("../../../src/features/commands/statsCommand.ts");
+
+    expect(
+      calculateCurrentTimeAliveMs(
+        {
+          isAlive: true,
+          isConnected: true,
+          connectedSince: 10_000,
+          accumulatedAliveMs: 20_000,
+        },
+        40_000
+      )
+    ).toBe(50_000);
+  });
+
+  test("shows only accumulated life while disconnected", async () => {
+    const { calculateCurrentTimeAliveMs } =
+      await import("../../../src/features/commands/statsCommand.ts");
+
+    expect(
+      calculateCurrentTimeAliveMs(
+        {
+          isAlive: true,
+          isConnected: false,
+          connectedSince: null,
+          accumulatedAliveMs: 45_000,
+        },
+        100_000
+      )
+    ).toBe(45_000);
+  });
+
+  test("returns no current life after death", async () => {
+    const { calculateCurrentTimeAliveMs } =
+      await import("../../../src/features/commands/statsCommand.ts");
+
+    expect(
+      calculateCurrentTimeAliveMs(
+        {
+          isAlive: false,
+          isConnected: false,
+          connectedSince: null,
+          accumulatedAliveMs: 0,
+        },
+        100_000
+      )
+    ).toBeNull();
   });
 });

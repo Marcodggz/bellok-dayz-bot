@@ -13,6 +13,7 @@ import {
 } from "../../storage/linkedGamertagsStore.js";
 import { findPlayerStats, loadPlayerStats } from "../../storage/playerStatsStore.js";
 import { SERVER_NAME } from "../../config/config.js";
+import { getEstimatedAdmTimeMs } from "../stats/admClock.js";
 import { getRankBadgePath } from "../../utils/rankBadges.js";
 import type { PersistedPlayerStats } from "../../types/domainPersistence.js";
 
@@ -110,10 +111,33 @@ export function formatStatsDuration(ms: number | null | undefined): string {
   return `${String(hours).padStart(2, "0")}H ${String(minutes).padStart(2, "0")}M ${String(seconds).padStart(2, "0")}S`;
 }
 
+export function calculateCurrentTimeAliveMs(
+  stats: StatsDisplayData,
+  estimatedAdmTimeMs: number | null
+): number | null {
+  if (stats.isAlive === false) {
+    return null;
+  }
+
+  let totalAliveMs = stats.accumulatedAliveMs ?? 0;
+
+  if (
+    stats.isConnected === true &&
+    stats.connectedSince !== null &&
+    stats.connectedSince !== undefined &&
+    estimatedAdmTimeMs !== null
+  ) {
+    totalAliveMs += Math.max(0, estimatedAdmTimeMs - stats.connectedSince);
+  }
+
+  return totalAliveMs;
+}
+
 export function buildStatsEmbed(
   gamertag: string,
   stats: StatsDisplayData,
-  discordDisplay: string
+  discordDisplay: string,
+  estimatedAdmTimeMs: number | null = getEstimatedAdmTimeMs()
 ): StatsEmbedResult {
   const rank = stats.rank ?? "Private";
   const score = (stats.score ?? 0).toFixed(1);
@@ -131,7 +155,7 @@ export function buildStatsEmbed(
   const longestKill = stats.longestKill ? `${stats.longestKill.toFixed(2)}m` : "N/A";
   const timePlayed = formatStatsDuration(stats.accumulatedPlayedMs);
   const bestTimeAlive = formatStatsDuration(stats.bestTimeAliveMs);
-  const timeAlive = stats.lastTimeAlive ?? "N/A";
+  const timeAlive = formatStatsDuration(calculateCurrentTimeAliveMs(stats, estimatedAdmTimeMs));
 
   const embed = new EmbedBuilder()
     .setColor(0x00ae86)
