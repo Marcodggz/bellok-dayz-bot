@@ -1,4 +1,5 @@
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest";
+import type { KillEvent } from "../../../src/types/domainEvents.ts";
 
 describe("playerStats", () => {
   let playerStats;
@@ -585,7 +586,12 @@ describe("duplicate competitive death protection", () => {
       victim: "Victim",
       weapon: "M4A1",
       distanceMeters: 20,
-    };
+      ammo: null,
+      hitZone: null,
+      damage: null,
+      t: null,
+      line: "",
+    } satisfies KillEvent;
 
     playerStats.updateStatsFromEvent(stats, event, 70_000);
     playerStats.updateStatsFromEvent(stats, event, 70_000);
@@ -608,12 +614,63 @@ describe("duplicate competitive death protection", () => {
         type: "explosion",
         victim: "Victim",
         device: "Landmine",
-      },
+        t: null,
+        line: "",
+      } satisfies KillEvent,
       70_000
     );
 
     expect(stats.Victim.deaths).toBe(0);
     expect(stats.Victim.deathStreak).toBe(0);
     expect(stats.Victim.lastTimeAlive).toBe("00H 01M 00S");
+  });
+});
+
+describe("player lifecycle across bot restarts", () => {
+  test("pauses an active session and resumes the same life after restart", async () => {
+    const playerStats = await import("../../../src/features/stats/playerStats.ts");
+    const stats = playerStats.createEmptyStats();
+
+    playerStats.handlePlayerConnect(stats, "Survivor", 10_000);
+    playerStats.handlePlayerDisconnect(stats, "Survivor", 40_000);
+    playerStats.handlePlayerConnect(stats, "Survivor", 70_000);
+
+    expect(playerStats.resetStalePlayerSessions(stats)).toBe(true);
+
+    expect(stats.Survivor).toMatchObject({
+      accumulatedAliveMs: 30_000,
+      connectedSince: null,
+      isConnected: false,
+      isAlive: true,
+    });
+
+    playerStats.handlePlayerConnect(stats, "Survivor", 5_000);
+    playerStats.applyNonPvpDeath(stats, "Survivor", 25_000);
+
+    expect(stats.Survivor).toMatchObject({
+      lastTimeAlive: "00H 00M 50S",
+      accumulatedAliveMs: 0,
+      accumulatedPlayedMs: 50_000,
+      connectedSince: null,
+      isConnected: false,
+      isAlive: false,
+    });
+  });
+
+  test("does not restart a finished life during bot startup cleanup", async () => {
+    const playerStats = await import("../../../src/features/stats/playerStats.ts");
+    const stats = playerStats.createEmptyStats();
+
+    playerStats.handlePlayerConnect(stats, "Survivor", 10_000);
+    playerStats.applyNonPvpDeath(stats, "Survivor", 70_000);
+
+    expect(playerStats.resetStalePlayerSessions(stats)).toBe(false);
+
+    expect(stats.Survivor).toMatchObject({
+      lastTimeAlive: "00H 01M 00S",
+      connectedSince: null,
+      isConnected: false,
+      isAlive: false,
+    });
   });
 });

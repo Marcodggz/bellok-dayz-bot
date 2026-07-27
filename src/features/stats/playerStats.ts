@@ -205,6 +205,20 @@ function formatTimeAlive(ms: number | null | undefined): string {
   return `${String(hours).padStart(2, "0")}H ${String(minutes).padStart(2, "0")}M ${String(seconds).padStart(2, "0")}S`;
 }
 
+export function resetStalePlayerSessions(stats: MutableStatsCollection): boolean {
+  let changed = false;
+
+  for (const playerStats of Object.values(stats)) {
+    if (playerStats.isConnected || playerStats.connectedSince !== null) {
+      playerStats.isConnected = false;
+      playerStats.connectedSince = null;
+      changed = true;
+    }
+  }
+
+  return changed;
+}
+
 export function handlePlayerConnect(
   stats: MutableStatsCollection,
   playerName: string,

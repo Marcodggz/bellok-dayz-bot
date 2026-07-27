@@ -41,6 +41,7 @@ import {
   getPlayerStats,
   handlePlayerConnect,
   handlePlayerDisconnect,
+  resetStalePlayerSessions,
   updateStatsFromEvent,
 } from "./src/features/stats/playerStats.js";
 import {
@@ -375,16 +376,7 @@ async function runBot(): Promise<void> {
 
   // Active sessions cannot safely continue across bot restarts because ADM
   // timestamps are normalized relative to the current process.
-  let resetStaleSessions = false;
-  for (const playerStats of Object.values(stats)) {
-    if (playerStats.isConnected || playerStats.connectedSince !== null) {
-      playerStats.isConnected = false;
-      playerStats.connectedSince = null;
-      resetStaleSessions = true;
-    }
-  }
-
-  if (resetStaleSessions) {
+  if (resetStalePlayerSessions(stats)) {
     savePlayerStats(stats);
   }
 
