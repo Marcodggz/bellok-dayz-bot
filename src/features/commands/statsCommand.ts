@@ -16,16 +16,7 @@ import { SERVER_NAME } from "../../config/config.js";
 import { getRankBadgePath } from "../../utils/rankBadges.js";
 import type { PersistedPlayerStats } from "../../types/domainPersistence.js";
 
-interface StatsDisplayData extends PersistedPlayerStats {
-  bestKillStreak?: number;
-  worstDeathStreak?: number;
-  lastKill?: string;
-  lastDeath?: string;
-  favouriteWeapon?: string;
-  timePlayed?: string;
-  bestTimeAlive?: string;
-  timeAlive?: string;
-}
+type StatsDisplayData = PersistedPlayerStats;
 
 interface StatsEmbedResult {
   embed: EmbedBuilder;
@@ -101,7 +92,25 @@ export const statsCommand = {
   },
 };
 
-function buildStatsEmbed(
+export function formatStatsDuration(ms: number | null | undefined): string {
+  if (ms === null || ms === undefined || ms < 0) {
+    return "N/A";
+  }
+
+  const totalSeconds = Math.floor(ms / 1000);
+  const days = Math.floor(totalSeconds / 86_400);
+  const hours = Math.floor((totalSeconds % 86_400) / 3_600);
+  const minutes = Math.floor((totalSeconds % 3_600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (days > 0) {
+    return `${String(days).padStart(2, "0")}D ${String(hours).padStart(2, "0")}H ${String(minutes).padStart(2, "0")}M`;
+  }
+
+  return `${String(hours).padStart(2, "0")}H ${String(minutes).padStart(2, "0")}M ${String(seconds).padStart(2, "0")}S`;
+}
+
+export function buildStatsEmbed(
   gamertag: string,
   stats: StatsDisplayData,
   discordDisplay: string
@@ -120,9 +129,9 @@ function buildStatsEmbed(
   const lastDeath = stats.lastDeath ?? "N/A";
   const favouriteWeapon = stats.favouriteWeapon ?? "N/A";
   const longestKill = stats.longestKill ? `${stats.longestKill.toFixed(2)}m` : "N/A";
-  const timePlayed = stats.timePlayed ?? "N/A";
-  const bestTimeAlive = stats.bestTimeAlive ?? "N/A";
-  const timeAlive = stats.timeAlive ?? stats.lastTimeAlive ?? "N/A";
+  const timePlayed = formatStatsDuration(stats.accumulatedPlayedMs);
+  const bestTimeAlive = formatStatsDuration(stats.bestTimeAliveMs);
+  const timeAlive = stats.lastTimeAlive ?? "N/A";
 
   const embed = new EmbedBuilder()
     .setColor(0x00ae86)

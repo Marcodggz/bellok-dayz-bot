@@ -21,7 +21,13 @@ function ensurePlayerStats(stats: MutableStatsCollection, playerName: string): P
     headshots: persistedStats.headshots ?? 0,
     kd: persistedStats.kd ?? 0,
     killStreak: persistedStats.killStreak ?? 0,
+    bestKillStreak: persistedStats.bestKillStreak ?? persistedStats.killStreak ?? 0,
     deathStreak: persistedStats.deathStreak ?? 0,
+    worstDeathStreak: persistedStats.worstDeathStreak ?? persistedStats.deathStreak ?? 0,
+    lastKill: persistedStats.lastKill ?? null,
+    lastDeath: persistedStats.lastDeath ?? null,
+    weaponKills: persistedStats.weaponKills ?? {},
+    favouriteWeapon: persistedStats.favouriteWeapon ?? null,
     score: persistedStats.score ?? 0,
     rank: persistedStats.rank ?? "Private",
     longestKill: persistedStats.longestKill ?? 0,
@@ -31,6 +37,7 @@ function ensurePlayerStats(stats: MutableStatsCollection, playerName: string): P
     isConnected: persistedStats.isConnected ?? false,
     isAlive: persistedStats.isAlive ?? true,
     lastTimeAlive: persistedStats.lastTimeAlive ?? null,
+    bestTimeAliveMs: persistedStats.bestTimeAliveMs ?? 0,
     accumulatedPlayedMs: persistedStats.accumulatedPlayedMs ?? 0,
   };
 
@@ -64,6 +71,7 @@ function finishPlayerLife(
   }
 
   victimStats.lastTimeAlive = formatTimeAlive(totalAliveMs);
+  victimStats.bestTimeAliveMs = Math.max(victimStats.bestTimeAliveMs, totalAliveMs);
   victimStats.accumulatedAliveMs = 0;
   victimStats.connectedSince = null;
   victimStats.isConnected = false;
@@ -76,6 +84,7 @@ function finishPlayerLife(
 function applyCompetitiveDeathStats(victimStats: PlayerStats): void {
   victimStats.deaths++;
   victimStats.deathStreak++;
+  victimStats.worstDeathStreak = Math.max(victimStats.worstDeathStreak, victimStats.deathStreak);
   victimStats.kd = calculateKD(victimStats.kills, victimStats.deaths);
   victimStats.score = calculateScore(victimStats);
   victimStats.rank = calculateRank(victimStats.score);
@@ -96,7 +105,23 @@ export function updateStatsFromEvent(
 
       killerStats.kills++;
       killerStats.killStreak++;
+      killerStats.bestKillStreak = Math.max(killerStats.bestKillStreak, killerStats.killStreak);
       killerStats.deathStreak = 0;
+
+      if (event.victim) {
+        killerStats.lastKill = event.victim;
+      }
+
+      const weapon = event.weapon || "Unknown";
+      killerStats.weaponKills[weapon] = (killerStats.weaponKills[weapon] ?? 0) + 1;
+
+      const favouriteWeaponKills = killerStats.favouriteWeapon
+        ? (killerStats.weaponKills[killerStats.favouriteWeapon] ?? 0)
+        : 0;
+
+      if (!killerStats.favouriteWeapon || killerStats.weaponKills[weapon] > favouriteWeaponKills) {
+        killerStats.favouriteWeapon = weapon;
+      }
 
       if (event.hitZone === "Head") {
         killerStats.headshots++;
@@ -116,6 +141,10 @@ export function updateStatsFromEvent(
       const victimStats = finishPlayerLife(stats, event.victim, normalizedEventTimeMs);
 
       if (victimStats) {
+        if (event.killer) {
+          victimStats.lastDeath = event.killer;
+        }
+
         applyCompetitiveDeathStats(victimStats);
       }
     }

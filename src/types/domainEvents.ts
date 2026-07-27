@@ -7,7 +7,13 @@ export interface PlayerStats {
   headshots: number;
   kd: number;
   killStreak: number;
+  bestKillStreak: number;
   deathStreak: number;
+  worstDeathStreak: number;
+  lastKill: string | null;
+  lastDeath: string | null;
+  weaponKills: Record<string, number>;
+  favouriteWeapon: string | null;
   score: number;
   rank: PlayerRank;
   longestKill: number;
@@ -17,6 +23,7 @@ export interface PlayerStats {
   isConnected: boolean;
   isAlive: boolean;
   lastTimeAlive: string | null;
+  bestTimeAliveMs: number;
   accumulatedPlayedMs: number;
 }
 

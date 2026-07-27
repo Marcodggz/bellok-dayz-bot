@@ -674,3 +674,172 @@ describe("player lifecycle across bot restarts", () => {
     });
   });
 });
+
+describe("detailed player statistics", () => {
+  test("stores PvP rivals and weapon usage", async () => {
+    const playerStats = await import("../../../src/features/stats/playerStats.ts");
+    const stats = playerStats.createEmptyStats();
+
+    playerStats.handlePlayerConnect(stats, "Victim", 1_000);
+
+    playerStats.updateStatsFromEvent(
+      stats,
+      {
+        type: "pvp",
+        killer: "Killer",
+        victim: "Victim",
+        weapon: "M4A1",
+        distanceMeters: 30,
+        ammo: "5.56x45mm",
+        hitZone: "Torso",
+        damage: 100,
+        t: "12:00:00",
+        line: "PvP kill",
+      } satisfies KillEvent,
+      10_000
+    );
+
+    expect(stats.Killer).toMatchObject({
+      lastKill: "Victim",
+      favouriteWeapon: "M4A1",
+      weaponKills: {
+        M4A1: 1,
+      },
+    });
+
+    expect(stats.Victim.lastDeath).toBe("Killer");
+  });
+
+  test("selects the weapon with the most PvP kills", async () => {
+    const playerStats = await import("../../../src/features/stats/playerStats.ts");
+    const stats = playerStats.createEmptyStats();
+
+    for (const [victim, weapon] of [
+      ["Victim1", "M4A1"],
+      ["Victim2", "LAR"],
+      ["Victim3", "LAR"],
+    ]) {
+      playerStats.updateStatsFromEvent(stats, {
+        type: "pvp",
+        killer: "Killer",
+        victim,
+        weapon,
+        distanceMeters: 20,
+        ammo: null,
+        hitZone: null,
+        damage: null,
+        t: null,
+        line: "",
+      } satisfies KillEvent);
+    }
+
+    expect(stats.Killer.weaponKills).toEqual({
+      M4A1: 1,
+      LAR: 2,
+    });
+    expect(stats.Killer.favouriteWeapon).toBe("LAR");
+  });
+
+  test("tracks historical best and worst streaks", async () => {
+    const playerStats = await import("../../../src/features/stats/playerStats.ts");
+    const stats = playerStats.createEmptyStats();
+
+    for (const victim of ["Victim1", "Victim2"]) {
+      playerStats.updateStatsFromEvent(stats, {
+        type: "pvp",
+        killer: "Killer",
+        victim,
+        weapon: "M4A1",
+        distanceMeters: 20,
+        ammo: null,
+        hitZone: null,
+        damage: null,
+        t: null,
+        line: "",
+      } satisfies KillEvent);
+    }
+
+    expect(stats.Killer.bestKillStreak).toBe(2);
+
+    playerStats.handlePlayerConnect(stats, "Victim", 1_000);
+    playerStats.updateStatsFromEvent(
+      stats,
+      {
+        type: "pvp",
+        killer: "Enemy1",
+        victim: "Victim",
+        weapon: "M4A1",
+        distanceMeters: 20,
+        ammo: null,
+        hitZone: null,
+        damage: null,
+        t: null,
+        line: "",
+      } satisfies KillEvent,
+      10_000
+    );
+
+    playerStats.handlePlayerConnect(stats, "Victim", 20_000);
+    playerStats.updateStatsFromEvent(
+      stats,
+      {
+        type: "pvp",
+        killer: "Enemy2",
+        victim: "Victim",
+        weapon: "LAR",
+        distanceMeters: 20,
+        ammo: null,
+        hitZone: null,
+        damage: null,
+        t: null,
+        line: "",
+      } satisfies KillEvent,
+      30_000
+    );
+
+    expect(stats.Victim.worstDeathStreak).toBe(2);
+  });
+
+  test("stores the longest completed life in milliseconds", async () => {
+    const playerStats = await import("../../../src/features/stats/playerStats.ts");
+    const stats = playerStats.createEmptyStats();
+
+    playerStats.handlePlayerConnect(stats, "Survivor", 10_000);
+    playerStats.applyNonPvpDeath(stats, "Survivor", 70_000);
+
+    playerStats.handlePlayerConnect(stats, "Survivor", 100_000);
+    playerStats.applyNonPvpDeath(stats, "Survivor", 130_000);
+
+    expect(stats.Survivor.bestTimeAliveMs).toBe(60_000);
+    expect(stats.Survivor.lastTimeAlive).toBe("00H 00M 30S");
+  });
+
+  test("does not replace PvP rival fields after a non-PvP death", async () => {
+    const playerStats = await import("../../../src/features/stats/playerStats.ts");
+    const stats = playerStats.createEmptyStats();
+
+    playerStats.handlePlayerConnect(stats, "Victim", 1_000);
+    playerStats.updateStatsFromEvent(
+      stats,
+      {
+        type: "pvp",
+        killer: "Enemy",
+        victim: "Victim",
+        weapon: "M4A1",
+        distanceMeters: 20,
+        ammo: null,
+        hitZone: null,
+        damage: null,
+        t: null,
+        line: "",
+      } satisfies KillEvent,
+      10_000
+    );
+
+    playerStats.handlePlayerConnect(stats, "Victim", 20_000);
+    playerStats.applyNonPvpDeath(stats, "Victim", 30_000);
+
+    expect(stats.Victim.lastDeath).toBe("Enemy");
+    expect(stats.Victim.deaths).toBe(1);
+  });
+});

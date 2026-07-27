@@ -60,7 +60,13 @@ function normalizePlayerStats(stats: PersistedPlayerStats | null): PlayerStats |
     headshots: stats.headshots ?? 0,
     kd: stats.kd ?? 0,
     killStreak: stats.killStreak ?? 0,
+    bestKillStreak: stats.bestKillStreak ?? stats.killStreak ?? 0,
     deathStreak: stats.deathStreak ?? 0,
+    worstDeathStreak: stats.worstDeathStreak ?? stats.deathStreak ?? 0,
+    lastKill: stats.lastKill ?? null,
+    lastDeath: stats.lastDeath ?? null,
+    weaponKills: stats.weaponKills ?? {},
+    favouriteWeapon: stats.favouriteWeapon ?? null,
     score: stats.score ?? 0,
     rank: stats.rank ?? "Private",
     longestKill: stats.longestKill ?? 0,
@@ -70,6 +76,7 @@ function normalizePlayerStats(stats: PersistedPlayerStats | null): PlayerStats |
     isConnected: stats.isConnected ?? false,
     isAlive: stats.isAlive ?? true,
     lastTimeAlive: stats.lastTimeAlive ?? null,
+    bestTimeAliveMs: stats.bestTimeAliveMs ?? 0,
     accumulatedPlayedMs: stats.accumulatedPlayedMs ?? 0,
   };
 }
