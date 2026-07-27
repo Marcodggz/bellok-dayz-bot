@@ -29,3 +29,5 @@ coverage/
 
 # TypeScript build output
 dist/
+
+data/linked-gamertags.json
