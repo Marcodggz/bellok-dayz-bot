@@ -16,6 +16,8 @@ beforeEach(async () => {
 
   vi.doMock("../../../src/features/killfeed/killEventDeduplicator.ts", () => ({
     hasSentBucket,
+    victimBucketKey: vi.fn((victim: string | null, time: string | null) => `${victim}|${time}`),
+    typeRank: vi.fn(() => 1),
   }));
 
   vi.doMock("../../../src/features/killfeed/killfeedQueue.ts", () => ({
@@ -24,6 +26,7 @@ beforeEach(async () => {
 
   vi.doMock("../../../src/features/tracking/positionTracker.ts", () => ({
     posForVictimFromLine,
+    updatePositionsFromLine: vi.fn(),
   }));
 
   ({ handleKillEvents } = await import("../../../src/features/killfeed/killEventHandler.ts"));
@@ -290,5 +293,65 @@ describe("killEventHandler", () => {
     const result = handleKillEvents(groups, lines);
 
     expect(result).toEqual([]);
+  });
+
+  test("closes the player life after a fatal fuel station explosion", async () => {
+    hasSentBucket.mockReturnValue(false);
+
+    const { processKillEvents } =
+      await import("../../../src/features/killfeed/killEventProcessor.ts");
+
+    const line =
+      '18:46:13 | Player "BL6CKx" (DEAD) (id=test pos=<2003.9, 7371.8, 208.3>)[HP: 0] hit by explosion (LandFuelFeed_Ammo)';
+
+    const groups = processKillEvents([line]);
+
+    const stats: Record<string, Partial<PlayerStats>> = {
+      BL6CKx: {
+        kills: 0,
+        deaths: 0,
+        headshots: 0,
+        kd: 0,
+        killStreak: 0,
+        deathStreak: 0,
+        score: 0,
+        rank: "Private",
+        connectedSince: 67_500_000,
+        accumulatedAliveMs: 0,
+        accumulatedPlayedMs: 0,
+        isConnected: true,
+        isAlive: true,
+        lastTimeAlive: null,
+      },
+    };
+
+    const normalizedEventTimes = new Map([[line, 67_573_000]]);
+
+    handleKillEvents(groups, [line], stats, normalizedEventTimes);
+
+    expect(stats.BL6CKx).toMatchObject({
+      deaths: 1,
+      accumulatedAliveMs: 0,
+      accumulatedPlayedMs: 73_000,
+      connectedSince: null,
+      isConnected: false,
+      isAlive: false,
+      lastTimeAlive: "00H 01M 13S",
+    });
+
+    expect(queueKillfeedEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        kill: expect.objectContaining({
+          type: "explosion",
+          victim: "BL6CKx",
+          device: "LandFuelFeed_Ammo",
+        }),
+        victimStats: expect.objectContaining({
+          isAlive: false,
+          lastTimeAlive: "00H 01M 13S",
+        }),
+      }),
+      expect.any(String)
+    );
   });
 });

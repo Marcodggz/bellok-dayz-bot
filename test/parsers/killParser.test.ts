@@ -180,6 +180,24 @@ describe("killParser", () => {
       expect(result.device).toBe("Tripwire explosion");
     });
 
+    test("parses a real fuel station explosion death from the fatal hit line", () => {
+      const line =
+        '18:46:13 | Player "BL6CKx" (DEAD) (id=test pos=<2003.9, 7371.8, 208.3>)[HP: 0] hit by explosion (LandFuelFeed_Ammo)';
+
+      const result = parser.parseKill(line);
+
+      expect(result).not.toBeNull();
+      expect(result.type).toBe("explosion");
+      expect(result.victim).toBe("BL6CKx");
+      expect(result.device).toBe("LandFuelFeed_Ammo");
+      expect(result.t).toBe("18:46:13");
+      expect(result.victimPosition).toEqual({
+        x: 2003.9,
+        y: 7371.8,
+        z: 208.3,
+      });
+    });
+
     test("extracts victim position for explosion deaths", () => {
       const line =
         '14:27:33 | Player "BoomGuy" (id=55443322 pos=<4521.8, 9876.5, 125.3>) killed by Grenade explosion';

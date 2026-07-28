@@ -201,6 +201,42 @@ export function parseKill(line: string): KillEvent | null {
     return result;
   }
 
+  const explosionHitMatch = line.match(
+    new RegExp(
+      `Player ${q}(.+?)${q}\\s+\\(DEAD\\)[^|\\r\\n]*?hit by explosion\\s*\\(([^)]+)\\)`,
+      "i"
+    )
+  );
+
+  if (explosionHitMatch) {
+    const victimRaw = explosionHitMatch[1];
+    const device = explosionHitMatch[2].trim();
+
+    const result: ExplosionKillEvent = {
+      type: "explosion",
+      victim: cleanPlayerName(victimRaw),
+      device: cleanDevice(device),
+      t,
+      line,
+    };
+
+    const victimPositionPattern = new RegExp(
+      `Player ${q}${escapeRegExp(victimRaw)}${q}[^<]*pos=<([^>]+)>`,
+      "i"
+    );
+    const victimPositionMatch = line.match(victimPositionPattern);
+
+    if (victimPositionMatch) {
+      const victimPosition = extractPosition(`pos=<${victimPositionMatch[1]}>`);
+
+      if (victimPosition) {
+        result.victimPosition = victimPosition;
+      }
+    }
+
+    return result;
+  }
+
   const explosionMatch = line.match(
     new RegExp(`Player ${q}(.+?)${q}.*?killed by ([^|\\r\\n]+)`, "i")
   );
