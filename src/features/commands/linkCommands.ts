@@ -9,6 +9,10 @@ import {
 } from "../../storage/linkedGamertagsStore.js";
 import { findPlayerStats, loadPlayerStats } from "../../storage/playerStatsStore.js";
 
+export function buildLinkSuccessMessage(gamertag: string): string {
+  return `✅ Successfully linked your account to gamertag **${gamertag}**`;
+}
+
 export const linkCommand = {
   data: new SlashCommandBuilder()
     .setName("link")
@@ -40,20 +44,13 @@ export const linkCommand = {
 
       linkGamertag(userId, gamertag);
 
-      if (!playerResult) {
-        await interaction.reply({
-          content: `✅ Linked your account to gamertag **${gamertag}**. No statistics have been recorded for this player yet; they will appear after playing on the server.`,
-          flags: MessageFlags.Ephemeral,
-        });
-      } else if (existingGamertag) {
+      if (existingGamertag && existingGamertag !== gamertag) {
         await interaction.reply({
           content: `✅ Updated your linked gamertag from **${existingGamertag}** to **${gamertag}**`,
-          flags: MessageFlags.Ephemeral,
         });
       } else {
         await interaction.reply({
-          content: `✅ Successfully linked your account to gamertag **${gamertag}**`,
-          flags: MessageFlags.Ephemeral,
+          content: buildLinkSuccessMessage(gamertag),
         });
       }
     } catch (error: unknown) {

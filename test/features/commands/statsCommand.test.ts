@@ -1,11 +1,25 @@
 import { describe, expect, test } from "vitest";
 
 import {
+  buildMissingStatsMessage,
   buildStatsEmbed,
+  buildUnknownPlayerMessage,
   formatStatsDuration,
 } from "../../../src/features/commands/statsCommand.ts";
 
 describe("statsCommand", () => {
+  test("explains how to generate statistics for a new player", () => {
+    expect(buildMissingStatsMessage("LeFleur0")).toBe(
+      "❌ No statistics have been recorded for **LeFleur0** yet. Play on the server for at least 10 minutes, then try again."
+    );
+  });
+
+  test("warns when a manually specified gamertag does not exist", () => {
+    expect(buildUnknownPlayerMessage("Vanilla+ Livonia")).toBe(
+      "❌ Specified gamertag does not exist on **Vanilla+ Livonia**!\nPlease note gamertags are case-sensitive, so they must be typed correctly."
+    );
+  });
+
   test("formats persisted durations", () => {
     expect(formatStatsDuration(0)).toBe("00H 00M 00S");
     expect(formatStatsDuration(3_661_000)).toBe("01H 01M 01S");

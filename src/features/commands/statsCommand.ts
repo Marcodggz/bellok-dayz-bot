@@ -24,6 +24,14 @@ interface StatsEmbedResult {
   files: AttachmentBuilder[];
 }
 
+export function buildMissingStatsMessage(gamertag: string): string {
+  return `❌ No statistics have been recorded for **${gamertag}** yet. Play on the server for at least 10 minutes, then try again.`;
+}
+
+export function buildUnknownPlayerMessage(serverName: string): string {
+  return `❌ Specified gamertag does not exist on **${serverName}**!\nPlease note gamertags are case-sensitive, so they must be typed correctly.`;
+}
+
 export const statsCommand = {
   data: new SlashCommandBuilder()
     .setName("stats")
@@ -64,7 +72,9 @@ export const statsCommand = {
 
       if (!playerResult) {
         await interaction.reply({
-          content: `❌ No stats found for player **${gamertag}**`,
+          content: playerOption
+            ? buildUnknownPlayerMessage(SERVER_NAME)
+            : buildMissingStatsMessage(gamertag),
           flags: MessageFlags.Ephemeral,
         });
         return;
