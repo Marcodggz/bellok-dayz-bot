@@ -87,7 +87,16 @@ export function getRandomPvpAction(
   killer: string | null | undefined,
   victim: string | null | undefined
 ): string {
-  const actions = ["embarrassed", "eliminated", "shit on"];
+  const actions = [
+    "embarrassed",
+    "eliminated",
+    "shit on",
+    "destroyed",
+    "wrecked",
+    "ended",
+    "smoked",
+    "annihilated",
+  ];
   const seed = (killer || "").length + (victim || "").length * 3;
   const index = seed % actions.length;
 

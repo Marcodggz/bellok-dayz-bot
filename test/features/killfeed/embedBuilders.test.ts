@@ -9,6 +9,7 @@ import {
   buildVictimStatsLines,
   embedPvp,
   embedExplosion,
+  getRandomPvpAction,
 } from "../../../src/features/killfeed/embedBuilders.ts";
 
 function createPvpEvent(overrides: Partial<PvPKillEvent> = {}): PvPKillEvent {
@@ -76,6 +77,29 @@ describe("embedBuilders", () => {
         "**Time Alive:** 0m",
       ]);
     });
+  });
+
+  test("uses the supported PvP action phrases", () => {
+    const supportedActions = [
+      "embarrassed",
+      "eliminated",
+      "shit on",
+      "destroyed",
+      "wrecked",
+      "ended",
+      "smoked",
+      "annihilated",
+    ];
+
+    const actions = Array.from({ length: 40 }, (_, index) =>
+      getRandomPvpAction("K".repeat(index), "V".repeat(index * 2))
+    );
+
+    expect(actions.every((action) => supportedActions.includes(action))).toBe(true);
+
+    for (const action of supportedActions) {
+      expect(actions).toContain(action);
+    }
   });
 
   describe("embedPvp", () => {
