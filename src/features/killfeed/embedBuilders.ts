@@ -172,7 +172,7 @@ export function embedPvp(
         .setColor(0xe11d48)
         .setDescription(lines.join("\n"))
         .setFooter({ text: "Bellok's Killfeed" })
-        .setTimestamp(eventTimestamp ? new Date(eventTimestamp) : new Date()),
+        .setTimestamp(new Date()),
     ],
   };
 }
@@ -207,7 +207,7 @@ export function embedExplosion(
         .setColor(0xf59e0b)
         .setDescription(lines.join("\n"))
         .setFooter({ text: "Bellok's Killfeed" })
-        .setTimestamp(eventTimestamp ? new Date(eventTimestamp) : new Date()),
+        .setTimestamp(new Date()),
     ],
   };
 }

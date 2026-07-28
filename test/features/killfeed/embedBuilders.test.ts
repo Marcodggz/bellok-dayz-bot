@@ -1,4 +1,4 @@
-import { describe, test, expect } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 import type {
   ExplosionKillEvent,
   PlayerStats,
@@ -100,6 +100,30 @@ describe("embedBuilders", () => {
     for (const action of supportedActions) {
       expect(actions).toContain(action);
     }
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  test("uses the death time in the title and the Discord send time in the footer", () => {
+    const deathTimestamp = Date.parse("2026-07-28T16:00:08.000Z");
+    const sentTimestamp = Date.parse("2026-07-28T16:08:00.000Z");
+
+    vi.useFakeTimers();
+    vi.setSystemTime(sentTimestamp);
+
+    const pvpResult = embedPvp(createPvpEvent(), deathTimestamp, null, null);
+    const explosionResult = embedExplosion(createExplosionEvent(), deathTimestamp, null);
+
+    const expectedDeathTime = `<t:${Math.floor(deathTimestamp / 1000)}:T>`;
+    const expectedSendTime = new Date(sentTimestamp).toISOString();
+
+    expect(pvpResult.embeds[0].data.description).toContain(expectedDeathTime);
+    expect(explosionResult.embeds[0].data.description).toContain(expectedDeathTime);
+
+    expect(pvpResult.embeds[0].data.timestamp).toBe(expectedSendTime);
+    expect(explosionResult.embeds[0].data.timestamp).toBe(expectedSendTime);
   });
 
   describe("embedPvp", () => {
