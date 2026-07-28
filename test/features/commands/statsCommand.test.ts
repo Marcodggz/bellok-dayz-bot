@@ -147,3 +147,53 @@ describe("current time alive", () => {
     ).toBeNull();
   });
 });
+
+describe("current time played", () => {
+  test("includes the active connected session", async () => {
+    const { calculateCurrentTimePlayedMs } =
+      await import("../../../src/features/commands/statsCommand.ts");
+
+    expect(
+      calculateCurrentTimePlayedMs(
+        {
+          accumulatedPlayedMs: 300_000,
+          isConnected: true,
+          connectedSince: 100_000,
+        },
+        400_000
+      )
+    ).toBe(600_000);
+  });
+
+  test("uses only accumulated playtime while disconnected", async () => {
+    const { calculateCurrentTimePlayedMs } =
+      await import("../../../src/features/commands/statsCommand.ts");
+
+    expect(
+      calculateCurrentTimePlayedMs(
+        {
+          accumulatedPlayedMs: 480_000,
+          isConnected: false,
+          connectedSince: null,
+        },
+        900_000
+      )
+    ).toBe(480_000);
+  });
+
+  test("does not extrapolate an active session without an ADM timestamp", async () => {
+    const { calculateCurrentTimePlayedMs } =
+      await import("../../../src/features/commands/statsCommand.ts");
+
+    expect(
+      calculateCurrentTimePlayedMs(
+        {
+          accumulatedPlayedMs: 120_000,
+          isConnected: true,
+          connectedSince: 100_000,
+        },
+        null
+      )
+    ).toBe(120_000);
+  });
+});

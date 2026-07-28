@@ -19,6 +19,8 @@ import type { PersistedPlayerStats } from "../../types/domainPersistence.js";
 
 type StatsDisplayData = PersistedPlayerStats;
 
+const MINIMUM_STATS_PLAYTIME_MS = 10 * 60 * 1000;
+
 interface StatsEmbedResult {
   embed: EmbedBuilder;
   files: AttachmentBuilder[];
@@ -82,11 +84,25 @@ export const statsCommand = {
 
       gamertag = playerResult.gamertag;
       const playerStats: StatsDisplayData = playerResult.stats;
+      const estimatedAdmTimeMs = getEstimatedAdmTimeMs();
+      const currentTimePlayedMs = calculateCurrentTimePlayedMs(playerStats, estimatedAdmTimeMs);
+
+      if (currentTimePlayedMs < MINIMUM_STATS_PLAYTIME_MS) {
+        await interaction.reply({
+          content: buildMissingStatsMessage(gamertag),
+        });
+        return;
+      }
 
       const linkedUserId = getDiscordUserIdByGamertag(gamertag);
       const discordDisplay = linkedUserId ? `<@${linkedUserId}>` : "Not Linked";
 
-      const { embed, files } = buildStatsEmbed(gamertag, playerStats, discordDisplay);
+      const { embed, files } = buildStatsEmbed(
+        gamertag,
+        playerStats,
+        discordDisplay,
+        estimatedAdmTimeMs
+      );
 
       await interaction.reply({
         embeds: [embed],
@@ -119,6 +135,24 @@ export function formatStatsDuration(ms: number | null | undefined): string {
   }
 
   return `${String(hours).padStart(2, "0")}H ${String(minutes).padStart(2, "0")}M ${String(seconds).padStart(2, "0")}S`;
+}
+
+export function calculateCurrentTimePlayedMs(
+  stats: StatsDisplayData,
+  estimatedAdmTimeMs: number | null
+): number {
+  let totalPlayedMs = stats.accumulatedPlayedMs ?? 0;
+
+  if (
+    stats.isConnected === true &&
+    stats.connectedSince !== null &&
+    stats.connectedSince !== undefined &&
+    estimatedAdmTimeMs !== null
+  ) {
+    totalPlayedMs += Math.max(0, estimatedAdmTimeMs - stats.connectedSince);
+  }
+
+  return totalPlayedMs;
 }
 
 export function calculateCurrentTimeAliveMs(
