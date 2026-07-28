@@ -11,13 +11,20 @@ describe("admClock", () => {
     resetAdmClock();
   });
 
-  test("estimates current ADM time from elapsed real time", () => {
-    updateAdmClock(50_000, 1_000);
+  test("returns the latest normalized ADM timestamp without extrapolation", () => {
+    updateAdmClock(50_000);
 
-    expect(getEstimatedAdmTimeMs(6_000)).toBe(55_000);
+    expect(getEstimatedAdmTimeMs()).toBe(50_000);
+  });
+
+  test("keeps the latest timestamp when an invalid timestamp arrives", () => {
+    updateAdmClock(50_000);
+    updateAdmClock(null);
+
+    expect(getEstimatedAdmTimeMs()).toBe(50_000);
   });
 
   test("returns null before receiving an ADM timestamp", () => {
-    expect(getEstimatedAdmTimeMs(10_000)).toBeNull();
+    expect(getEstimatedAdmTimeMs()).toBeNull();
   });
 });
