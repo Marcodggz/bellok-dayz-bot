@@ -4,6 +4,7 @@ import { PNG } from "pngjs";
 import fs from "node:fs";
 import { clamp } from "./helpers.js";
 import { mapToPixelCoords } from "./coordinateMapper.js";
+import { buildHeatmapMessagePayload } from "./heatmapMessagePayload.js";
 import {
   buildHeatClusters,
   drawHeatCluster,
@@ -21,13 +22,7 @@ import {
   HEATMAP_HEIGHT,
   MAP_SIZE,
 } from "../config/config.js";
-import {
-  AttachmentBuilder,
-  EmbedBuilder,
-  type Client,
-  type MessageCreateOptions,
-  type MessageEditOptions,
-} from "discord.js";
+import { AttachmentBuilder, EmbedBuilder, type Client } from "discord.js";
 import type { TrackedPlayerPosition, WeekendHeatState } from "../types/domainHeatmap.js";
 
 function getErrorDetail(error: unknown): unknown {
@@ -233,7 +228,7 @@ export async function maybeSendWeekendHeatmap(client: Client): Promise<void> {
       .setFooter({ text: `Bellok's Killfeed • ${MAP_DISPLAY_NAME}` })
       .setTimestamp(now);
 
-    let payload: MessageCreateOptions & MessageEditOptions;
+    let payload: ReturnType<typeof buildHeatmapMessagePayload>;
 
     if (wh.points.length) {
       renderWeekendHeatPng(wh.points, WEEKEND_HEATMAP_IMG_PATH, MAP_IMAGE_PATH);
@@ -247,17 +242,13 @@ export async function maybeSendWeekendHeatmap(client: Client): Promise<void> {
         )
         .setImage(`attachment://${WEEKEND_HEATMAP_IMG_PATH.split("/").pop()}`);
 
-      payload = { content: "", embeds: [embed], files: [file] };
+      payload = buildHeatmapMessagePayload({ embed, file });
     } else {
       embed.setDescription(
         `No player locations recorded in the last ${WEEKEND_HEATMAP_WINDOW_MIN} minutes.`
       );
 
-      payload = {
-        content: "",
-        embeds: [embed],
-        attachments: [],
-      };
+      payload = buildHeatmapMessagePayload({ embed });
     }
 
     // Try to edit existing message, or send new one

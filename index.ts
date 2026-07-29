@@ -9,14 +9,7 @@ import type { PersistedPlayerStatsCollection } from "./src/types/domainPersisten
 import type { HeatPoint, HeatState } from "./src/types/domainHeatmap.js";
 
 import fs from "node:fs";
-import {
-  AttachmentBuilder,
-  Client,
-  EmbedBuilder,
-  GatewayIntentBits,
-  type MessageCreateOptions,
-  type MessageEditOptions,
-} from "discord.js";
+import { AttachmentBuilder, Client, EmbedBuilder, GatewayIntentBits } from "discord.js";
 import { PNG } from "pngjs";
 
 // Import config and helpers
@@ -55,6 +48,7 @@ import { registerCommands } from "./src/features/commands/registerCommands.js";
 import { maybeSendWeekendHeatmap } from "./src/utils/weekendHeatmapHelpers.js";
 import { mapToPixelCoords } from "./src/utils/coordinateMapper.js";
 import { createHeatmapCycle } from "./src/utils/heatmapCycle.js";
+import { buildHeatmapMessagePayload } from "./src/utils/heatmapMessagePayload.js";
 import {
   buildHeatClusters,
   drawHeatCluster,
@@ -292,7 +286,7 @@ async function maybeSendHeatmap(client: Client): Promise<void> {
       .setFooter({ text: `Bellok's Killfeed • ${MAP_DISPLAY_NAME}` })
       .setTimestamp(now);
 
-    let payload: MessageCreateOptions & MessageEditOptions;
+    let payload: ReturnType<typeof buildHeatmapMessagePayload>;
 
     if (h.points.length) {
       renderHeatPng(h.points, HEAT_IMG_PATH, MAP_IMAGE_PATH);
@@ -306,15 +300,11 @@ async function maybeSendHeatmap(client: Client): Promise<void> {
         )
         .setImage(`attachment://${HEAT_IMG_PATH.split("/").pop()}`);
 
-      payload = { content: "", embeds: [embed], files: [file] };
+      payload = buildHeatmapMessagePayload({ embed, file });
     } else {
       embed.setDescription(`No PvP activity in the last ${HEATMAP_WINDOW_MIN} minutes.`);
 
-      payload = {
-        content: "",
-        embeds: [embed],
-        attachments: [],
-      };
+      payload = buildHeatmapMessagePayload({ embed });
     }
 
     // Try to edit existing message, or send new one if it doesn't exist
