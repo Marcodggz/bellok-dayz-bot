@@ -16,7 +16,7 @@ describe("statsCommand", () => {
 
   test("warns when a manually specified gamertag does not exist", () => {
     expect(buildUnknownPlayerMessage("Vanilla+ Livonia")).toBe(
-      "❌ Specified gamertag does not exist on **Vanilla+ Livonia**!\nPlease note gamertags are case-sensitive, so they must be typed correctly."
+      "❌ Specified gamertag does not exist on **Vanilla+ Livonia**!\nPlease check the spelling and try again."
     );
   });
 

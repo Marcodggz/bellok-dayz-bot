@@ -31,7 +31,7 @@ export function buildMissingStatsMessage(gamertag: string): string {
 }
 
 export function buildUnknownPlayerMessage(serverName: string): string {
-  return `❌ Specified gamertag does not exist on **${serverName}**!\nPlease note gamertags are case-sensitive, so they must be typed correctly.`;
+  return `❌ Specified gamertag does not exist on **${serverName}**!\nPlease check the spelling and try again.`;
 }
 
 export const statsCommand = {
