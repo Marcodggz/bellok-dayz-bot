@@ -45,16 +45,6 @@ export const MAP_OFFSET_Y = Number(process.env.MAP_OFFSET_Y || 0);
 export const MAP_SCALE_X = Number(process.env.MAP_SCALE_X || 1);
 export const MAP_SCALE_Y = Number(process.env.MAP_SCALE_Y || 1);
 
-// ================== HEATMAP VISUAL ==================
-export const HEAT_RADIUS = Number(process.env.HEAT_RADIUS || 0);
-export const HEAT_GAMMA = Number(process.env.HEAT_GAMMA || 0.6);
-export const HEAT_MIN_ALPHA = Number(process.env.HEAT_MIN_ALPHA || 70);
-export const HEAT_HALFLIFE_MIN = Number(process.env.HEAT_HALFLIFE_MIN || 60);
-export const HEAT_NORM_PERCENTILE = Number(process.env.HEAT_NORM_PERCENTILE || 0.9);
-export const HEAT_RECENT_MIN = Number(process.env.HEAT_RECENT_MIN || 10);
-export const HEAT_RECENT_DOT_RADIUS = Number(process.env.HEAT_RECENT_DOT_RADIUS || 6);
-export const HEAT_RECENT_DOT_ALPHA = Number(process.env.HEAT_RECENT_DOT_ALPHA || 230);
-
 // ================== FILE PATHS ==================
 export const STATE_FILE = "./state.json";
 export const HEAT_STATE_FILE = "./heatmap.json";
