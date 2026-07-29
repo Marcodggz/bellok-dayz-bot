@@ -1,7 +1,7 @@
 # Bellok’s Killfeed
 
 [![Quality checks](https://github.com/Marcodggz/bellok-dayz-bot/actions/workflows/quality.yml/badge.svg?branch=main)](https://github.com/Marcodggz/bellok-dayz-bot/actions/workflows/quality.yml)
-![Tests](https://img.shields.io/badge/tests-218%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-222%20passing-brightgreen)
 ![Node.js](https://img.shields.io/badge/Node.js-24-339933?logo=node.js&logoColor=white)
 ![Discord.js](https://img.shields.io/badge/discord.js-v14-5865F2?logo=discord.js&logoColor=white)
 
@@ -30,7 +30,7 @@ The project is designed to handle real operational problems rather than assuming
 - retryable Discord delivery without duplicating successful messages;
 - atomic JSON writes to reduce persistence corruption risk;
 - strict TypeScript across the source code;
-- **218 automated tests across 26 test files**;
+- **222 automated tests across 27 test files**;
 - GitHub Actions validation on every push and pull request.
 
 For the complete data flow and technical decisions, see
