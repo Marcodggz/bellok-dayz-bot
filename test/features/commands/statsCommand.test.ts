@@ -6,6 +6,10 @@ import {
   buildUnknownPlayerMessage,
   formatStatsDuration,
 } from "../../../src/features/commands/statsCommand.ts";
+import {
+  calculateCurrentTimeAliveMs,
+  calculateCurrentTimePlayedMs,
+} from "../../../src/features/stats/playerTimeCalculations.ts";
 
 describe("statsCommand", () => {
   test("explains how to generate statistics for a new player", () => {
@@ -97,9 +101,6 @@ describe("statsCommand", () => {
 
 describe("current time alive", () => {
   test("includes the active connected session", async () => {
-    const { calculateCurrentTimeAliveMs } =
-      await import("../../../src/features/commands/statsCommand.ts");
-
     expect(
       calculateCurrentTimeAliveMs(
         {
@@ -114,9 +115,6 @@ describe("current time alive", () => {
   });
 
   test("shows only accumulated life while disconnected", async () => {
-    const { calculateCurrentTimeAliveMs } =
-      await import("../../../src/features/commands/statsCommand.ts");
-
     expect(
       calculateCurrentTimeAliveMs(
         {
@@ -131,9 +129,6 @@ describe("current time alive", () => {
   });
 
   test("returns no current life after death", async () => {
-    const { calculateCurrentTimeAliveMs } =
-      await import("../../../src/features/commands/statsCommand.ts");
-
     expect(
       calculateCurrentTimeAliveMs(
         {
@@ -150,9 +145,6 @@ describe("current time alive", () => {
 
 describe("current time played", () => {
   test("includes the active connected session", async () => {
-    const { calculateCurrentTimePlayedMs } =
-      await import("../../../src/features/commands/statsCommand.ts");
-
     expect(
       calculateCurrentTimePlayedMs(
         {
@@ -166,9 +158,6 @@ describe("current time played", () => {
   });
 
   test("uses only accumulated playtime while disconnected", async () => {
-    const { calculateCurrentTimePlayedMs } =
-      await import("../../../src/features/commands/statsCommand.ts");
-
     expect(
       calculateCurrentTimePlayedMs(
         {
@@ -182,9 +171,6 @@ describe("current time played", () => {
   });
 
   test("does not extrapolate an active session without an ADM timestamp", async () => {
-    const { calculateCurrentTimePlayedMs } =
-      await import("../../../src/features/commands/statsCommand.ts");
-
     expect(
       calculateCurrentTimePlayedMs(
         {

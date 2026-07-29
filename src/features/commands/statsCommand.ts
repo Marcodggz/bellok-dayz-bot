@@ -14,6 +14,10 @@ import {
 import { findPlayerStats, loadPlayerStats } from "../../storage/playerStatsStore.js";
 import { SERVER_NAME } from "../../config/config.js";
 import { getEstimatedAdmTimeMs } from "../stats/admClock.js";
+import {
+  calculateCurrentTimeAliveMs,
+  calculateCurrentTimePlayedMs,
+} from "../stats/playerTimeCalculations.js";
 import { getRankBadgePath } from "../../utils/rankBadges.js";
 import type { PersistedPlayerStats } from "../../types/domainPersistence.js";
 
@@ -137,46 +141,6 @@ export function formatStatsDuration(ms: number | null | undefined): string {
   return `${String(hours).padStart(2, "0")}H ${String(minutes).padStart(2, "0")}M ${String(seconds).padStart(2, "0")}S`;
 }
 
-export function calculateCurrentTimePlayedMs(
-  stats: StatsDisplayData,
-  estimatedAdmTimeMs: number | null
-): number {
-  let totalPlayedMs = stats.accumulatedPlayedMs ?? 0;
-
-  if (
-    stats.isConnected === true &&
-    stats.connectedSince !== null &&
-    stats.connectedSince !== undefined &&
-    estimatedAdmTimeMs !== null
-  ) {
-    totalPlayedMs += Math.max(0, estimatedAdmTimeMs - stats.connectedSince);
-  }
-
-  return totalPlayedMs;
-}
-
-export function calculateCurrentTimeAliveMs(
-  stats: StatsDisplayData,
-  estimatedAdmTimeMs: number | null
-): number | null {
-  if (stats.isAlive === false) {
-    return null;
-  }
-
-  let totalAliveMs = stats.accumulatedAliveMs ?? 0;
-
-  if (
-    stats.isConnected === true &&
-    stats.connectedSince !== null &&
-    stats.connectedSince !== undefined &&
-    estimatedAdmTimeMs !== null
-  ) {
-    totalAliveMs += Math.max(0, estimatedAdmTimeMs - stats.connectedSince);
-  }
-
-  return totalAliveMs;
-}
-
 export function buildStatsEmbed(
   gamertag: string,
   stats: StatsDisplayData,
@@ -197,7 +161,15 @@ export function buildStatsEmbed(
   const lastDeath = stats.lastDeath ?? "N/A";
   const favouriteWeapon = stats.favouriteWeapon ?? "N/A";
   const longestKill = stats.longestKill ? `${stats.longestKill.toFixed(2)}m` : "N/A";
-  const timePlayed = formatStatsDuration(stats.accumulatedPlayedMs);
+  const hasCurrentPlaytime =
+    stats.accumulatedPlayedMs !== undefined ||
+    (stats.isConnected === true &&
+      stats.connectedSince !== null &&
+      stats.connectedSince !== undefined &&
+      estimatedAdmTimeMs !== null);
+  const timePlayed = formatStatsDuration(
+    hasCurrentPlaytime ? calculateCurrentTimePlayedMs(stats, estimatedAdmTimeMs) : undefined
+  );
   const bestTimeAlive = formatStatsDuration(stats.bestTimeAliveMs);
   const timeAlive = formatStatsDuration(calculateCurrentTimeAliveMs(stats, estimatedAdmTimeMs));
 

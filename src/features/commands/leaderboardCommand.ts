@@ -1,6 +1,11 @@
 // Slash command for leaderboards
 
 import { MessageFlags, SlashCommandBuilder, type ChatInputCommandInteraction } from "discord.js";
+import { getEstimatedAdmTimeMs } from "../stats/admClock.js";
+import {
+  calculateCurrentTimeAliveMs,
+  calculateCurrentTimePlayedMs,
+} from "../stats/playerTimeCalculations.js";
 import {
   getTopPlayers,
   loadPlayerStatsForLeaderboard,
@@ -32,7 +37,7 @@ export const leaderboardCommand = {
     .addSubcommand((subcommand) =>
       subcommand
         .setName("killstreak")
-        .setDescription("View top 15 players ranked by best kill streak")
+        .setDescription("View top 15 players ranked by current kill streak")
     )
     .addSubcommand((subcommand) =>
       subcommand.setName("deathstreak").setDescription("View top 15 players ranked by death streak")
@@ -302,21 +307,26 @@ async function handleLongestKillLeaderboard(
  */
 async function handleTimeAliveLeaderboard(interaction: ChatInputCommandInteraction): Promise<void> {
   const allStats = loadPlayerStatsForLeaderboard();
+  const estimatedAdmTimeMs = getEstimatedAdmTimeMs();
 
   const playerArray = Object.entries(allStats)
-    .filter(
-      ([, stats]) =>
-        (stats.kills ?? 0) > 0 || (stats.deaths ?? 0) > 0 || (stats.accumulatedAliveMs ?? 0) > 0
-    )
     .map(([gamertag, stats]) => ({
       gamertag,
-      accumulatedAliveMs: stats.accumulatedAliveMs ?? 0,
-    }));
+      currentTimeAliveMs: calculateCurrentTimeAliveMs(stats, estimatedAdmTimeMs),
+    }))
+    .filter(
+      (
+        player
+      ): player is {
+        gamertag: string;
+        currentTimeAliveMs: number;
+      } => player.currentTimeAliveMs !== null && player.currentTimeAliveMs > 0
+    );
 
-  const top15 = getTopPlayers(playerArray, (a, b) => b.accumulatedAliveMs - a.accumulatedAliveMs);
+  const top15 = getTopPlayers(playerArray, (a, b) => b.currentTimeAliveMs - a.currentTimeAliveMs);
 
   await replyLeaderboard(interaction, "Current Top 15 Lives ⏳", top15, (player) =>
-    formatTimeAliveForLeaderboard(player.accumulatedAliveMs)
+    formatTimeAliveForLeaderboard(player.currentTimeAliveMs)
   );
 }
 
@@ -328,24 +338,19 @@ async function handleTimePlayedLeaderboard(
   interaction: ChatInputCommandInteraction
 ): Promise<void> {
   const allStats = loadPlayerStatsForLeaderboard();
+  const estimatedAdmTimeMs = getEstimatedAdmTimeMs();
 
   const playerArray = Object.entries(allStats)
-    .filter(
-      ([, stats]) =>
-        (stats.kills ?? 0) > 0 ||
-        (stats.deaths ?? 0) > 0 ||
-        (stats.accumulatedAliveMs ?? 0) > 0 ||
-        (stats.accumulatedPlayedMs ?? 0) > 0
-    )
     .map(([gamertag, stats]) => ({
       gamertag,
-      accumulatedPlayedMs: stats.accumulatedPlayedMs ?? 0,
-    }));
+      currentTimePlayedMs: calculateCurrentTimePlayedMs(stats, estimatedAdmTimeMs),
+    }))
+    .filter((player) => player.currentTimePlayedMs > 0);
 
-  const top15 = getTopPlayers(playerArray, (a, b) => b.accumulatedPlayedMs - a.accumulatedPlayedMs);
+  const top15 = getTopPlayers(playerArray, (a, b) => b.currentTimePlayedMs - a.currentTimePlayedMs);
 
   await replyLeaderboard(interaction, "Current Top 15 Play Time ⌚", top15, (player) =>
-    formatTimeAliveForLeaderboard(player.accumulatedPlayedMs)
+    formatTimeAliveForLeaderboard(player.currentTimePlayedMs)
   );
 }
 
