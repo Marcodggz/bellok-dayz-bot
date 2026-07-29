@@ -313,6 +313,7 @@ async function maybeSendHeatmap(client: Client): Promise<void> {
       payload = {
         content: "",
         embeds: [embed],
+        attachments: [],
       };
     }
 

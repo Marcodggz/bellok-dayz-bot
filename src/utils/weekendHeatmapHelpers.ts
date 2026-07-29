@@ -256,6 +256,7 @@ export async function maybeSendWeekendHeatmap(client: Client): Promise<void> {
       payload = {
         content: "",
         embeds: [embed],
+        attachments: [],
       };
     }
 
