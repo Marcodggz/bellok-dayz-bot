@@ -6,22 +6,11 @@
 // - Coordinate calibration: min/max/offset/scale/flip for accurate map overlay
 
 import type { PersistedPlayerStatsCollection } from "./src/types/domainPersistence.js";
-import type { HeatPoint, HeatState } from "./src/types/domainHeatmap.js";
-
-import fs from "node:fs";
-import { AttachmentBuilder, Client, EmbedBuilder, GatewayIntentBits } from "discord.js";
-import { PNG } from "pngjs";
+import { Client, GatewayIntentBits } from "discord.js";
 
 // Import config and helpers
 import * as config from "./src/config/config.js";
-import {
-  bufToText,
-  looksLikeHtml,
-  looksLikeRateLimit,
-  tMadrid,
-  clamp,
-} from "./src/utils/helpers.js";
-import { loadHeat, saveHeat } from "./src/storage/heatStore.js";
+import { bufToText, looksLikeHtml, looksLikeRateLimit, tMadrid } from "./src/utils/helpers.js";
 import { loadMockStats, saveMockStats } from "./src/storage/mockStatsStore.js";
 import { loadPlayerStats, savePlayerStats } from "./src/storage/playerStatsStore.js";
 import { parseKill } from "./src/parsers/killParser.js";
@@ -46,15 +35,8 @@ import { updateAdmClock } from "./src/features/stats/admClock.js";
 import { handleCommandInteraction } from "./src/features/commands/commandHandler.js";
 import { registerCommands } from "./src/features/commands/registerCommands.js";
 import { maybeSendWeekendHeatmap } from "./src/utils/weekendHeatmapHelpers.js";
-import { mapToPixelCoords } from "./src/utils/coordinateMapper.js";
+import { addHeatPoint, maybeSendHeatmap } from "./src/utils/pvpHeatmapHelpers.js";
 import { createHeatmapCycle } from "./src/utils/heatmapCycle.js";
-import { buildHeatmapMessagePayload } from "./src/utils/heatmapMessagePayload.js";
-import {
-  buildHeatClusters,
-  drawHeatCluster,
-  composeHeatmapOverlay,
-  drawSoftBridge,
-} from "./src/utils/heatmapRenderer.js";
 import {
   runDiagnose,
   runDiscordHeatmapTest,
@@ -121,102 +103,7 @@ const {
   POLL_MS,
   LIST_COOLDOWN_MS,
   HEATMAP_INTERVAL_MS,
-  HEATMAP_WIDTH,
-  HEATMAP_HEIGHT,
-  MAP_SIZE,
-  HEATMAP_WINDOW_MIN,
-  MAP_IMAGE_PATH,
-  MAP_DISPLAY_NAME,
-  HEAT_IMG_PATH,
 } = config;
-
-// ================== PVP HEATMAP STATE ==================
-function addHeatPoint(x: number, y: number): void {
-  const h = loadHeat();
-  const ts = Date.now();
-  h.points.push({ x: clamp(x, 0, MAP_SIZE), y: clamp(y, 0, MAP_SIZE), ts });
-  pruneHeat(h);
-  saveHeat(h);
-}
-function pruneHeat(heatState: HeatState): void {
-  const minTs = Date.now() - HEATMAP_WINDOW_MIN * 60 * 1000;
-  heatState.points = heatState.points.filter((point) => point.ts >= minTs);
-}
-
-// ================== HEATMAP RENDER (compact clustered dots) ==================
-function renderHeatPng(points: HeatPoint[], outPath: string, baseMapPath = ""): void {
-  let basePng = null;
-  let W = HEATMAP_WIDTH,
-    H = HEATMAP_HEIGHT;
-
-  // 1) Cargar mapa base si existe
-  try {
-    if (baseMapPath && fs.existsSync(baseMapPath)) {
-      const buf = fs.readFileSync(baseMapPath);
-      basePng = PNG.sync.read(buf);
-      W = basePng.width;
-      H = basePng.height;
-    }
-  } catch (e) {
-    console.warn(
-      "[heatmap] no se pudo leer MAP_IMAGE_PATH, uso lienzo transparente:",
-      getErrorDetail(e)
-    );
-  }
-
-  // 2) Build clusters from the already-pruned world coordinates
-  const clusters = buildHeatClusters(points);
-
-  // 3) Create transparent overlay
-  const overlay = new PNG({ width: W, height: H });
-  overlay.data.fill(0);
-
-  // 4) Identify 5+ clusters for visual bridge connections
-  const fivePlusClusters = clusters.filter((c) => c.count >= 5);
-  const bridgeConnections = [];
-
-  // Find pairs of 5+ clusters that should have visual bridges
-  for (let i = 0; i < fivePlusClusters.length; i++) {
-    for (let j = i + 1; j < fivePlusClusters.length; j++) {
-      const c1 = fivePlusClusters[i];
-      const c2 = fivePlusClusters[j];
-
-      // Calculate world distance
-      const dx = c2.x - c1.x;
-      const dy = c2.y - c1.y;
-      const worldDist = Math.sqrt(dx * dx + dy * dy);
-
-      // Connect if between 125m and 300m (close but not merged)
-      if (worldDist >= 125 && worldDist <= 300) {
-        bridgeConnections.push({ c1, c2, worldDist });
-      }
-    }
-  }
-
-  // 5) Draw heat bridges between nearby 5+ clusters (BEFORE drawing dots)
-  for (const { c1, c2 } of bridgeConnections) {
-    const p1 = mapToPixelCoords(c1.x, c1.y, W, H);
-    const p2 = mapToPixelCoords(c2.x, c2.y, W, H);
-
-    // Multi-layer bridge: outer blue → middle green → inner orange
-    // Using distance-to-line-segment for true elongated heat corridors
-    drawSoftBridge(overlay, p1.px, p1.py, p2.px, p2.py, 28, 59, 130, 246, 95, W, H); // Blue outer
-    drawSoftBridge(overlay, p1.px, p1.py, p2.px, p2.py, 18, 34, 197, 94, 90, W, H); // Green middle
-    drawSoftBridge(overlay, p1.px, p1.py, p2.px, p2.py, 9, 234, 179, 8, 70, W, H); // Orange inner
-  }
-
-  // 6) Draw all clusters as normal radial dots (on top of bridges)
-  for (const cluster of clusters) {
-    const { px, py } = mapToPixelCoords(cluster.x, cluster.y, W, H);
-    const visualCount = Math.min(cluster.count, 5);
-    drawHeatCluster(overlay, px, py, visualCount, W, H);
-  }
-
-  // 7) Compose onto base map
-  const outPng = composeHeatmapOverlay(basePng, overlay, W, H);
-
-  fs.writeFileSync(outPath, PNG.sync.write(outPng));
-}
 
 // ================== DISCORD / BOOT ==================
 function checkEnv() {
@@ -248,101 +135,6 @@ function checkEnv() {
 }
 
 // ================== LOOP PRINCIPAL ==================
-let heatmapSending = false;
-
-async function maybeSendHeatmap(client: Client): Promise<void> {
-  if (!HEATMAP_CHANNEL_ID) return;
-
-  const now = Date.now();
-
-  const h = loadHeat();
-  const previousPointCount = h.points.length;
-  pruneHeat(h);
-
-  if (h.points.length !== previousPointCount) {
-    saveHeat(h);
-  }
-
-  if (heatmapSending) return;
-  heatmapSending = true;
-
-  try {
-    const ch = await client.channels.fetch(HEATMAP_CHANNEL_ID).catch(() => null);
-
-    if (
-      !ch?.isTextBased() ||
-      !("send" in ch) ||
-      typeof ch.send !== "function" ||
-      !("messages" in ch)
-    ) {
-      console.warn("[heatmap] Invalid channel or missing permissions");
-      return;
-    }
-
-    const updatedTimestamp = Math.floor(now / 1000);
-    const embed = new EmbedBuilder()
-      .setTitle("🗺️ • PvP Heatmap")
-      .setColor(0x00ae86)
-      .setFooter({ text: `Bellok's Killfeed • ${MAP_DISPLAY_NAME}` })
-      .setTimestamp(now);
-
-    let payload: ReturnType<typeof buildHeatmapMessagePayload>;
-
-    if (h.points.length) {
-      renderHeatPng(h.points, HEAT_IMG_PATH, MAP_IMAGE_PATH);
-      await new Promise((r) => setTimeout(r, 80));
-
-      const file = new AttachmentBuilder(HEAT_IMG_PATH);
-
-      embed
-        .setDescription(
-          `• **Updated:** <t:${updatedTimestamp}:R>\n` + `• **Entries:** ${h.points.length}`
-        )
-        .setImage(`attachment://${HEAT_IMG_PATH.split("/").pop()}`);
-
-      payload = buildHeatmapMessagePayload({ embed, file });
-    } else {
-      embed.setDescription(`No PvP activity in the last ${HEATMAP_WINDOW_MIN} minutes.`);
-
-      payload = buildHeatmapMessagePayload({ embed });
-    }
-
-    // Try to edit existing message, or send new one if it doesn't exist
-    let sent = false;
-    if (h.messageId) {
-      try {
-        const existingMsg = await ch.messages.fetch(h.messageId).catch(() => null);
-        if (existingMsg) {
-          await existingMsg.edit(payload);
-          sent = true;
-          console.log("[heatmap] edited existing message", h.messageId);
-        } else {
-          console.log("[heatmap] previous message not found, sending new one");
-          h.messageId = null;
-        }
-      } catch (e) {
-        console.warn("[heatmap] failed to edit message, sending new one:", getErrorDetail(e));
-        h.messageId = null;
-      }
-    }
-
-    // Send new message if we couldn't edit
-    if (!sent) {
-      const newMsg = await ch.send(payload);
-      h.messageId = newMsg.id;
-      console.log("[heatmap] sent new message", h.messageId);
-    }
-
-    h.lastSentCount = h.points.length;
-    h.lastUpdate = now;
-    saveHeat(h);
-  } catch (e) {
-    console.warn("[heatmap] send error:", getErrorDetail(e));
-  } finally {
-    heatmapSending = false;
-  }
-}
-
 async function runBot(): Promise<void> {
   checkEnv();
 
