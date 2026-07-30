@@ -105,14 +105,14 @@ The heatmap requires `HEATMAP_CHANNEL_ID` to send or update its Discord message.
 
 ## Player-Location Heatmap
 
-| Variable                      | Template value           | Purpose                                 |
-| ----------------------------- | ------------------------ | --------------------------------------- |
-| `WEEKEND_HEATMAP_INTERVAL_MS` | `900000`                 | Minimum interval between update cycles  |
-| `WEEKEND_HEATMAP_WINDOW_MIN`  | `15`                     | Age limit for retained player positions |
-| `WEEKEND_HEATMAP_STATE_FILE`  | `./weekend-heatmap.json` | Persistent state path                   |
-| `WEEKEND_HEATMAP_IMG_PATH`    | `./weekend-heatmap.png`  | Generated image path                    |
+| Variable                     | Template value           | Purpose                                 |
+| ---------------------------- | ------------------------ | --------------------------------------- |
+| `WEEKEND_HEATMAP_WINDOW_MIN` | `15`                     | Age limit for retained player positions |
+| `WEEKEND_HEATMAP_STATE_FILE` | `./weekend-heatmap.json` | Persistent state path                   |
+| `WEEKEND_HEATMAP_IMG_PATH`   | `./weekend-heatmap.png`  | Generated image path                    |
 
 This heatmap records and displays player positions only on Friday, Saturday, and Sunday.
+Its Discord update cycle uses the shared `HEATMAP_INTERVAL_MS` setting.
 
 It requires `WEEKEND_HEATMAP_CHANNEL_ID` to send or update its Discord message.
 

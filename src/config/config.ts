@@ -24,11 +24,11 @@ export const ROTATE_CHECK_MS = Number(process.env.ROTATE_CHECK_MS || 60000);
 export const LIST_COOLDOWN_MS = Number(process.env.LIST_COOLDOWN_MS || 120000);
 
 // ================== HEATMAP CONFIG ==================
-export const HEATMAP_INTERVAL_MS = Number(process.env.HEATMAP_INTERVAL_MS || 600000);
+export const HEATMAP_INTERVAL_MS = Number(process.env.HEATMAP_INTERVAL_MS || 900000);
 export const HEATMAP_WIDTH = Number(process.env.HEATMAP_WIDTH || 512);
 export const HEATMAP_HEIGHT = Number(process.env.HEATMAP_HEIGHT || 512);
 export const MAP_SIZE = Number(process.env.MAP_SIZE || 15360);
-export const HEATMAP_WINDOW_MIN = Number(process.env.HEATMAP_WINDOW_MIN || 720);
+export const HEATMAP_WINDOW_MIN = Number(process.env.HEATMAP_WINDOW_MIN || 15);
 export const HEATMAP_RESET_ON_ROTATE = process.env.HEATMAP_RESET_ON_ROTATE === "1";
 export const MAP_IMAGE_PATH = process.env.MAP_IMAGE_PATH || "";
 export const MAP_DISPLAY_NAME = process.env.MAP_DISPLAY_NAME || "Livonia";
@@ -52,9 +52,7 @@ export const HEAT_IMG_PATH = "./heatmap.png";
 
 // ================== WEEKEND HEATMAP CONFIG ==================
 export const WEEKEND_HEATMAP_CHANNEL_ID = process.env.WEEKEND_HEATMAP_CHANNEL_ID || "";
-export const WEEKEND_HEATMAP_INTERVAL_MS =
-  Number(process.env.WEEKEND_HEATMAP_INTERVAL_MS) || 15 * 60 * 1000;
-export const WEEKEND_HEATMAP_WINDOW_MIN = Number(process.env.WEEKEND_HEATMAP_WINDOW_MIN || 60);
+export const WEEKEND_HEATMAP_WINDOW_MIN = Number(process.env.WEEKEND_HEATMAP_WINDOW_MIN || 15);
 export const WEEKEND_HEATMAP_STATE_FILE =
   process.env.WEEKEND_HEATMAP_STATE_FILE || "./weekend-heatmap.json";
 export const WEEKEND_HEATMAP_IMG_PATH =
