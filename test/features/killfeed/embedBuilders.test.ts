@@ -9,6 +9,7 @@ import {
   buildVictimStatsLines,
   embedPvp,
   embedExplosion,
+  getExplosionDeathPhrase,
   getRandomPvpAction,
 } from "../../../src/features/killfeed/embedBuilders.ts";
 
@@ -361,7 +362,56 @@ describe("embedBuilders", () => {
     });
   });
 
+  describe("getExplosionDeathPhrase", () => {
+    test.each([
+      ["LandMineExplosion", "died from a land mine"],
+      ["LandMineTrap", "died from a land mine"],
+      ["Plastic_Explosive_Ammo", "died from a plastic explosive"],
+      ["Plastic Explosive", "died from a plastic explosive"],
+      ["ClaymoreMine_Ammo", "died from a claymore"],
+      ["Claymore", "died from a claymore"],
+      ["RGD5Grenade_Ammo", "died from a grenade"],
+      ["EGD-5 Frag Grenade", "died from a grenade"],
+      ["M67Grenade_Ammo", "died from a grenade"],
+      ["6-M7 Frag Grenade", "died from a grenade"],
+    ])("maps %s to a readable death phrase", (device, expected) => {
+      expect(getExplosionDeathPhrase(device)).toBe(expected);
+    });
+
+    test("uses a readable fallback for an unknown explosive", () => {
+      expect(getExplosionDeathPhrase("UnknownExplosive_Ammo")).toBe(
+        "died in an explosion caused by UnknownExplosive_Ammo"
+      );
+    });
+
+    test("uses a generic fallback when the device is missing", () => {
+      expect(getExplosionDeathPhrase(null)).toBe("died in an explosion");
+    });
+  });
+
   describe("embedExplosion", () => {
+    test.each([
+      ["LandMineExplosion", "`TestVictim` died from a land mine"],
+      ["Plastic_Explosive_Ammo", "`TestVictim` died from a plastic explosive"],
+      ["ClaymoreMine_Ammo", "`TestVictim` died from a claymore"],
+      ["RGD5Grenade_Ammo", "`TestVictim` died from a grenade"],
+      ["M67Grenade_Ammo", "`TestVictim` died from a grenade"],
+    ])("shows a readable cause for %s", (device, expected) => {
+      const result = embedExplosion(
+        createExplosionEvent({
+          victim: "TestVictim",
+          device,
+        }),
+        null,
+        null
+      );
+
+      const description = result.embeds[0].data.description;
+
+      expect(description).toContain(expected);
+      expect(description).not.toContain(`"${device}" explosion`);
+    });
+
     test("shows zero values and Unranked when victim stats are missing", () => {
       const killEvent = createExplosionEvent({
         victim: "TestVictim",

@@ -83,6 +83,32 @@ export function buildVictimStatsLines(
   ];
 }
 
+export function getExplosionDeathPhrase(device: string | null | undefined): string {
+  if (!device) {
+    return "died in an explosion";
+  }
+
+  const normalizedDevice = device.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+  if (normalizedDevice.includes("plasticexplosive")) {
+    return "died from a plastic explosive";
+  }
+
+  if (normalizedDevice.includes("landmine")) {
+    return "died from a land mine";
+  }
+
+  if (normalizedDevice.includes("claymore")) {
+    return "died from a claymore";
+  }
+
+  if (normalizedDevice.includes("grenade")) {
+    return "died from a grenade";
+  }
+
+  return `died in an explosion caused by ${device}`;
+}
+
 export function getRandomPvpAction(
   killer: string | null | undefined,
   victim: string | null | undefined
@@ -194,9 +220,9 @@ export function embedExplosion(
   lines.push("");
 
   const victimName = sanitizePlayerName(victim);
-  const deviceName = device || "explosive";
+  const deathPhrase = getExplosionDeathPhrase(device);
 
-  lines.push(`\`${victimName}\` died from "${deviceName}" explosion`);
+  lines.push(`\`${victimName}\` ${deathPhrase}`);
   lines.push(buildLocationLine(victimPosition));
   lines.push("");
   lines.push(...buildVictimStatsLines(victimName, victimStats));
