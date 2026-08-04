@@ -1,13 +1,27 @@
 # Bellok’s Killfeed
 
 [![Quality checks](https://github.com/Marcodggz/bellok-dayz-bot/actions/workflows/quality.yml/badge.svg?branch=main)](https://github.com/Marcodggz/bellok-dayz-bot/actions/workflows/quality.yml)
-![Tests](https://img.shields.io/badge/tests-276%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-293%20passing-brightgreen)
 ![Node.js](https://img.shields.io/badge/Node.js-24-339933?logo=node.js&logoColor=white)
 ![Discord.js](https://img.shields.io/badge/discord.js-v14-5865F2?logo=discord.js&logoColor=white)
 
 A production-style Discord bot that transforms raw DayZ PlayStation server logs into a live killfeed, player statistics, leaderboards, and activity heatmaps.
 
 Built with strict TypeScript, Node.js, Discord.js, the Nitrado API, and a fully automated quality pipeline.
+
+## Preview
+
+### Live PvP Killfeed
+
+<img src="docs/images/killfeed-preview.png" alt="Bellok's Killfeed PvP notification showing weapon, distance, hit details, location, and player statistics" width="520">
+
+### Player Statistics
+
+<img src="docs/images/stats-preview.png" alt="Bellok's Killfeed player statistics command showing PvP, streak, weapon, and playtime statistics" width="520">
+
+### PvP Activity Heatmap
+
+<img src="docs/images/heatmap-preview.png" alt="Bellok's Killfeed PvP activity heatmap for Livonia" width="520">
 
 ## What It Does
 
@@ -30,7 +44,7 @@ The project is designed to handle real operational problems rather than assuming
 - retryable Discord delivery without duplicating successful messages;
 - atomic JSON writes to reduce persistence corruption risk;
 - strict TypeScript across the source code;
-- **276 automated tests across 32 test files**;
+- **293 automated tests across 32 test files**;
 - GitHub Actions validation on every push and pull request.
 
 For the complete data flow and technical decisions, see
