@@ -4,7 +4,7 @@
 
 Bellok’s Killfeed is a modular TypeScript application that transforms DayZ PlayStation ADM logs into Discord killfeed notifications, persistent player statistics, leaderboards, and activity heatmaps.
 
-The source code is compiled to CommonJS JavaScript in `dist`. The root `index.ts` entrypoint coordinates the runtime while API access, parsing, polling, persistence, Discord commands, statistics, killfeed handling, tracking, and rendering remain separated under `src/`.
+The source code is compiled to CommonJS JavaScript in `dist`. The root `index.ts` entrypoint selects the execution mode, while `src/runtime/botRuntime.ts` coordinates the normal bot runtime. API access, parsing, polling, persistence, Discord commands, statistics, killfeed handling, tracking, and rendering remain separated under `src/`.
 
 ## System Flow
 
@@ -58,15 +58,14 @@ flowchart LR
 
 ### `index.ts`
 
-The main runtime entrypoint:
+The main compiled entrypoint:
 
 - loads environment configuration;
-- creates the Discord client;
-- registers slash commands when `DISCORD_CLIENT_ID` is available;
-- selects and polls the latest ADM file;
-- processes session, death, killfeed, statistics, and heatmap activity;
-- schedules killfeed queue delivery;
-- exposes diagnostic and test modes through `process.argv`.
+- selects normal, diagnostic, mock, or Discord test modes through `process.argv`;
+- delegates normal bot execution to `src/runtime/botRuntime.ts`;
+- delegates diagnostic and test modes to `src/cli/`.
+
+The runtime module creates the Discord client, validates required configuration, registers slash commands, polls ADM files, processes events and statistics, updates heatmaps, and schedules killfeed delivery.
 
 The compiled production entrypoint is `dist/index.js`.
 
@@ -305,7 +304,7 @@ The source compiles through `tsc` into CommonJS JavaScript under `dist`.
 
 ## Testing and Continuous Integration
 
-The Vitest suite currently contains 308 tests across 34 test files.
+The Vitest suite currently contains 312 tests across 35 test files.
 
 Coverage includes:
 
