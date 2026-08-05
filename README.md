@@ -5,9 +5,9 @@
 ![Node.js](https://img.shields.io/badge/Node.js-24-339933?logo=node.js&logoColor=white)
 ![Discord.js](https://img.shields.io/badge/discord.js-v14-5865F2?logo=discord.js&logoColor=white)
 
-A production-style Discord bot that transforms raw DayZ PlayStation server logs into a live killfeed, player statistics, leaderboards, and activity heatmaps.
+A production-style Discord bot that transforms raw DayZ PlayStation server logs into a live killfeed, persistent player statistics, leaderboards, and activity heatmaps.
 
-Built with strict TypeScript, Node.js, Discord.js, the Nitrado API, and a fully automated quality pipeline.
+Built with strict TypeScript, Node.js, Discord.js, the Nitrado API, and an automated quality pipeline.
 
 ## Preview
 
@@ -27,51 +27,40 @@ Built with strict TypeScript, Node.js, Discord.js, the Nitrado API, and a fully 
 
 Bellok’s Killfeed continuously reads ADM logs from a Nitrado-hosted DayZ server and converts low-level game events into useful Discord features:
 
-- structured PvP, melee, and explosion kill notifications;
+- structured PvP, melee, explosion, and non-PvP death notifications;
 - persistent player statistics and PlayStation gamertag linking;
 - leaderboards for kills, deaths, K/D, streaks, headshots, distance, and playtime;
 - PvP and player-location heatmaps for Livonia and Chernarus;
-- accurate player session and life-cycle tracking;
-- diagnostic and local mock modes for safer development.
+- player session, playtime, and life-cycle tracking;
+- local diagnostic and mock modes for safer development.
 
 ## Engineering Highlights
 
-The project is designed to handle real operational problems rather than assuming perfect input:
+The project handles operational problems found in real server logs rather than assuming perfect input:
 
 - incremental ADM downloads instead of repeatedly processing complete files;
 - safe handling of file rotation and lines split between downloads;
 - persistent deduplication to prevent repeated kills after restarts;
 - retryable Discord delivery without duplicating successful messages;
 - atomic JSON writes to reduce persistence corruption risk;
-- strict TypeScript across the source code;
+- cached PNG base maps to avoid repeated synchronous decoding;
+- strict TypeScript with no `any` in the source code;
 - **299 automated tests across 33 test files**;
 - GitHub Actions validation on every push and pull request.
-
-For the complete data flow and technical decisions, see
-[Architecture and Technical Decisions](docs/ARCHITECTURE.md).
 
 ## Tech Stack
 
 - **Language:** TypeScript with `strict: true`
 - **Runtime:** Node.js 24
-- **Discord:** discord.js v14
+- **Discord integration:** discord.js v14
 - **API integration:** Axios and the Nitrado API
-- **Rendering:** pngjs
+- **Image rendering:** pngjs
 - **Persistence:** local JSON with atomic writes
 - **Testing:** Vitest
-- **Quality:** ESLint, Prettier, and GitHub Actions
+- **Quality:** ESLint, Prettier, TypeScript, and GitHub Actions
 - **Build output:** CommonJS JavaScript in `dist`
 
 ## Quick Start
-
-### Requirements
-
-- Node.js 24 or newer
-- npm
-- A Discord application and bot token
-- A Nitrado DayZ PlayStation server with ADM log access
-
-The expected Node.js version is defined in `.nvmrc`.
 
 ```bash
 git clone https://github.com/Marcodggz/bellok-dayz-bot.git
@@ -81,81 +70,35 @@ npm ci
 cp .env.example .env
 ```
 
-Add the required Discord and Nitrado values to `.env`.
-
-The full variable reference is available in
-[Environment Configuration](docs/ENVIRONMENT.md).
-
-Start the bot:
+Add the required Discord and Nitrado values to `.env`, then run:
 
 ```bash
 npm start
 ```
 
-The `prestart` script compiles the TypeScript project before running `dist/index.js`.
+See [Environment Configuration](docs/ENVIRONMENT.md) for the complete setup and variable reference.
 
-## Available Discord Commands
+## Discord Commands
 
-- `/link` — link a Discord user to a PlayStation gamertag
+- `/link` — link a Discord account to a PlayStation gamertag
 - `/unlink` — remove the current link
 - `/stats` — display persistent player statistics
-- `/leaderboard` — display top-15 rankings by:
-  - rank, kills, deaths, K/D, headshots;
-  - kill streak, death streak, longest kill;
-  - time alive and total time played.
+- `/leaderboard` — display top-15 rankings across supported statistics
 
-Commands register automatically when the bot starts and `DISCORD_CLIENT_ID` is configured.
+## Quality Checks
 
-They can also be registered independently:
-
-```bash
-npm run register-commands
-```
-
-## Development and Quality
-
-Run the complete local verification:
-
-```bash
-npm run lint
-npm run format:check
-npm run typecheck
-npm test
-npm run build
-```
-
-Or run the main combined check:
+Run the complete local verification with:
 
 ```bash
 npm run check
+npm run typecheck
+npm run build
 ```
-
-Generate a coverage report:
-
-```bash
-npm run test:coverage
-```
-
-GitHub Actions runs installation, linting, formatting checks, all tests, TypeScript validation, and the production build.
-
-## Local and Diagnostic Modes
-
-After building, the compiled entrypoint supports several development modes:
-
-```bash
-node dist/index.js mock-parse
-node dist/index.js diagnose
-node dist/index.js discord-test
-node dist/index.js discord-heatmap-test
-node dist/index.js discord-weekend-heatmap-test
-```
-
-`mock-parse` processes synthetic ADM data locally. The diagnostic and Discord test modes connect to configured external services.
 
 ## Documentation
 
-- [Architecture and Technical Decisions](docs/ARCHITECTURE.md)
-- [Environment Configuration](docs/ENVIRONMENT.md)
+- [Architecture and Technical Decisions](docs/ARCHITECTURE.md) — system flow, modules, persistence, parsing, delivery, heatmaps, testing, and CLI modes
+- [Environment Configuration](docs/ENVIRONMENT.md) — required variables, optional features, map calibration, runtime files, and execution requirements
 
 ## Behind the Name
 
