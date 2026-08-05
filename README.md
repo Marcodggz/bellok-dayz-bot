@@ -1,7 +1,7 @@
 # Bellok’s Killfeed
 
 [![Quality checks](https://github.com/Marcodggz/bellok-dayz-bot/actions/workflows/quality.yml/badge.svg?branch=main)](https://github.com/Marcodggz/bellok-dayz-bot/actions/workflows/quality.yml)
-![Tests](https://img.shields.io/badge/tests-299%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-308%20passing-brightgreen)
 ![Node.js](https://img.shields.io/badge/Node.js-24-339933?logo=node.js&logoColor=white)
 ![Discord.js](https://img.shields.io/badge/discord.js-v14-5865F2?logo=discord.js&logoColor=white)
 
@@ -45,7 +45,7 @@ The project handles operational problems found in real server logs rather than a
 - atomic JSON writes to reduce persistence corruption risk;
 - cached PNG base maps to avoid repeated synchronous decoding;
 - strict TypeScript with no `any` in the source code;
-- **299 automated tests across 33 test files**;
+- **308 automated tests across 34 test files**;
 - GitHub Actions validation on every push and pull request.
 
 ## Tech Stack

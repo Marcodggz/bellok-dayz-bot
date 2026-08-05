@@ -11,6 +11,7 @@ import { Client, GatewayIntentBits } from "discord.js";
 // Import config and helpers
 import * as config from "./src/config/config.js";
 import { bufToText, looksLikeHtml, looksLikeRateLimit, tMadrid } from "./src/utils/helpers.js";
+import { getHttpErrorDetails } from "./src/utils/httpErrors.js";
 import { loadMockStats, saveMockStats } from "./src/storage/mockStatsStore.js";
 import { loadPlayerStats, savePlayerStats } from "./src/storage/playerStatsStore.js";
 import { parseKill } from "./src/parsers/killParser.js";
@@ -53,35 +54,6 @@ import {
 import { ensureLatestAdmSelected, readNewLines } from "./src/features/polling/admFilePoller.js";
 import { processKillEvents } from "./src/features/killfeed/killEventProcessor.js";
 import { handleKillEvents } from "./src/features/killfeed/killEventHandler.js";
-
-interface HttpErrorDetails {
-  status?: number;
-  data?: unknown;
-  message: string;
-}
-
-function getHttpErrorDetails(error: unknown): HttpErrorDetails {
-  if (typeof error !== "object" || error === null) {
-    return {
-      message: typeof error === "string" ? error : "",
-    };
-  }
-
-  const response =
-    "response" in error && typeof error.response === "object" && error.response !== null
-      ? error.response
-      : null;
-
-  const status =
-    response && "status" in response && typeof response.status === "number"
-      ? response.status
-      : undefined;
-
-  const data = response && "data" in response ? response.data : undefined;
-  const message = "message" in error && typeof error.message === "string" ? error.message : "";
-
-  return { status, data, message };
-}
 
 function getErrorDetail(error: unknown): unknown {
   const { message } = getHttpErrorDetails(error);
