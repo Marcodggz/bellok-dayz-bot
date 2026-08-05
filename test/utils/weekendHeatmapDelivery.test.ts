@@ -57,6 +57,10 @@ vi.mock("../../src/config/config.js", () => ({
   MAP_OFFSET_Y: 0,
   MAP_SCALE_X: 1,
   MAP_SCALE_Y: 1,
+  MAP_PIX_INSET_L: 0,
+  MAP_PIX_INSET_R: 0,
+  MAP_PIX_INSET_T: 0,
+  MAP_PIX_INSET_B: 0,
 }));
 
 import { maybeSendWeekendHeatmap } from "../../src/utils/weekendHeatmapHelpers.ts";

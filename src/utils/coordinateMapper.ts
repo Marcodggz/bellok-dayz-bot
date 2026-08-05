@@ -11,6 +11,10 @@ import {
   MAP_OFFSET_Y,
   MAP_SCALE_X,
   MAP_SCALE_Y,
+  MAP_PIX_INSET_L,
+  MAP_PIX_INSET_R,
+  MAP_PIX_INSET_T,
+  MAP_PIX_INSET_B,
 } from "../config/config.js";
 
 export function mapToPixelCoords(
@@ -32,21 +36,16 @@ export function mapToPixelCoords(
   const offY = (height - side) / 2;
 
   // Pixel insets to crop inner map border
-  const INSET_L = Number(process.env.MAP_PIX_INSET_L || 0);
-  const INSET_R = Number(process.env.MAP_PIX_INSET_R || 0);
-  const INSET_T = Number(process.env.MAP_PIX_INSET_T || 0);
-  const INSET_B = Number(process.env.MAP_PIX_INSET_B || 0);
-
-  const innerW = Math.max(1, side - INSET_L - INSET_R);
-  const innerH = Math.max(1, side - INSET_T - INSET_B);
+  const innerW = Math.max(1, side - MAP_PIX_INSET_L - MAP_PIX_INSET_R);
+  const innerH = Math.max(1, side - MAP_PIX_INSET_T - MAP_PIX_INSET_B);
 
   // Project to normalized UV (0..1), optional vertical flip
   const u = clamp(sx, 0, 1);
   const v = clamp(MAP_FLIP_Y ? 1 - sy : sy, 0, 1);
 
   // Final pixel coordinates within centered square + insets
-  const px = Math.floor(offX + INSET_L + u * innerW);
-  const py = Math.floor(offY + INSET_T + v * innerH);
+  const px = Math.floor(offX + MAP_PIX_INSET_L + u * innerW);
+  const py = Math.floor(offY + MAP_PIX_INSET_T + v * innerH);
 
   // Diagnostic logging when debug flag is set
   if (debug) {

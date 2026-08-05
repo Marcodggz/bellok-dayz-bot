@@ -22,6 +22,7 @@ export const DEBUG_TICKS = process.env.DEBUG_TICKS === "1";
 export const POLL_MS = Number(process.env.POLL_MS || 5000);
 export const ROTATE_CHECK_MS = Number(process.env.ROTATE_CHECK_MS || 60000);
 export const LIST_COOLDOWN_MS = Number(process.env.LIST_COOLDOWN_MS || 120000);
+export const ADM_TIME_OFFSET_MINUTES = Number(process.env.ADM_TIME_OFFSET_MINUTES || 0);
 
 // ================== HEATMAP CONFIG ==================
 export const HEATMAP_INTERVAL_MS = Number(process.env.HEATMAP_INTERVAL_MS || 900000);
@@ -44,6 +45,10 @@ export const MAP_OFFSET_X = Number(process.env.MAP_OFFSET_X || 0);
 export const MAP_OFFSET_Y = Number(process.env.MAP_OFFSET_Y || 0);
 export const MAP_SCALE_X = Number(process.env.MAP_SCALE_X || 1);
 export const MAP_SCALE_Y = Number(process.env.MAP_SCALE_Y || 1);
+export const MAP_PIX_INSET_L = Number(process.env.MAP_PIX_INSET_L || 0);
+export const MAP_PIX_INSET_R = Number(process.env.MAP_PIX_INSET_R || 0);
+export const MAP_PIX_INSET_T = Number(process.env.MAP_PIX_INSET_T || 0);
+export const MAP_PIX_INSET_B = Number(process.env.MAP_PIX_INSET_B || 0);
 
 // ================== FILE PATHS ==================
 export const STATE_FILE = "./state.json";

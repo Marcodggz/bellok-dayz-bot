@@ -1,3 +1,4 @@
+import { ADM_TIME_OFFSET_MINUTES } from "../../config/config.js";
 import type { KillEvent } from "../../types/domainEvents.js";
 import type { PersistedPlayerStats } from "../../types/domainPersistence.js";
 import { buildKillEmbed } from "./embedBuilders.js";
@@ -54,9 +55,7 @@ function resolveEventTimestamp(rawTime: string | null, queuedAt: number): number
 
   eventDate.setHours(Number(hours), Number(minutes), Number(seconds), 0);
 
-  const offsetMinutes = Number(process.env.ADM_TIME_OFFSET_MINUTES || 0);
-
-  eventDate.setMinutes(eventDate.getMinutes() + offsetMinutes);
+  eventDate.setMinutes(eventDate.getMinutes() + ADM_TIME_OFFSET_MINUTES);
 
   if (eventDate.getTime() - queuedAt > 5 * 60 * 1000) {
     eventDate.setDate(eventDate.getDate() - 1);
