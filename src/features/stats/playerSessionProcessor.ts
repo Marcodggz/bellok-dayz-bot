@@ -1,5 +1,3 @@
-// Process ADM connection/disconnection lines and normalize times across midnight
-
 import type { PlayerSessionEvent } from "../../types/domainEvents.js";
 
 type EventTimeNormalizer = (timeStr: string | null) => number | null;

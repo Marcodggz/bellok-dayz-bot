@@ -1,5 +1,3 @@
-// Kill event deduplication logic for 20-second buckets with persistent tracking
-
 import { loadState, saveState } from "../../storage/stateStore.js";
 
 const BUCKET_SECONDS = 20;

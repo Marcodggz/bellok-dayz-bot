@@ -1,5 +1,3 @@
-// Map ranks to badge images
-
 import fs from "node:fs";
 import { resolveProjectPath } from "../config/projectPaths.js";
 

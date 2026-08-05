@@ -1,5 +1,3 @@
-// CLI test and diagnostic handlers
-
 import fs from "node:fs";
 import { Client, EmbedBuilder, GatewayIntentBits } from "discord.js";
 
@@ -229,7 +227,6 @@ async function runMockParse(
     `[mock-parse] Loaded stats for ${Object.keys(stats).length} players from persistent storage.\n`
   );
 
-  // Midnight rollover tracking: detect when HH:MM:SS wraps from 23:59:59 → 00:00:00
   let previousRawTimeMs: number | null = null;
   let dayOffsetMs = 0;
 
@@ -249,9 +246,9 @@ async function runMockParse(
     const rawTimeMs = parseRawTimeMs(timeStr);
     if (rawTimeMs === null) return null;
 
-    // Detect midnight rollover: HH:MM:SS decreased from previous line
+    // A lower ADM time indicates a midnight rollover, so subsequent events move to the next day.
     if (previousRawTimeMs !== null && rawTimeMs < previousRawTimeMs) {
-      dayOffsetMs += 86400000; // Add 24 hours in milliseconds
+      dayOffsetMs += 86400000;
       console.log(
         `[mock-parse] Midnight rollover detected at ${timeStr}, dayOffset now: ${dayOffsetMs / 3600000}h`
       );

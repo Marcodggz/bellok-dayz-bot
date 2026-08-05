@@ -1,4 +1,3 @@
-// src/api/nitradoClient.ts — Nitrado API client
 import axios from "axios";
 
 import * as config from "../config/config.js";
@@ -14,7 +13,6 @@ import { getHttpErrorDetails } from "../utils/httpErrors.js";
 
 const { NIT_API, SERVICE_ID, NIT_TOKEN, ROTATE_CHECK_MS, LIST_COOLDOWN_MS } = config;
 
-// ================== NITRADO API CLIENT ==================
 const nit = axios.create({
   baseURL: NIT_API,
   headers: { Authorization: `Bearer ${NIT_TOKEN}` },
@@ -76,7 +74,6 @@ async function nitDownload(filePath: string): Promise<NitradoDownloadResult> {
   }
 }
 
-// ================== NITRADO ADM LIST (with backoff + cooldown + cache) ==================
 let listCooldownUntil = 0;
 const listCache = new Map<string, AdmFile[]>();
 let lastRotateCheck = 0;

@@ -1,5 +1,3 @@
-// Slash commands for linking Discord users to DayZ gamertags
-
 import { MessageFlags, SlashCommandBuilder, type ChatInputCommandInteraction } from "discord.js";
 import {
   getDiscordUserIdByGamertag,

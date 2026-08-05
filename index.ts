@@ -1,10 +1,3 @@
-// index.js — DayZ Nitrado PS4 → Discord Kill-feed + Heatmap
-// - PvP kills: red embed with killer/victim/weapon details
-// - Explosion deaths: orange embed
-// - PvP Heatmap: single editable message with clustered death locations
-// - Weekend Heatmap: single editable message with player position density (Fri-Sun only)
-// - Coordinate calibration: min/max/offset/scale/flip for accurate map overlay
-
 import * as config from "./src/config/config.js";
 import { tMadrid } from "./src/utils/helpers.js";
 import { loadMockStats, saveMockStats } from "./src/storage/mockStatsStore.js";
@@ -29,7 +22,6 @@ import { checkEnv, runBot } from "./src/runtime/botRuntime.js";
 const MODE = process.argv[2] || "run";
 const checkCurrentModeEnv = (): void => checkEnv(MODE);
 
-// ================== MAIN ==================
 if (MODE === "discord-test") {
   runDiscordTest(config, checkCurrentModeEnv);
 } else if (MODE === "discord-heatmap-test") {

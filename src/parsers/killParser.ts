@@ -1,5 +1,4 @@
-// Parse DayZ kill events from ADM log lines
-// ADM pos=<X, Y, Z>: X/Y are map coordinates; Z is elevation.
+// ADM pos=<X, Y, Z>: X and Y are map coordinates; Z is elevation.
 
 import type {
   ExplosionKillEvent,

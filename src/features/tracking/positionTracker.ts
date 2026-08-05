@@ -1,5 +1,4 @@
-// Player position tracking from ADM log lines
-// ADM pos=<X, Y, Z>: X/Y are map coordinates; Z is elevation.
+// ADM pos=<X, Y, Z>: X and Y are map coordinates; Z is elevation.
 
 import type { Position2D } from "../../types/domainEvents.js";
 import { escapeRegExp } from "../../utils/helpers.js";

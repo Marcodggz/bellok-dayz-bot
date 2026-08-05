@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-// Standalone script to register Discord slash commands
 
 import "dotenv/config";
 

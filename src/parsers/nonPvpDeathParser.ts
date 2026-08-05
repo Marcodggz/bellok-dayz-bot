@@ -1,6 +1,3 @@
-// Parse confirmed non-PvP deaths from real DayZ ADM log lines.
-// Damage, unconsciousness and contextual lines are intentionally ignored.
-
 import type { NonPvpDeathCause, NonPvpDeathEvent, Position3D } from "../types/domainEvents.js";
 import { cleanPlayerName, extractPosition } from "./killParser.js";
 

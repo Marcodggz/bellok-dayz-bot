@@ -1,5 +1,3 @@
-// src/storage/weekendHeatStore.ts — Weekend Heatmap state management
-
 import { WEEKEND_HEATMAP_STATE_FILE } from "../config/config.js";
 import type { WeekendHeatState } from "../types/domainHeatmap.js";
 import { loadJSON, saveJSON } from "./jsonStore.js";

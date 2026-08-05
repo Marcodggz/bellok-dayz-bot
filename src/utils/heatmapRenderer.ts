@@ -1,5 +1,3 @@
-// src/utils/heatmapRenderer.ts — Shared heatmap rendering utilities
-
 import { PNG } from "pngjs";
 import type { Position2D } from "../types/domainEvents.js";
 import type { HeatCluster } from "../types/domainHeatmap.js";

@@ -1,5 +1,3 @@
-// Helper functions for leaderboard commands
-
 import { EmbedBuilder, type ChatInputCommandInteraction } from "discord.js";
 import { SERVER_NAME } from "../../config/config.js";
 import { loadPlayerStats } from "../../storage/playerStatsStore.js";

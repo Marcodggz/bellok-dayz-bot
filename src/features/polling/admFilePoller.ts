@@ -1,5 +1,3 @@
-// admFilePoller.js — ADM file rotation detection and tail-reading
-
 import * as config from "../../config/config.js";
 import { loadState } from "../../storage/stateStore.js";
 import { getFileState, setFileState } from "../../storage/fileStateStore.js";

@@ -1,5 +1,3 @@
-// Player statistics tracking
-
 import type { KillEvent, PlayerRank, PlayerStats } from "../../types/domainEvents.js";
 import type {
   PersistedPlayerStats,

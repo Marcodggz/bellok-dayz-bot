@@ -1,5 +1,3 @@
-// Mock player stats persistence
-
 import { resolveProjectPath } from "../config/projectPaths.js";
 import { loadJSON, saveJSON } from "./jsonStore.js";
 import type { PersistedPlayerStatsCollection } from "../types/domainPersistence.js";

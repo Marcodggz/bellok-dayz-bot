@@ -1,5 +1,3 @@
-// Real player statistics persistence
-
 import { resolveProjectPath } from "../config/projectPaths.js";
 import { loadJSON, saveJSON } from "./jsonStore.js";
 import type {

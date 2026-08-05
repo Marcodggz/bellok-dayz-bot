@@ -1,5 +1,3 @@
-// Register slash commands with Discord API
-
 import { REST, Routes } from "discord.js";
 
 import { linkCommand, unlinkCommand } from "./linkCommands.js";

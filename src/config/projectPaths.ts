@@ -1,5 +1,3 @@
-// Resolve project resources consistently from source and compiled code
-
 import fs from "node:fs";
 import path from "node:path";
 

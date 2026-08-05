@@ -1,5 +1,3 @@
-// src/utils/coordinateMapper.ts — World-to-pixel coordinate mapping
-
 import { clamp } from "./helpers.js";
 import {
   MAP_MIN_X,

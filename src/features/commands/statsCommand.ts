@@ -1,5 +1,3 @@
-// Slash command for player stats
-
 import {
   AttachmentBuilder,
   EmbedBuilder,

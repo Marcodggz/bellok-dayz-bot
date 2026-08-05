@@ -1,5 +1,4 @@
-// Apply confirmed non-PvP ADM deaths to the player life cycle.
-// These events never enter the Discord killfeed or PvP heatmap.
+// Confirmed non-PvP deaths close the current life but never enter the PvP killfeed or heatmap.
 
 import { parseNonPvpDeath } from "../../parsers/nonPvpDeathParser.js";
 import type { KillEvent, NonPvpDeathEvent } from "../../types/domainEvents.js";

@@ -1,5 +1,3 @@
-// Handle deduplicated kill events: update stats, queue Discord events, extract positions
-
 import type { KillEvent, Position2D } from "../../types/domainEvents.js";
 import type {
   PersistedPlayerStats,

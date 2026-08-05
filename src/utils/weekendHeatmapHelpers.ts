@@ -1,5 +1,3 @@
-// src/utils/weekendHeatmapHelpers.ts — Weekend Heatmap utilities
-
 import { PNG } from "pngjs";
 import fs from "node:fs";
 import { loadBaseMapPng } from "./baseMapCache.js";
@@ -44,25 +42,14 @@ function getErrorDetail(error: unknown): unknown {
   return error;
 }
 
-// Prevent concurrent weekend heatmap sends
+// Prevent overlapping renders and Discord updates for the same heatmap cycle.
 let weekendHeatmapSending = false;
 
-/**
- * Weekend heatmap runs on Friday, Saturday, and Sunday
- * @param {Date} date - Date to check (defaults to now)
- * @returns {boolean} True if Friday, Saturday, or Sunday
- */
 export function isWeekendHeatmapActive(date: Date = new Date()): boolean {
   const day = date.getDay();
   return day === 0 || day === 5 || day === 6;
 }
 
-/**
- * Track player position for weekend heatmap (Fri-Sun only)
- * @param {string} name - Player name
- * @param {number} x - X coordinate
- * @param {number} y - Y coordinate
- */
 export function addWeekendHeatPoint(name: string, x: number, y: number): void {
   if (!isWeekendHeatmapActive()) return;
 
@@ -79,7 +66,7 @@ export function addWeekendHeatPoint(name: string, x: number, y: number): void {
     ts,
   };
 
-  // Keep exactly one position per player.
+  // Keep only the latest recorded position for each player.
   wh.points = wh.points.filter((p) => p.name !== name);
   wh.points.push(point);
 
@@ -117,7 +104,6 @@ function renderWeekendHeatPng(
   let W = HEATMAP_WIDTH;
   let H = HEATMAP_HEIGHT;
 
-  // Load base map if exists
   try {
     basePng = loadBaseMapPng(baseMapPath);
 
@@ -132,14 +118,11 @@ function renderWeekendHeatPng(
     );
   }
 
-  // Build clusters
   const clusters = buildHeatClusters(points);
 
-  // Create transparent overlay
   const overlay = new PNG({ width: W, height: H });
   overlay.data.fill(0);
 
-  // Identify 5+ clusters for bridge connections
   const fivePlusClusters = clusters.filter((c) => c.count >= 5);
   const bridgeConnections = [];
 
@@ -158,7 +141,6 @@ function renderWeekendHeatPng(
     }
   }
 
-  // Draw heat bridges before cluster dots
   for (const { c1, c2 } of bridgeConnections) {
     const p1 = mapToPixelCoords(c1.x, c1.y, W, H);
     const p2 = mapToPixelCoords(c2.x, c2.y, W, H);
@@ -168,27 +150,20 @@ function renderWeekendHeatPng(
     drawSoftBridge(overlay, p1.px, p1.py, p2.px, p2.py, 9, 234, 179, 8, 70, W, H);
   }
 
-  // Draw all clusters as radial dots
   for (const cluster of clusters) {
     const { px, py } = mapToPixelCoords(cluster.x, cluster.y, W, H);
     const visualCount = Math.min(cluster.count, 5);
     drawHeatCluster(overlay, px, py, visualCount, W, H);
   }
 
-  // Compose onto base map
   const outPng = composeHeatmapOverlay(basePng, overlay, W, H);
 
   fs.writeFileSync(outPath, PNG.sync.write(outPng));
 }
 
-/**
- * Send or update weekend heatmap message
- * @param {Client} client - Discord client
- */
 export async function maybeSendWeekendHeatmap(client: Client): Promise<void> {
   if (!WEEKEND_HEATMAP_CHANNEL_ID) return;
 
-  // Only send/update on Friday, Saturday, Sunday
   if (!isWeekendHeatmapActive()) {
     return;
   }
@@ -204,9 +179,6 @@ export async function maybeSendWeekendHeatmap(client: Client): Promise<void> {
     saveWeekendHeat(wh);
   }
 
-  // Scheduling is controlled by the shared heatmap timer in index.js.
-
-  // Prevent concurrent sends
   if (weekendHeatmapSending) return;
   weekendHeatmapSending = true;
 
@@ -274,7 +246,6 @@ export async function maybeSendWeekendHeatmap(client: Client): Promise<void> {
       }
     }
 
-    // Send new message if we couldn't edit
     if (!sent) {
       const newMsg = await ch.send(payload);
       wh.messageId = newMsg.id;

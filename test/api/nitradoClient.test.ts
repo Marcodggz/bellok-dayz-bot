@@ -26,15 +26,12 @@ describe("nitradoClient", () => {
       default: axiosMock,
     }));
 
-    // Spy on console.warn to suppress expected test messages
     const originalWarn = console.warn;
     consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation((...args) => {
       const message = args.join(" ");
-      // Suppress expected test messages
       if (message.includes("[download] error:") || message.includes("[list] cooldown")) {
         return;
       }
-      // Forward all other warnings
       originalWarn(...args);
     });
 

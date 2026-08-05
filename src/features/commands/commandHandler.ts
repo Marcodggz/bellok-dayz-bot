@@ -1,5 +1,3 @@
-// Handle slash command interactions
-
 import {
   MessageFlags,
   type ChatInputCommandInteraction,

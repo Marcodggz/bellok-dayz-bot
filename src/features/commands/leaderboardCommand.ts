@@ -1,5 +1,3 @@
-// Slash command for leaderboards
-
 import { MessageFlags, SlashCommandBuilder, type ChatInputCommandInteraction } from "discord.js";
 import { getEstimatedAdmTimeMs } from "../stats/admClock.js";
 import {
@@ -12,9 +10,6 @@ import {
   replyLeaderboard,
 } from "./leaderboardHelpers.js";
 
-/**
- * Define the /leaderboard command with subcommands
- */
 export const leaderboardCommand = {
   data: new SlashCommandBuilder()
     .setName("leaderboard")

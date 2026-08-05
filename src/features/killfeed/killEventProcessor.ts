@@ -1,5 +1,3 @@
-// Process raw ADM log lines into deduplicated kill event groups
-
 import { extractAmmo, extractDamage, extractHitZone, parseKill } from "../../parsers/killParser.js";
 import type { KillEvent } from "../../types/domainEvents.js";
 import { updatePositionsFromLine } from "../tracking/positionTracker.js";

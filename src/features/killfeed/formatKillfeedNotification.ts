@@ -1,5 +1,3 @@
-// Format premium killfeed notifications
-
 import type {
   ExplosionKillEvent,
   KillEvent,
