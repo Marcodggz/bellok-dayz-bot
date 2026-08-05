@@ -15,6 +15,7 @@ import {
 import { loadHeat, saveHeat } from "../storage/heatStore.js";
 import type { HeatPoint, HeatState } from "../types/domainHeatmap.js";
 import { mapToPixelCoords } from "./coordinateMapper.js";
+import { loadBaseMapPng } from "./baseMapCache.js";
 import { buildHeatmapMessagePayload } from "./heatmapMessagePayload.js";
 import {
   buildHeatClusters,
@@ -62,9 +63,9 @@ function renderHeatPng(points: HeatPoint[], outPath: string, baseMapPath = ""): 
   let height = HEATMAP_HEIGHT;
 
   try {
-    if (baseMapPath && fs.existsSync(baseMapPath)) {
-      const buffer = fs.readFileSync(baseMapPath);
-      basePng = PNG.sync.read(buffer);
+    basePng = loadBaseMapPng(baseMapPath);
+
+    if (basePng) {
       width = basePng.width;
       height = basePng.height;
     }

@@ -305,7 +305,7 @@ The source compiles through `tsc` into CommonJS JavaScript under `dist`.
 
 ## Testing and Continuous Integration
 
-The Vitest suite currently contains 293 tests across 32 test files.
+The Vitest suite currently contains 299 tests across 33 test files.
 
 Coverage includes:
 

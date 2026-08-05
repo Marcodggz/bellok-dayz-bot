@@ -2,6 +2,7 @@
 
 import { PNG } from "pngjs";
 import fs from "node:fs";
+import { loadBaseMapPng } from "./baseMapCache.js";
 import { clamp } from "./helpers.js";
 import { mapToPixelCoords } from "./coordinateMapper.js";
 import { buildHeatmapMessagePayload } from "./heatmapMessagePayload.js";
@@ -118,9 +119,9 @@ function renderWeekendHeatPng(
 
   // Load base map if exists
   try {
-    if (baseMapPath && fs.existsSync(baseMapPath)) {
-      const buf = fs.readFileSync(baseMapPath);
-      basePng = PNG.sync.read(buf);
+    basePng = loadBaseMapPng(baseMapPath);
+
+    if (basePng) {
       W = basePng.width;
       H = basePng.height;
     }

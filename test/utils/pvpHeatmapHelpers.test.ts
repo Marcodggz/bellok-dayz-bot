@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { EmbedBuilder, type Client } from "discord.js";
+import { PNG } from "pngjs";
 
 interface HeatPoint {
   x: number;
@@ -47,7 +48,7 @@ vi.mock("../../src/config/config.js", () => ({
   HEATMAP_WINDOW_MIN: 15,
   HEAT_IMG_PATH: "./heatmap.png",
   MAP_DISPLAY_NAME: "Livonia",
-  MAP_IMAGE_PATH: "",
+  MAP_IMAGE_PATH: "./images/livonia.png",
   MAP_SIZE: 12800,
   MAP_MIN_X: 0,
   MAP_MAX_X: 12800,
@@ -60,6 +61,7 @@ vi.mock("../../src/config/config.js", () => ({
   MAP_SCALE_Y: 1,
 }));
 
+import { resetBaseMapPngCache } from "../../src/utils/baseMapCache.ts";
 import { addHeatPoint, maybeSendHeatmap } from "../../src/utils/pvpHeatmapHelpers.ts";
 
 interface MockDiscord {
@@ -128,6 +130,7 @@ describe("pvpHeatmapHelpers", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-07-18T12:00:00Z"));
     vi.clearAllMocks();
+    resetBaseMapPngCache();
 
     mocks.existsSync.mockReturnValue(false);
     mocks.buildHeatmapMessagePayload.mockImplementation(({ embed, file }) =>
@@ -244,6 +247,40 @@ describe("pvpHeatmapHelpers", () => {
     expect(state.lastSentCount).toBe(0);
     expect(state.lastUpdate).toBe(now);
     expect(mocks.saveHeat).toHaveBeenLastCalledWith(state);
+  });
+
+  test("reads the base map only once across two consecutive renders", async () => {
+    const now = Date.now();
+    const state = createState({
+      messageId: "existing-message",
+      points: [
+        {
+          x: 1000,
+          y: 2000,
+          ts: now,
+        },
+      ],
+    });
+
+    const baseMap = new PNG({ width: 64, height: 64 });
+    baseMap.data.fill(0);
+
+    mocks.loadHeat.mockReturnValue(state);
+    mocks.existsSync.mockReturnValue(true);
+    mocks.readFileSync.mockReturnValue(PNG.sync.write(baseMap));
+
+    const discord = createDiscordMock();
+
+    const firstRender = maybeSendHeatmap(discord.client);
+    await vi.runAllTimersAsync();
+    await firstRender;
+
+    const secondRender = maybeSendHeatmap(discord.client);
+    await vi.runAllTimersAsync();
+    await secondRender;
+
+    expect(mocks.readFileSync).toHaveBeenCalledTimes(1);
+    expect(discord.edit).toHaveBeenCalledTimes(2);
   });
 
   test("edits an existing message with the rendered heatmap attachment", async () => {
